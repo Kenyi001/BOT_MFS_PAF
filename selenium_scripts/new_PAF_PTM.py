@@ -24,6 +24,11 @@ def agrupar_dias_con_horarios_comunes(dias):
     grupos = {}
     for num_dia, horarios in dias.items():
         tipo_horario, horarios_dia = determinar_tipo_horario(horarios)
+
+        # Saltar los días "Sin Atención"
+        if tipo_horario == "-Sin Atención-":
+            continue
+
         clave = (tipo_horario, tuple(horarios_dia))  # Clave única para cada combinación de tipo de horario y horarios
 
         if clave not in grupos:
@@ -122,31 +127,53 @@ def establecer_horario(driver, tipo_horario, horarios, prefijo_id):
         driver.execute_script(f"document.getElementById('{prefijo_id}timeSalida2_I').value = '{salida2}';")
 
 def guardar_horario(driver, tipo_horario, horario_dia, prefijo_id):
-    # Configurar y guardar el horario si no es "-Sin Atención-"
     if tipo_horario != "-Sin Atención-":
         establecer_horario(driver, tipo_horario, horario_dia, prefijo_id)
         WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, f"{prefijo_id}btnAdicionarHorario"))
         ).click()
 
-        # Acciones adicionales para "24 horas" si es necesario
-        if horario_dia[1] >= "23:00" or horario_dia[-1] >= "23:00":
-            # Esperar y hacer clic en la ventana emergente si es necesario
+        # Determinar si es necesario realizar acciones adicionales basadas en el horario
+        realizar_accion_adicional = False
+        if tipo_horario == "Continuo" and horario_dia[1] >= "23:00":
+            realizar_accion_adicional = True
+        elif tipo_horario == "Discontinuo" and horario_dia[3] >= "23:00":
+            realizar_accion_adicional = True
+
+        # Acciones adicionales si se cumple la condición
+        if realizar_accion_adicional:
             WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.ID, f"{prefijo_id}ASPxPopupControlMensaje_HCB-1"))
             ).click()
+
 # Función para dividir los horarios en horario de mañana y tarde
 def dividir_horarios(horario):
-    if pd.isnull(horario) or horario in ["0", "00:00", "00:00 a 00:00", "00:00 a 00:00 y 00:00 a 00:00"]:
-        return ["0:00", "0:00", "", ""]  # Modificado para manejar "0" y "00:00" como "Sin Atención"
-    elif "y" in horario:
+    # Manejar casos nulos o especiales
+    if pd.isnull(horario) or horario in ["", "0", "0:00", "00:00", "00:00 a 00:00", "00:00 a 00:00 y 00:00 a 00:00"]:
+        return "-Sin Atención-", ["0:00", "0:00", "", ""]
+
+    # Dividir horario en partes (mañana y tarde si es necesario)
+    if "y" in horario:
         partes = horario.split(' y ')
         manana = partes[0].split(' a ')
         tarde = partes[1].split(' a ')
-        return manana + tarde
+        horarios_dia = manana + tarde
     else:
         partes = horario.split(' a ')
-        return partes + ["", ""]  # Agrega campos vacíos para entrada2 y salida2
+        horarios_dia = partes + ["", ""]  # Asegura que siempre hay 4 elementos
+
+    # Asegurarse de que horarios_dia tenga siempre 4 elementos
+    while len(horarios_dia) < 4:
+        horarios_dia.append("")
+
+    # Determinar el tipo de horario
+    manana_ini, manana_fin, tarde_ini, tarde_fin = horarios_dia
+    if manana_ini == "00:01" and manana_fin == "00:01" and tarde_ini == "" and tarde_fin == "":
+        return "24 horas", horarios_dia
+    elif tarde_ini == tarde_fin:
+        return "Continuo", horarios_dia
+    else:
+        return "Discontinuo", horarios_dia
 def determinar_horario_comun(*horarios_semana):
     # Supongamos que cada entrada en horarios_semana es una lista de horarios [inicio1, fin1, inicio2, fin2]
     horario_referencia = horarios_semana[0]
@@ -216,15 +243,6 @@ def ejecutar_automatizacion_new(ruta_archivo_excel):
             telefono = row["Linea Personal PTM"]
             fax = "0"
 
-            # Horarios
-            horario_LUN = dividir_horarios(row["HORARIO_LUNES"])
-            horario_MAR = dividir_horarios(row["HORARIO_MARTES"])
-            horario_MIE = dividir_horarios(row["HORARIO_MIERCOLES"])
-            horario_JUE = dividir_horarios(row["HORARIO_JUEVES"])
-            horario_VIE = dividir_horarios(row["HORARIO_VIERNES"])
-            horario_SAB = dividir_horarios(row["HORARIO_SABADO"])
-            horario_DOM = dividir_horarios(row["HORARIO_DOMINGO"])
-
             # Coordenadas
             coordenada_x = row["LATITUD_X"]
             coordenada_y = row["LONGITUD_Y"]
@@ -278,34 +296,30 @@ def ejecutar_automatizacion_new(ruta_archivo_excel):
             driver.find_element(By.ID, "ctl00_ctl00_MainContent_DefaultContent_ASPxtxtTelefono_I").send_keys(telefono)
             driver.find_element(By.ID, "ctl00_ctl00_MainContent_DefaultContent_ASPxtxtFax_I").send_keys(fax)
 
-            # Asignar tipos de horarios y horarios para cada día de la semana
-            dias = {
-                1: (horario_LUN),
-                2: (horario_MAR),
-                3: (horario_MIE),
-                4: (horario_JUE),
-                5: (horario_VIE),
-                6: (horario_SAB),
-                7: (horario_DOM)
-            }
+            # Horarios para cada día
+            horario_LUN = dividir_horarios(row["HORARIO_LUNES"])
+            horario_MAR = dividir_horarios(row["HORARIO_MARTES"])
+            horario_MIE = dividir_horarios(row["HORARIO_MIERCOLES"])
+            horario_JUE = dividir_horarios(row["HORARIO_JUEVES"])
+            horario_VIE = dividir_horarios(row["HORARIO_VIERNES"])
+            horario_SAB = dividir_horarios(row["HORARIO_SABADO"])
+            horario_DOM = dividir_horarios(row["HORARIO_DOMINGO"])
 
-            # Agrupar días con horarios comunes
-            grupos_horarios = agrupar_dias_con_horarios_comunes(dias)
-            for clave, dias_grupo in grupos_horarios.items():
-                tipo_horario, horarios_dia = clave
+            # Procesar y guardar horarios para cada día individualmente
+            dias_horarios = [horario_LUN, horario_MAR, horario_MIE, horario_JUE, horario_VIE, horario_SAB, horario_DOM]
 
-                # Saltar el proceso de guardar horario si es "-Sin Atención-"
-                if tipo_horario == "-Sin Atención-":
-                    continue
+            for num_dia, horarios_dia in enumerate(dias_horarios, start=1):
 
-                # Seleccionar los días del grupo
-                seleccionar_dias(driver, dias_grupo)
+                tipo_horario, horarios = horarios_dia
 
-                # Establecer y guardar el horario
-                # if tipo_horario not in ["-Sin Atención-"]:
-                #     establecer_horario(driver, tipo_horario, horarios_dia, 'MainContent_DefaultContent_')
+                if tipo_horario != "-Sin Atención-":
+                    # Seleccionar el día
+                    seleccionar_dias(driver, [num_dia])
 
-                guardar_horario(driver, tipo_horario, horarios_dia, 'MainContent_DefaultContent_')
+                    # Establecer y guardar el horario
+                    # if tipo_horario not in ["-Sin Atención-", "24 horas"]:
+                    #     establecer_horario(driver, tipo_horario, horarios, 'MainContent_DefaultContent_')
+                    guardar_horario(driver, tipo_horario, horarios, 'MainContent_DefaultContent_')
 
             # Seleccionar servicios
             driver.find_element(By.ID, "MainContent_DefaultContent_ASPxGridViewServicios_DXSelBtn0_D").click()
@@ -346,25 +360,11 @@ def ejecutar_automatizacion_new(ruta_archivo_excel):
             # time.sleep(20)
         except Exception as e:
             print(f"Error en la fila {index}: {e}")
-            # Añadir la fila con error a la lista
-            registros_con_errores.append(row)
+            break
 
     # Cerrar el navegador
     hora_finalizacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"Inicio de sesión exitoso, URL actualizada a las {hora_finalizacion}.")
-    print("El Bot a Finalizado con exito!, todos los Reguistros")
-
-    # Guardar los registros con errores
-    if registros_con_errores:
-        # Puedes descomentar la siguiente línea para permitir que el usuario elija la ruta
-        # ruta_archivo_errores = seleccionar_ruta_guardado()
-        # O usar la ruta del escritorio por defecto
-        ruta_archivo_errores = os.path.join(obtener_ruta_escritorio(), "errores.xlsx")
-
-        if ruta_archivo_errores:  # Verificar si se ha proporcionado una ruta
-            df_errores = pd.DataFrame(registros_con_errores)
-            with pd.ExcelWriter(ruta_archivo_errores, mode='a', if_sheet_exists='overlay') as writer:
-                df_errores.to_excel(writer, sheet_name='Errores', index=False)
-
+    print("El Bot a Finalizado con exito!, todos los Reguistros PAF")
 
     driver.quit()
