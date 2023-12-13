@@ -1,6 +1,7 @@
 import sys
 import time
 import pandas as pd
+from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
 from selenium import webdriver
 from datetime import datetime
 from selenium.webdriver.common.by import By
@@ -72,9 +73,9 @@ def establecer_horario(driver, tipo_horario_text, entrada1, salida1, entrada2, s
 def ejecutar_automatizacion_modificacion(ruta_excel):
     try:
         # Configuración del WebDriver de Edge
-        webdriver_path = r'C:\msedgedriver\msedgedriver.exe'
-        edge_dev_path = r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-        perfil_usuario = r'C:\Users\tellezd\AppData\Local\Microsoft\Edge\User Data\Default'
+        webdriver_path = WEBDRIVER_PATH
+        edge_dev_path = EDGE_BINARY_PATH
+        perfil_usuario = USER_PROFILE_PATH
 
         options = Options()
         options.binary_location = edge_dev_path

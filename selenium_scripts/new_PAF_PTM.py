@@ -1,17 +1,21 @@
 # new_PAF_PTM.py
-import time
 import os
-import pandas as pd
 from datetime import datetime
-from selenium import webdriver
+
+import pandas as pd
+import openpyxl
 # Importaciones adicionales
 from PyQt5.QtWidgets import QFileDialog
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
+from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
+
 
 def seleccionar_ruta_guardado():
     dialogo = QFileDialog()
@@ -185,31 +189,37 @@ def ejecutar_automatizacion_new(ruta_archivo_excel):
     # Inicializa la lista de registros con errores
     registros_con_errores = []
     # Ruta al WebDriver de Edge Dev
-    webdriver_path = r'C:\msedgedriver\msedgedriver.exe'
+    webdriver_path = WEBDRIVER_PATH
 
     # Ruta al ejecutable de Edge Dev
-    edge_dev_path = r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+    edge_path = EDGE_BINARY_PATH
 
     # Ruta al perfil de usuario específico de Edge Dev (ajusta esto según sea necesario)
-    perfil_usuario = r'C:\Users\tellezd\AppData\Local\Microsoft\Edge\User Data\Default'
+    perfil_usuario = USER_PROFILE_PATH
 
     # Configuración de las opciones para apuntar a Edge Dev y al perfil específico
     options = Options()
-    options.binary_location = edge_dev_path
+    options.binary_location = edge_path
     options.add_argument(f'user-data-dir={perfil_usuario}')
 
     # Crear el servicio con la ruta del WebDriver
     service = Service(webdriver_path)
 
     # Iniciar Edge Dev con las opciones configuradas
+    print("Iniciando el navegador Edge Dev...")
     driver = webdriver.Edge(service=service, options=options)
+    print("Navegador Edge Dev iniciado correctamente.")
 
     # Lee los datos desde el archivo Excel y forza todas las columnas a ser tratadas como texto
-    df = pd.read_excel(
-        ruta_archivo_excel,
-        sheet_name="Cargas_de_Alta_BOT",
-        dtype=str  # Forza todas las columnas a ser tratadas como texto
-    )
+    try:
+        df = pd.read_excel(
+            ruta_archivo_excel,
+            sheet_name="Cargas_de_Alta_BOT",
+            dtype=str  # Forza todas las columnas a ser tratadas como texto
+        )
+        print("Lectura de archivo Excel exitosa.")
+    except Exception as e:
+        print(f"se abrio correctamente el excel: {e}")
 
     # URL de la página de inicio de sesión
     url_inicio_sesion = "https://appweb.asfi.gob.bo/RMI/Default.aspx"
