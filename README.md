@@ -30,9 +30,37 @@ Instala las dependencias:
 pip install -r requirements.txt
 ```
 
-Configura las variables de entorno necesarias:
+### Configuración
 
-cp .env.example .env
+Para que el bot funcione correctamente, necesitas configurar las siguientes variables de entorno:
+
+Reemplaza `[Ruta del webdriver]`, `[Ruta del ejecutable de Edge]` y `[Ruta del perfil de usuario]` con las rutas correspondientes en tu sistema.
+
+en caso de que no tengas el perfil de usuario, puedes crearlo con el siguiente comando:
+
+```bash
+msedge.exe --profile-directory="Profile 1"
+```
+
+```bash
+# Ruta del webdriver
+export WEBDRIVER_PATH=[Ruta del webdriver]
+
+# Ruta del ejecutable de Edge
+export EDGE_PATH=[Ruta del ejecutable de Edge]
+
+# Ruta del perfil de usuario
+export USER_DATA_DIR=[Ruta del perfil de usuario]
+```
+
+### Ejecución
+
+Para ejecutar el bot, ejecuta el siguiente comando:
+
+```bash
+python main.py
+```
+
 ### Luego configura las variables en el archivo .env
 
 Ejecución de pruebas
@@ -46,8 +74,7 @@ Agrega notas adicionales sobre cómo desplegar esto en un sistema en vivo.
 
 ### Construido con
 Python - El lenguaje de programación usado
-Flask - El framework web usado
-SQLite - Sistema de gestión de bases de datos
+
 ### Contribuir
 Por favor, lee CONTRIBUTING.md para detalles sobre nuestro código de conducta, y el proceso para enviarnos pull requests.
 
@@ -55,7 +82,7 @@ Por favor, lee CONTRIBUTING.md para detalles sobre nuestro código de conducta, 
 Usamos SemVer para el versionado. Para las versiones disponibles, mira las tags en este repositorio.
 
 ### Autores
-Dax Krnji Tellez Duran - Tellezd
+Dax Kenji Tellez Duran - Tellezd
 Licencia
 Este proyecto está licenciado bajo la Licencia XYZ - mira el archivo LICENSE.md para detalles.
 
