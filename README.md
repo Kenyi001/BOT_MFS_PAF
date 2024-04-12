@@ -80,6 +80,7 @@ Por favor, lee CONTRIBUTING.md para detalles sobre nuestro código de conducta, 
 
 ### Versionado
 Usamos SemVer para el versionado. Para las versiones disponibles, mira las tags en este repositorio.
+<br>1.3.6
 
 ### Autores
 Dax Kenji Tellez Duran - Tellezd

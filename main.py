@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QFi
 # Importa tus scripts de automatización
 from selenium_scripts.new_PAF_PTM import ejecutar_automatizacion_new
 from selenium_scripts.modificacion_PAF_PTM import ejecutar_automatizacion_modificacion
+from selenium_scripts.extraccion_datos_web import extraer_datos_web  # Importa la función de extracción de datos web
 
 class AppDemo(QWidget):
     def __init__(self):
@@ -15,13 +16,18 @@ class AppDemo(QWidget):
 
         # Botón para la automatización de New PAF/PTM
         self.btnNewPAFPTM = QPushButton('New PAF/PTM')
-        self.btnNewPAFPTM.clicked.connect(lambda: self.openFileDialog(ejecutar_automatizacion_new))
+        self.btnNewPAFPTM.clicked.connect(lambda: self.openFileDialog(self.ejecutar_new_PAF_PTM))
         layout.addWidget(self.btnNewPAFPTM)
 
         # Botón para la automatización de Modificación PAF/PTM
         self.btnModificacionPAFPTM = QPushButton('Modificación PAF/PTM')
-        self.btnModificacionPAFPTM.clicked.connect(lambda: self.openFileDialog(ejecutar_automatizacion_modificacion))
+        self.btnModificacionPAFPTM.clicked.connect(lambda: self.openFileDialog(self.ejecutar_modificacion_PAF_PTM))
         layout.addWidget(self.btnModificacionPAFPTM)
+
+        # Botón para la extracción de datos web
+        self.btnExtraccionDatosWeb = QPushButton('Extracción de Datos Web')
+        self.btnExtraccionDatosWeb.clicked.connect(lambda: self.openFileDialog(self.ejecutar_extraccion_datos_web))
+        layout.addWidget(self.btnExtraccionDatosWeb)
 
         self.setLayout(layout)
 
@@ -35,6 +41,15 @@ class AppDemo(QWidget):
             return
 
         automation_function(file)
+
+    def ejecutar_new_PAF_PTM(self, file):
+        ejecutar_automatizacion_new(file)
+
+    def ejecutar_modificacion_PAF_PTM(self, file):
+        ejecutar_automatizacion_modificacion(file)
+
+    def ejecutar_extraccion_datos_web(self, file):
+        extraer_datos_web("https://appweb.asfi.gob.bo/RMI/Default.aspx", file)  # Reemplaza con la URL correcta
 
 app = QApplication(sys.argv)
 demo = AppDemo()

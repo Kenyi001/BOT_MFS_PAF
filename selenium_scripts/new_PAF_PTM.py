@@ -15,8 +15,24 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
 from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
+def iniciar_sesion(driver, url_inicio_sesion, usuario, contrasena):
+    driver.get(url_inicio_sesion)
 
+    # Esperar hasta que los campos de usuario y contraseña estén presentes
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "MainContent_DefaultContent_txtUsuario")))
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "MainContent_DefaultContent_txtPassword")))
+
+    # Llenar y enviar el formulario de inicio de sesión
+    campo_usuario = driver.find_element(By.ID, "MainContent_DefaultContent_txtUsuario")
+    campo_contrasena = driver.find_element(By.ID, "MainContent_DefaultContent_txtPassword")
+    boton_inicio_sesion = driver.find_element(By.ID, "MainContent_DefaultContent_LoginButton")
+
+    campo_usuario.send_keys(usuario)
+    campo_contrasena.send_keys(contrasena)
+    boton_inicio_sesion.click()
 def seleccionar_ruta_guardado():
     dialogo = QFileDialog()
     ruta_guardado = dialogo.getSaveFileName(caption="Guardar Archivo de Errores", directory=obtener_ruta_escritorio(), filter="Excel Files (*.xlsx)")
@@ -54,29 +70,52 @@ def buscar_localidad(driver, localidad_id, boton_buscar_id, localidad):
         EC.presence_of_element_located((By.ID, localidad_id))
     )
     campo_localidad.clear()
-    campo_localidad.send_keys(localidad)
+
+    # Quitar solo el primer espacio si localidad comienza con un espacio
+    localidad_modificada = localidad[1:] if localidad.startswith(' ') else localidad
+
+    campo_localidad.send_keys(localidad_modificada)
 
     boton_buscar = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.ID, boton_buscar_id))
     )
     boton_buscar.click()
-def seleccionar_localidad(driver, tabla_id, localidad_buscada):
+
+def seleccionar_localidad(driver, tabla_id, localidad_buscada, departamento_verificado):
     WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.ID, tabla_id))
     )
 
+    # Quitar solo el primer espacio si localidad_buscada comienza con un espacio
+    localidad_buscada = localidad_buscada[1:] if localidad_buscada.startswith(' ') else localidad_buscada
+    # Aplica también la misma lógica a departamento_verificado si crees que podría ser necesario
+    departamento_verificado = departamento_verificado[1:] if departamento_verificado.startswith(' ') else departamento_verificado
+
     tabla = driver.find_element(By.ID, tabla_id)
     filas = tabla.find_elements(By.TAG_NAME, "tr")
+    localidad_seleccionada = False  # Inicializa una bandera para seguir si se seleccionó alguna localidad
 
     for fila in filas[1:]:  # Comenzar desde 1 para saltar la fila del encabezado
         celdas = fila.find_elements(By.TAG_NAME, "td")
         if len(celdas) > 1:
-            nombre_localidad = celdas[1].text.strip()  # Segunda celda contiene el nombre de la localidad
+            nombre_localidad = celdas[1].text.strip()
+            datos_ubicacion = celdas[2].text.strip().split('\\')
+            if len(datos_ubicacion) >= 3:
+                departamento = datos_ubicacion[2].strip()  # Elimina espacios adicionales
 
-            # Verifica si el nombre de la localidad coincide exactamente
-            if nombre_localidad.lower() == localidad_buscada.lower():
-                celdas[0].find_element(By.TAG_NAME, "a").click()  # Hacer clic en el enlace "Seleccionar" en la primera celda
-                return
+                if nombre_localidad.lower() == localidad_buscada.strip().lower() and departamento.lower() == departamento_verificado.strip().lower():
+                    print(f"Coincidencia encontrada: {nombre_localidad}, {departamento}. Intentando hacer clic...")
+                    boton_seleccionar = WebDriverWait(celdas[0], 10).until(
+                        EC.element_to_be_clickable((By.TAG_NAME, "a"))
+                    )
+                    boton_seleccionar.click()
+                    localidad_seleccionada = True
+                    break
+
+    if not localidad_seleccionada:
+        print(f"No se encontró la localidad '{localidad_buscada.strip()}' con departamento '{departamento_verificado.strip()}'. Deteniendo el bot.")
+
+
 def seleccionar_dias(driver, dias):
     for dia in dias:
         checkbox = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"td:nth-child({dia}) > label")))
@@ -185,83 +224,65 @@ def determinar_horario_comun(*horarios_semana):
         if horario != horario_referencia:
             return None  # Si algún horario es diferente, no hay horario común
     return horario_referencia  # Todos los horarios son iguales
-def ejecutar_automatizacion_new(ruta_archivo_excel):
-    # Inicializa la lista de registros con errores
-    registros_con_errores = []
-    # Ruta al WebDriver de Edge Dev
-    webdriver_path = WEBDRIVER_PATH
 
-    # Ruta al ejecutable de Edge Dev
-    edge_path = EDGE_BINARY_PATH
 
-    # Ruta al perfil de usuario específico de Edge Dev (ajusta esto según sea necesario)
-    perfil_usuario = USER_PROFILE_PATH
-
-    # Configuración de las opciones para apuntar a Edge Dev y al perfil específico
+def ejecutar_automatizacion_new(ruta_archivo_excel,usuario, contrasena):
+    # Configuración inicial para modo headless
     options = Options()
-    options.binary_location = edge_path
-    options.add_argument(f'user-data-dir={perfil_usuario}')
-
-    # Crear el servicio con la ruta del WebDriver
-    service = Service(webdriver_path)
-
-    # Iniciar Edge Dev con las opciones configuradas
-    print("Iniciando el navegador Edge Dev...")
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    options.binary_location = EDGE_BINARY_PATH
+    options.add_argument(f'user-data-dir={USER_PROFILE_PATH}')  # Si necesitas cargar un perfil de usuario específico
+    service = Service(WEBDRIVER_PATH)
     driver = webdriver.Edge(service=service, options=options)
-    print("Navegador Edge Dev iniciado correctamente.")
 
-    # Lee los datos desde el archivo Excel y forza todas las columnas a ser tratadas como texto
+    print("Iniciando el navegador Edge en modo headless...")
+
+    # Iniciar sesión en la plataforma
+    url_inicio_sesion = "https://appweb.asfi.gob.bo/RMI/Default.aspx"
+    iniciar_sesion(driver, url_inicio_sesion, usuario, contrasena)
+
+    # Asegúrate de ajustar el ID del elemento según tu aplicación para confirmar un inicio de sesión exitoso
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "ID_DEL_ELEMENTO_POST_INICIO_SESION")))
+    print("Inicio de sesión exitoso.")
+
+    # Aquí continúa el procesamiento de tu archivo Excel y la automatización subsecuente
     try:
         df = pd.read_excel(
             ruta_archivo_excel,
-            sheet_name="Cargas_de_Alta_BOT",
-            dtype=str  # Forza todas las columnas a ser tratadas como texto
+            sheet_name="Data",  # Nombre de la Hoja de Cálculo
+            dtype=str  # Forzar todas las columnas a ser tratadas como texto
         )
         print("Lectura de archivo Excel exitosa.")
     except Exception as e:
-        print(f"se abrio correctamente el excel: {e}")
-
-    # URL de la página de inicio de sesión
-    url_inicio_sesion = "https://appweb.asfi.gob.bo/RMI/Default.aspx"
-    # Navegar a la página de inicio de sesión
-    driver.get(url_inicio_sesion)
-    #time.sleep(20)
-
-    # Esperar hasta que la URL cambie a la de la página de inicio
-    nueva_url = "https://appweb.asfi.gob.bo/RMI/Default.aspx"  # URL después del inicio de sesión
-    WebDriverWait(driver, 240).until(EC.url_to_be(nueva_url))
-
-    hora_iniciacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"Inicio de sesión exitoso, URL actualizada a las {hora_iniciacion}.")
-
-    # Contador de filas y numero de procesos
+        print(f"Error al abrir el archivo Excel: {e}")
+        return  # Finaliza la ejecución si hay un error al leer el archivo
     contador_row = 0
-
-    # Inicio de Bucle
-    # Itera a través de las filas del DataFrame
     for index, row in df.iterrows():
         try:
             contador_row += 1
             # Accede a los valores de las columnas que necesitas
-            numero_MEF = row["MEF"]
+            numero_MEF = row["mef"]
             tipo_sucursal = "Punto de Atención Corresponsal No Financiero"
-            nombre_responsable = row["Nombre de Corresponsal"]
-            identificacion_responsable = row["CI"]
-            nombre_comercio = row["Nombre del negocio"]
-            direccion = row["Direccion"]
+            nombre_responsable = row["nombre_corresponsable"]
+            identificacion_responsable = row["nro_carnet"]
+            nombre_comercio = row["nombre_del_negocio"]
+            direccion = row["direccion"]
             nivel_seguridad = "Bajo"
-            telefono = row["Linea Personal PTM"]
+            camaras_seguridad = row["camara_de_seguridad"]
+            telefono = row["linea_personal_corresponsable"]
             fax = "0"
 
             # Coordenadas
-            coordenada_x = row["LATITUD_X"]
-            coordenada_y = row["LONGITUD_Y"]
+            coordenada_x = row["lat_gps"]
+            coordenada_y = row["lng_gps"]
 
             # Servicios
             # servicios_seleccionados = [0, 1, 2]
 
             # Localidad
             localidad_busqueda = row["Localidad"]
+            departamento_verificado = row["departamento"]
 
             # Mensaje deseado
             mensaje_deseado = "Se guardo correctamente el punto de atención"
@@ -306,14 +327,20 @@ def ejecutar_automatizacion_new(ruta_archivo_excel):
             driver.find_element(By.ID, "ctl00_ctl00_MainContent_DefaultContent_ASPxtxtTelefono_I").send_keys(telefono)
             driver.find_element(By.ID, "ctl00_ctl00_MainContent_DefaultContent_ASPxtxtFax_I").send_keys(fax)
 
+            # Interaccion con el campo de Número de Cámaras de Seguridad
+            # Localizar el campo de entrada de cámaras de seguridad por ID
+            campo_camaras_seguridad = driver.find_element(By.ID, "MainContent_DefaultContent_txtCamaras")
+            campo_camaras_seguridad.clear()
+            campo_camaras_seguridad.send_keys(camaras_seguridad)
+
             # Horarios para cada día
-            horario_LUN = dividir_horarios(row["HORARIO_LUNES"])
-            horario_MAR = dividir_horarios(row["HORARIO_MARTES"])
-            horario_MIE = dividir_horarios(row["HORARIO_MIERCOLES"])
-            horario_JUE = dividir_horarios(row["HORARIO_JUEVES"])
-            horario_VIE = dividir_horarios(row["HORARIO_VIERNES"])
-            horario_SAB = dividir_horarios(row["HORARIO_SABADO"])
-            horario_DOM = dividir_horarios(row["HORARIO_DOMINGO"])
+            horario_LUN = dividir_horarios(row["horario_lunes"])
+            horario_MAR = dividir_horarios(row["horario_martes"])
+            horario_MIE = dividir_horarios(row["horario_miercoles"])
+            horario_JUE = dividir_horarios(row["horario_jueves"])
+            horario_VIE = dividir_horarios(row["horario_viernes"])
+            horario_SAB = dividir_horarios(row["horario_sabado"])
+            horario_DOM = dividir_horarios(row["horario_domingo"])
 
             # Procesar y guardar horarios para cada día individualmente
             dias_horarios = [horario_LUN, horario_MAR, horario_MIE, horario_JUE, horario_VIE, horario_SAB, horario_DOM]
@@ -342,7 +369,7 @@ def ejecutar_automatizacion_new(ruta_archivo_excel):
             tabla_id = "MainContent_DefaultContent_ctlPaisLocalidadGeografia2012_gridGeografiaLocalidades"
 
             buscar_localidad(driver, localidad_id, boton_buscar_id, localidad_busqueda)
-            seleccionar_localidad(driver, tabla_id, localidad_busqueda)
+            seleccionar_localidad(driver, tabla_id, localidad_busqueda, departamento_verificado)
 
             # Habilitar y llenar campos de coordenadas
             id_coordenada_x = "MainContent_DefaultContent_txtCoordenadaX"

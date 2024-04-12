@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selector de Automatización</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        .drag-area {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .drag-over {
+            background-color: #f0f0f0;
+        }
+        form > div {
+            margin-bottom: 10px;
+        }
+        #fileList li {
+            list-style-type: none; /* Estilo para la lista de archivos */
+        }
+        #statusIndicator {
+            transition: background-color 0.5s ease; /* Suavizar la transición de color */
+        }
+    </style>
+</head>
+<body>
+    <h2>Selector de Automatización y Archivo</h2>
+
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+        <input type="file" name="files[]" multiple><br>
+        <input type="text" name="username" placeholder="Usuario"><br>
+        <input type="password" name="password" placeholder="Contraseña"><br>
+        <select id="action" name="action">
+            <option value="extraccionDatosWeb">Extracción de Datos Web</option>
+            <option value="newPAFPTM">Nuevo PAF/PTM</option>
+            <option value="modificacionPAFPTM">Modificación PAF/PTM</option>
+        </select><br>
+
+        <!-- Botón para mostrar/ocultar checkboxes -->
+        <button id="showCheckboxesButton" style="display: none;">Mostrar opciones de modificación</button>
+
+        <!-- Lista de checkboxes -->
+        <div id="checkboxesContainer" style="display: none;">
+            <label for="mef">Modificar MEF</label>
+            <input type="checkbox" id="mef" name="mef"><br>
+
+            <label for="tipo_sucursal">Modificar Tipo de Sucursal</label>
+            <input type="checkbox" id="tipo_sucursal" name="tipo_sucursal"><br>
+
+            <label for="nombre_responsable">Modificar Nombre del Responsable</label>
+            <input type="checkbox" id="nombre_responsable" name="nombre_responsable"><br>
+
+            <!-- ... Repite para cada campo ... -->
+
+            <!-- Checkbox para los servicios -->
+            <label for="servicio1">Modificar Servicio 1</label>
+            <input type="checkbox" id="servicio1" name="servicio1"><br>
+
+            <label for="servicio2">Modificar Servicio 2</label>
+            <input type="checkbox" id="servicio2" name="servicio2"><br>
+
+            <label for="servicio3">Modificar Servicio 3</label>
+            <input type="checkbox" id="servicio3" name="servicio3"><br>
+
+            <!-- Checkbox para los horarios -->
+            <label for="horarios">Modificar Horarios</label>
+            <input type="checkbox" id="horarios" name="horarios"><br>
+        </div>
+
+        <!-- Botón de envío -->
+        <input type="submit" value="Subir">
+    </form>
+
+    <div id="statusIndicator" style="height: 50px; width: 50px; border-radius: 25px; background-color: grey; margin-top: 10px;"></div> <!-- Indicador de estado como un "semafóro" -->
+
+    <div id="downloadLinkContainer"></div>
+
+    <script>
+    // Obtén referencias a los elementos
+    var actionSelect = document.getElementById('action');
+    var showCheckboxesButton = document.getElementById('showCheckboxesButton');
+    var checkboxesContainer = document.getElementById('checkboxesContainer');
+    var statusIndicator = document.getElementById('statusIndicator');
+
+    // Muestra el botón cuando se selecciona la opción de "modificaciones"
+    actionSelect.addEventListener('change', function() {
+        if (this.value === 'modificacionPAFPTM') {
+        showCheckboxesButton.style.display = 'block';
+        } else {
+            showCheckboxesButton.style.display = 'none';
+        }
+    });
+    // Muestra u oculta la lista de checkboxes cuando se hace clic en el botón
+    showCheckboxesButton.addEventListener('click', function() {
+        if (checkboxesContainer.style.display === 'none') {
+        checkboxesContainer.style.display = 'block';
+        } else {
+            checkboxesContainer.style.display = 'none';
+        }
+    });
+
+    $(document).ready(function() {
+        const dragArea = document.getElementById('dragArea');
+        const input = dragArea.querySelector('input[type="file"]');
+        const fileList = document.getElementById('fileList');
+
+        dragArea.onclick = () => input.click();
+
+        input.onchange = function() {
+            updateFileList(this.files); // Mostrar archivos seleccionados
+        };
+
+        $('#uploadForm').submit(function(e) {
+            e.preventDefault();
+            submitForm();
+        });
+
+        function updateFileList(files) {
+            fileList.innerHTML = ''; // Limpiar lista actual
+            for (let i = 0; i < files.length; i++) {
+                fileList.innerHTML += `
+                <li>${files[i].name}</li>
+                `; // Añadir cada archivo a la lista
+            }
+        }
+        function submitForm() {
+            var formData = new FormData($('#uploadForm')[0]);
+            statusIndicator.style.backgroundColor = 'green'; // Indicador "proceso iniciado"
+
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                beforeSend: function() {
+                    statusIndicator.style.backgroundColor = 'yellow'; // Cambio de color para indicar "en proceso"
+                },
+                success: function(data) {
+                    alert('Archivos cargados con éxito: ' + data.message);
+                    statusIndicator.style.backgroundColor = 'red'; // Cambio de color para indicar "completado con éxito"
+
+                    // Añadir enlace de descarga
+                    var downloadLink = $('<a>')
+                        .attr('href', data.download_url)
+                        .text('Descargar Archivo Procesado');
+                    $('#downloadLinkContainer').append(downloadLink);
+
+                    // Iniciar descarga automáticamente
+                    var autoDownloadLink = document.createElement('a');
+                    autoDownloadLink.href = data.download_url;
+                    autoDownloadLink.setAttribute('download', '');
+                    document.body.appendChild(autoDownloadLink);
+                    autoDownloadLink.click();
+                    document.body.removeChild(autoDownloadLink);
+                },
+                error: function(xhr, status, error) {
+                    alert('Error al cargar los archivos: ' + xhr.responseText + status + error);
+                    statusIndicator.style.backgroundColor = 'red'; // Cambio de color para indicar "error"
+                }
+            });
+        }
+
+        $('#uploadForm').submit(function(e){
+            e.preventDefault();
+            submitForm();
+        });
+    });
+    </script>
+
+</body>
+</html>
