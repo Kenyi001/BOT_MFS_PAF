@@ -2,7 +2,6 @@ import os
 from werkzeug.utils import secure_filename
 from flask import Flask, request, jsonify, render_template, send_from_directory, url_for
 from selenium_scripts.new_PAF_PTM import ejecutar_automatizacion_new
-from selenium_scripts.modificacion_PAF_PTM import ejecutar_automatizacion_modificacion
 from selenium_scripts.extraccion_datos_web import extraer_datos_web
 from selenium_scripts.Modification_PAF_PTM import ejecutar_automatizacion_modification_new
 

@@ -1,0 +1,44 @@
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 20px;
+    }
+    h2 {
+        color: #333;
+    }
+    form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+        width: 100%;
+        padding: 8px;
+        margin-top: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+    button {
+        background-color: #ffc000;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #d8a200;
+    }
+    #statusIndicator {
+        transition: background-color 0.5s ease;
+        height: 50px;
+        width: 100%;
+        border-radius: 10px;
+        background-color: grey;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+    }
