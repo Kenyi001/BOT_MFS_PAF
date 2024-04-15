@@ -12,6 +12,56 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+def buscar_localidad(driver, localidad_id, boton_buscar_id, localidad):
+    campo_localidad = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, localidad_id))
+    )
+    campo_localidad.clear()
+
+    # Quitar solo el primer espacio si localidad comienza con un espacio
+    localidad_modificada = localidad[1:] if localidad.startswith(' ') else localidad
+
+    campo_localidad.send_keys(localidad_modificada)
+
+    boton_buscar = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.ID, boton_buscar_id))
+    )
+    boton_buscar.click()
+
+def seleccionar_localidad(driver, tabla_id, localidad_buscada, departamento_verificado):
+    WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, tabla_id))
+    )
+
+    # Quitar solo el primer espacio si localidad_buscada comienza con un espacio
+    localidad_buscada = localidad_buscada[1:] if localidad_buscada.startswith(' ') else localidad_buscada
+    # Aplica también la misma lógica a departamento_verificado si crees que podría ser necesario
+    departamento_verificado = departamento_verificado[1:] if departamento_verificado.startswith(' ') else departamento_verificado
+
+    tabla = driver.find_element(By.ID, tabla_id)
+    filas = tabla.find_elements(By.TAG_NAME, "tr")
+    localidad_seleccionada = False  # Inicializa una bandera para seguir si se seleccionó alguna localidad
+
+    for fila in filas[1:]:  # Comenzar desde 1 para saltar la fila del encabezado
+        celdas = fila.find_elements(By.TAG_NAME, "td")
+        if len(celdas) > 1:
+            nombre_localidad = celdas[1].text.strip()
+            datos_ubicacion = celdas[2].text.strip().split('\\')
+            if len(datos_ubicacion) >= 3:
+                departamento = datos_ubicacion[2].strip()  # Elimina espacios adicionales
+
+                if nombre_localidad.lower() == localidad_buscada.strip().lower() and departamento.lower() == departamento_verificado.strip().lower():
+                    print(f"Coincidencia encontrada: {nombre_localidad}, {departamento}. Intentando hacer clic...")
+                    boton_seleccionar = WebDriverWait(celdas[0], 10).until(
+                        EC.element_to_be_clickable((By.TAG_NAME, "a"))
+                    )
+                    boton_seleccionar.click()
+                    localidad_seleccionada = True
+                    break
+
+    if not localidad_seleccionada:
+        print(f"No se encontró la localidad '{localidad_buscada.strip()}' con departamento '{departamento_verificado.strip()}'. Deteniendo el bot.")
+
 def es_hora_mayor_o_igual(hora, hora_comparacion="23:00"):
     hora_formato = datetime.strptime(hora, "%H:%M")
     hora_comparacion_formato = datetime.strptime(hora_comparacion, "%H:%M")
@@ -69,8 +119,57 @@ def establecer_horario(driver, tipo_horario_text, entrada1, salida1, entrada2, s
     driver.execute_script(f"document.getElementById('{prefijo_id}timeEntrada2_I').value = '{entrada2}';")
     driver.find_element(By.ID, "MainContent_DefaultContent_timeSalida2_I").click()
     driver.execute_script(f"document.getElementById('{prefijo_id}timeSalida2_I').value = '{salida2}';")
+def buscar_localidad(driver, localidad_id, boton_buscar_id, localidad):
+    campo_localidad = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, localidad_id))
+    )
+    campo_localidad.clear()
 
-def ejecutar_automatizacion_modificacion(ruta_excel):
+    # Quitar solo el primer espacio si localidad comienza con un espacio
+    localidad_modificada = localidad[1:] if localidad.startswith(' ') else localidad
+
+    campo_localidad.send_keys(localidad_modificada)
+
+    boton_buscar = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.ID, boton_buscar_id))
+    )
+    boton_buscar.click()
+
+def seleccionar_localidad(driver, tabla_id, localidad_buscada, departamento_verificado):
+    WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, tabla_id))
+    )
+
+    # Quitar solo el primer espacio si localidad_buscada comienza con un espacio
+    localidad_buscada = localidad_buscada[1:] if localidad_buscada.startswith(' ') else localidad_buscada
+    # Aplica también la misma lógica a departamento_verificado si crees que podría ser necesario
+    departamento_verificado = departamento_verificado[1:] if departamento_verificado.startswith(' ') else departamento_verificado
+
+    tabla = driver.find_element(By.ID, tabla_id)
+    filas = tabla.find_elements(By.TAG_NAME, "tr")
+    localidad_seleccionada = False  # Inicializa una bandera para seguir si se seleccionó alguna localidad
+
+    for fila in filas[1:]:  # Comenzar desde 1 para saltar la fila del encabezado
+        celdas = fila.find_elements(By.TAG_NAME, "td")
+        if len(celdas) > 1:
+            nombre_localidad = celdas[1].text.strip()
+            datos_ubicacion = celdas[2].text.strip().split('\\')
+            if len(datos_ubicacion) >= 3:
+                departamento = datos_ubicacion[2].strip()  # Elimina espacios adicionales
+
+                if nombre_localidad.lower() == localidad_buscada.strip().lower() and departamento.lower() == departamento_verificado.strip().lower():
+                    print(f"Coincidencia encontrada: {nombre_localidad}, {departamento}. Intentando hacer clic...")
+                    boton_seleccionar = WebDriverWait(celdas[0], 10).until(
+                        EC.element_to_be_clickable((By.TAG_NAME, "a"))
+                    )
+                    boton_seleccionar.click()
+                    localidad_seleccionada = True
+                    break
+
+    if not localidad_seleccionada:
+        print(f"No se encontró la localidad '{localidad_buscada.strip()}' con departamento '{departamento_verificado.strip()}'. Deteniendo el bot.")
+
+def ejecutar_automatizacion_modificacion(ruta_excel, username, password):
     try:
         # Configuración del WebDriver de Edge
         webdriver_path = WEBDRIVER_PATH
@@ -87,42 +186,50 @@ def ejecutar_automatizacion_modificacion(ruta_excel):
         # Lee los datos desde el archivo Excel y forza todas las columnas a ser tratadas como texto
         df = pd.read_excel(
             ruta_excel,
-            sheet_name="Cargas_de_Alta_BOT",
+            sheet_name="Modificar",
             dtype=str  # Forza todas las columnas a ser tratadas como texto
         )
 
         driver.get("https://appweb.asfi.gob.bo/RMI/Login.aspx?ReturnUrl=%2fRMI%2fDefault.aspx")
 
-        try:
-            nueva_url = "https://appweb.asfi.gob.bo/RMI/Default.aspx"
-            WebDriverWait(driver, 60).until(EC.url_to_be(nueva_url))
-            hora_iniciacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"Inicio de sesión exitoso, URL actualizada a las {hora_iniciacion}.")
-        except TimeoutException:
-            print("Tiempo de espera excedido para el cambio de URL después del inicio de sesión.")
+        # Esperar hasta que la URL cambie a la de la página de inicio
+        nueva_url = "https://appweb.asfi.gob.bo/RMI/Default.aspx"  # URL después del inicio de sesión
+        WebDriverWait(driver, 240).until(EC.url_to_be(nueva_url))
+
+        # try:
+        #     nueva_url = "https://appweb.asfi.gob.bo/RMI/Default.aspx"
+        #     WebDriverWait(driver, 60).until(EC.url_to_be(nueva_url))
+        #     hora_iniciacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        #     print(f"Inicio de sesión exitoso, URL actualizada a las {hora_iniciacion}.")
+        # except TimeoutException:
+        #     print("Tiempo de espera excedido para el cambio de URL después del inicio de sesión.")
 
         contador_row = 0
         for index, row in df.iterrows():
             contador_row += 1
-            mef = str(row['MEF'])[-4:]
+            mef = str(row['mef'])[-4:]
             # nueva_direccion = row['DIRECCIONES']
             # nombre_comercio = row['NOMBRE_PTM']
 
-            # Asignaciones correctas dentro del bucle
-            horario_entrada1_SAB = row["HORARIO_SAB_MAÑ_INI"]
-            horario_salida1_SAB = row["HORARIO_SAB_MAÑ_FIN"]
-            horario_entrada2_SAB = row["HORARIO_SAB_TAR_INI"]
-            horario_salida2_SAB = row["HORARIO_SAB_TAR_FIN"]
-            horario_entrada1_DOM = row["HORARIO_DOM_MAÑ_INI"]
-            horario_salida1_DOM = row["HORARIO_DOM_MAÑ_FIN"]
-            horario_entrada2_DOM = row["HORARIO_DOM_TAR_INI"]
-            horario_salida2_DOM = row["HORARIO_DOM_TAR_FIN"]
-            tipo_de_horario_SAB = row["TIPO_HORARIO_SAB"]
-            tipo_de_horario_DOM = row["TIPO_HORARIO_DOM"]
+            # # Asignaciones correctas dentro del bucle
+            # horario_entrada1_SAB = row["HORARIO_SAB_MAÑ_INI"]
+            # horario_salida1_SAB = row["HORARIO_SAB_MAÑ_FIN"]
+            # horario_entrada2_SAB = row["HORARIO_SAB_TAR_INI"]
+            # horario_salida2_SAB = row["HORARIO_SAB_TAR_FIN"]
+            # horario_entrada1_DOM = row["HORARIO_DOM_MAÑ_INI"]
+            # horario_salida1_DOM = row["HORARIO_DOM_MAÑ_FIN"]
+            # horario_entrada2_DOM = row["HORARIO_DOM_TAR_INI"]
+            # horario_salida2_DOM = row["HORARIO_DOM_TAR_FIN"]
+            # tipo_de_horario_SAB = row["TIPO_HORARIO_SAB"]
+            # tipo_de_horario_DOM = row["TIPO_HORARIO_DOM"]
+            #
+            # # Horario Lunes-Viernes, Sábado y Domingo
+            # horario_sabado = horario_entrada1_SAB + "-" + horario_salida1_SAB + "-" + horario_entrada2_SAB + "-" + horario_salida2_SAB
+            # horario_domingo = horario_entrada1_DOM + "-" + horario_salida1_DOM + "-" + horario_entrada2_DOM + "-" + horario_salida2_DOM
 
-            # Horario Lunes-Viernes, Sábado y Domingo
-            horario_sabado = horario_entrada1_SAB + "-" + horario_salida1_SAB + "-" + horario_entrada2_SAB + "-" + horario_salida2_SAB
-            horario_domingo = horario_entrada1_DOM + "-" + horario_salida1_DOM + "-" + horario_entrada2_DOM + "-" + horario_salida2_DOM
+            # Localidad
+            localidad_busqueda = row["Localidad"]
+            departamento_verificado = row["departamento"]
 
             driver.get("https://appweb.asfi.gob.bo/RMI/RegistroParticipante/puntoAtencion.aspx")
 
@@ -138,28 +245,28 @@ def ejecutar_automatizacion_modificacion(ruta_excel):
             boton_editar = driver.find_element(By.ID, "MainContent_DefaultContent_btnEditar")
             boton_editar.click()
 
-            # Verificar y configurar horario para Sábado
-            if tipo_de_horario_SAB != "-Sin Atención-":
-                buscar_y_eliminar_horario(driver, "Sabado")  # Eliminar horario de sábado
-                seleccionar_dias(driver, [6])
-                establecer_horario(driver, tipo_de_horario_SAB, horario_entrada1_SAB, horario_salida1_SAB,
-                                   horario_entrada2_SAB, horario_salida2_SAB, 'MainContent_DefaultContent_')
-
-                # Llamar a la función para guardar y realizar acciones basadas en el horario
-                realizar_acciones_basedo_en_horario(driver, horario_salida2_SAB)
-
-            # Verificar y configurar horario para Domingo
-            if tipo_de_horario_DOM != "-Sin Atención-":
-                buscar_y_eliminar_horario(driver, "Domingo")  # Eliminar horario de domingo
-                if horario_domingo != horario_sabado and tipo_de_horario_SAB != "-Sin Atención-":
-                    WebDriverWait(driver, 10).until(
-                        EC.element_to_be_clickable((By.ID, "MainContent_DefaultContent_btnAdicionarHorario"))).click()
-                seleccionar_dias(driver, [7])
-                establecer_horario(driver, tipo_de_horario_DOM, horario_entrada1_DOM, horario_salida1_DOM,
-                                   horario_entrada2_DOM, horario_salida2_DOM, 'MainContent_DefaultContent_')
-
-                # Llamar a la función para guardar y realizar acciones basadas en el horario
-                realizar_acciones_basedo_en_horario(driver, horario_salida2_DOM)
+            # # Verificar y configurar horario para Sábado
+            # if tipo_de_horario_SAB != "-Sin Atención-":
+            #     buscar_y_eliminar_horario(driver, "Sabado")  # Eliminar horario de sábado
+            #     seleccionar_dias(driver, [6])
+            #     establecer_horario(driver, tipo_de_horario_SAB, horario_entrada1_SAB, horario_salida1_SAB,
+            #                        horario_entrada2_SAB, horario_salida2_SAB, 'MainContent_DefaultContent_')
+            #
+            #     # Llamar a la función para guardar y realizar acciones basadas en el horario
+            #     realizar_acciones_basedo_en_horario(driver, horario_salida2_SAB)
+            #
+            # # Verificar y configurar horario para Domingo
+            # if tipo_de_horario_DOM != "-Sin Atención-":
+            #     buscar_y_eliminar_horario(driver, "Domingo")  # Eliminar horario de domingo
+            #     if horario_domingo != horario_sabado and tipo_de_horario_SAB != "-Sin Atención-":
+            #         WebDriverWait(driver, 10).until(
+            #             EC.element_to_be_clickable((By.ID, "MainContent_DefaultContent_btnAdicionarHorario"))).click()
+            #     seleccionar_dias(driver, [7])
+            #     establecer_horario(driver, tipo_de_horario_DOM, horario_entrada1_DOM, horario_salida1_DOM,
+            #                        horario_entrada2_DOM, horario_salida2_DOM, 'MainContent_DefaultContent_')
+            #
+            #     # Llamar a la función para guardar y realizar acciones basadas en el horario
+            #     realizar_acciones_basedo_en_horario(driver, horario_salida2_DOM)
 
             # campo_direccion = driver.find_element(By.ID, "MainContent_DefaultContent_txtDireccion")
             # campo_direccion.clear()
@@ -178,6 +285,14 @@ def ejecutar_automatizacion_modificacion(ruta_excel):
 
             # Ejecuta un script de JavaScript para cambiar el valor del elemento
             #driver.execute_script(f"document.getElementById('{id_elemento_nombre_comercio}').value = '{nombre_comercio}';")
+
+            # Uso de las funciones
+            localidad_id = "MainContent_DefaultContent_ctlPaisLocalidadGeografia2012_txtLocalidad"
+            boton_buscar_id = "MainContent_DefaultContent_ctlPaisLocalidadGeografia2012_btnBuscar"
+            tabla_id = "MainContent_DefaultContent_ctlPaisLocalidadGeografia2012_gridGeografiaLocalidades"
+
+            buscar_localidad(driver, localidad_id, boton_buscar_id, localidad_busqueda)
+            seleccionar_localidad(driver, tabla_id, localidad_busqueda, departamento_verificado)
 
             # time.sleep(60)
             driver.find_element(By.ID, "MainContent_DefaultContent_btnGrabar").click()

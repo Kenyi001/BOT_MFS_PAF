@@ -5,6 +5,7 @@ import os
 WEBDRIVER_PATH = os.getenv('EDGE_PATH')
 EDGE_BINARY_PATH = os.getenv('EDGE_DRIVER_PATH')
 USER_PROFILE_PATH = os.getenv('EDGE_PROFILE_PATH')
+URL_INICIO_SESION = 'https://appweb.asfi.gob.bo/RMI/Default.aspx'
 
 # Asegúrate de que las variables no estén vacías
 if not all([WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH]):
