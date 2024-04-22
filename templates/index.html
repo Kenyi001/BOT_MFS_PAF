@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BOT ASFI</title>
-    <link rel="icon" href="../Static/headImg.webp">
-    <link rel="stylesheet" href="/Static/style.css">
+    <link rel="icon" href="{{ url_for('static', filename='headImg.webp') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 <body>
     <h2>Selector de Automatización y Archivo</h2>
@@ -15,8 +17,9 @@
         <input type="password" name="password" placeholder="Contraseña">
         <select id="action" name="action">
             <option value="newPAFPTM">Nuevo PAF/PTM</option>
-<!--            <option value="extraccionDatosWeb">Extracción de Datos Web</option>-->
 <!--            <option value="modificacionPAFPTM">Modificación PAF/PTM</option>-->
+            <option value="extraccionDatosWeb">Extracción de Datos Web</option>
+
         </select>
         <button type="button" id="showCheckboxesButton" style="display: none;">Mostrar opciones de modificación</button>
         <div id="checkboxesContainer" style="display: none;">
@@ -25,10 +28,18 @@
         </div>
         <button type="submit">Ejecutar</button>
     </form>
+
+    <button id="downloadButton" style="display: none;">Descargar archivo procesado</button>
+
     <div id="statusIndicator">
         <span id="statusText">Esperando...</span>
     </div>
 
-    <script src="/Static/script.js"></script>
+    <div id="spinner" class="spinner" style="display: none;"></div>
+
+    <div id="preloader"></div>
+
+    <script src="{{url_for('static', filename='script.js') }}"></script>
+<!--    <script src="../Static/script.js"></script>-->
 </body>
 </html>

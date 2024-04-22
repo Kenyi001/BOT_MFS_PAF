@@ -6,6 +6,7 @@ import pandas as pd
 import openpyxl
 # Importaciones adicionales
 from PyQt5.QtWidgets import QFileDialog
+from flask import jsonify
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
@@ -397,7 +398,8 @@ def ejecutar_automatizacion_modification_new(ruta_archivo_excel,usuario, contras
             # time.sleep(20)
         except Exception as e:
             print(f"Error en la fila {index}: {e}")
-            break
+            return jsonify({'error': 'An error occurred while processing the files', 'details': f"Error en la fila {index}: {e}"}), 500
+
 
     # Cerrar el navegador
     hora_finalizacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

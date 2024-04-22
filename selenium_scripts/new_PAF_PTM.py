@@ -5,6 +5,7 @@ from datetime import datetime
 import pandas as pd
 import openpyxl
 # Importaciones adicionales
+from flask import jsonify, Response
 from PyQt5.QtWidgets import QFileDialog
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -226,7 +227,7 @@ def determinar_horario_comun(*horarios_semana):
     return horario_referencia  # Todos los horarios son iguales
 
 
-def ejecutar_automatizacion_new(ruta_archivo_excel,usuario, contrasena):
+def ejecutar_automatizacion_new(url_inicio_sesion, ruta_archivo_excel, usuario, contrasena):
     # Configuración inicial para modo headless
     options = Options()
     options.add_argument("--headless")
@@ -239,11 +240,9 @@ def ejecutar_automatizacion_new(ruta_archivo_excel,usuario, contrasena):
     print("Iniciando el navegador Edge en modo headless...")
 
     # Iniciar sesión en la plataforma
-    url_inicio_sesion = "https://appweb.asfi.gob.bo/RMI/Default.aspx"
+    # url_inicio_sesion = "https://appweb.asfi.gob.bo/RMI/Default.aspx"
     iniciar_sesion(driver, url_inicio_sesion, usuario, contrasena)
 
-    # Asegúrate de ajustar el ID del elemento según tu aplicación para confirmar un inicio de sesión exitoso
-    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "ID_DEL_ELEMENTO_POST_INICIO_SESION")))
     print("Inicio de sesión exitoso.")
 
     # Aquí continúa el procesamiento de tu archivo Excel y la automatización subsecuente
@@ -258,6 +257,9 @@ def ejecutar_automatizacion_new(ruta_archivo_excel,usuario, contrasena):
         print(f"Error al abrir el archivo Excel: {e}")
         return  # Finaliza la ejecución si hay un error al leer el archivo
     contador_row = 0
+    errores = []
+    max_retries = 3
+
     for index, row in df.iterrows():
         try:
             contador_row += 1
@@ -345,6 +347,7 @@ def ejecutar_automatizacion_new(ruta_archivo_excel,usuario, contrasena):
             # Procesar y guardar horarios para cada día individualmente
             dias_horarios = [horario_LUN, horario_MAR, horario_MIE, horario_JUE, horario_VIE, horario_SAB, horario_DOM]
 
+
             for num_dia, horarios_dia in enumerate(dias_horarios, start=1):
 
                 tipo_horario, horarios = horarios_dia
@@ -353,9 +356,6 @@ def ejecutar_automatizacion_new(ruta_archivo_excel,usuario, contrasena):
                     # Seleccionar el día
                     seleccionar_dias(driver, [num_dia])
 
-                    # Establecer y guardar el horario
-                    # if tipo_horario not in ["-Sin Atención-", "24 horas"]:
-                    #     establecer_horario(driver, tipo_horario, horarios, 'MainContent_DefaultContent_')
                     guardar_horario(driver, tipo_horario, horarios, 'MainContent_DefaultContent_')
 
             # Seleccionar servicios
@@ -390,18 +390,20 @@ def ejecutar_automatizacion_new(ruta_archivo_excel,usuario, contrasena):
 
             # Verificar si el mensaje deseado está presente en el texto
             if mensaje_deseado in mensaje_texto:
-                print("El mensaje deseado está presente:", mensaje_texto, " - ", contador_row, "-",numero_MEF)
+                print("El proceso se completó correctamente.")
             else:
-                print("El mensaje deseado no está presente:", mensaje_texto, " - ", contador_row, "-",numero_MEF)
-
-            # time.sleep(20)
+                response = jsonify({'error': 'An error occurred', 'details': f'Error at MEF number {numero_MEF}: {str(errores)}', 'mef': numero_MEF})
+                return Response(response, status=502)
         except Exception as e:
-            print(f"Error en la fila {index}: {e}")
-            break
+            print(f"Error at MEF number {numero_MEF}: {str(e)}")
+            print(f"Exception type: {type(e)}")
+            import traceback
+            print("Exception traceback:")
+            print(traceback.format_exc())
+            errores.append(f"Error en la fila {contador_row}: {str(e)}")
+            response = jsonify({'error': 'An error occurred while processing the files', 'details': errores, 'mef': numero_MEF})
+            return Response(response, status=501)
 
-    # Cerrar el navegador
-    hora_finalizacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"Inicio de sesión exitoso, URL actualizada a las {hora_finalizacion}.")
-    print("El Bot a Finalizado con exito!, todos los Reguistros PAF")
-
+    response = jsonify({'message': 'All files processed successfully'})
+    return Response(response, status=200)
     driver.quit()

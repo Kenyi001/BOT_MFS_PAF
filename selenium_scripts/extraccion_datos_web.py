@@ -12,9 +12,22 @@ from datetime import datetime
 from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
 
 # Variables para el usuario y contraseña
-usuario = "sanguezad@tigo.net.bo"
-contrasena = "Cessna152lr!"
+def buscar_y_editar_mef(driver, mef):
+    # Ingresar el MEF en el campo de búsqueda
+    input_mef = driver.find_element(By.ID, "MainContent_DefaultContent_gridPuntoAtencion1_DXFREditorcol3_I")
+    input_mef.clear()
+    input_mef.send_keys(mef)
+    time.sleep(3)
 
+
+    # Esperar a que el botón de edición esté visible
+    wait = WebDriverWait(driver, 20)
+    # Esperar a que el botón de edición esté interactuable
+    wait.until(EC.element_to_be_clickable((By.ID, "MainContent_DefaultContent_btnEditar")))
+
+    # Hacer clic en el botón de edición
+    boton_editar = driver.find_element(By.ID, "MainContent_DefaultContent_btnEditar")
+    boton_editar.click()
 
 def extraer_datos_web(url, archivo_excel, usuario, contrasena):
     # Configuración del WebDriver de Edge para modo headless
@@ -87,31 +100,21 @@ def extraer_datos_web(url, archivo_excel, usuario, contrasena):
 
         # Generar el nombre del archivo con formato de fecha y hora
         formato_fecha_hora = datetime.now().strftime("%Y%m%d_%H%M")
-        nombre_archivo_salida = f"D:\\Comercial - Daniel\\BOT_MFS_PAF\\data\\datos_extraidos_{formato_fecha_hora}.xlsx"
+        # Define la ruta de almacenamiento en la parte superior de tu script
+        RUTA_ALMACENAMIENTO = "data/Reports"
+
+        # Luego, puedes usar esta variable al generar el nombre del archivo de salida
+        nombre_archivo_salida = f"{RUTA_ALMACENAMIENTO}/datos_extraidos_{formato_fecha_hora}.xlsx"
 
         # Guardar los datos extraídos en un nuevo archivo Excel
         df_extraido.to_excel(nombre_archivo_salida, index=False)
 
-        print(f"Datos extraídos guardados en '{nombre_archivo_salida}'.")
+        #print(f"Datos extraídos guardados en '{nombre_archivo_salida}'.")
+    except Exception as e:
+        print(f"Ocurrió un error inesperado: {str(e)}")
 
     finally:
+        return nombre_archivo_salida
         # Cerrar el navegador al finalizar
         driver.quit()
 
-
-def buscar_y_editar_mef(driver, mef):
-    # Ingresar el MEF en el campo de búsqueda
-    input_mef = driver.find_element(By.ID, "MainContent_DefaultContent_gridPuntoAtencion1_DXFREditorcol3_I")
-    input_mef.clear()
-    input_mef.send_keys(mef)
-    time.sleep(3)
-
-
-    # Esperar a que el botón de edición esté visible
-    wait = WebDriverWait(driver, 20)
-    # Esperar a que el botón de edición esté interactuable
-    wait.until(EC.element_to_be_clickable((By.ID, "MainContent_DefaultContent_btnEditar")))
-
-    # Hacer clic en el botón de edición
-    boton_editar = driver.find_element(By.ID, "MainContent_DefaultContent_btnEditar")
-    boton_editar.click()
