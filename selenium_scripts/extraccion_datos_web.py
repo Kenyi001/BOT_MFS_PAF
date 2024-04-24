@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from datetime import datetime
-from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
+from config import WEBDRIVER_PATH, NAV_BINARY_PATH, USER_PROFILE_PATH
 
 # Variables para el usuario y contraseña
 def buscar_y_editar_mef(driver, mef):
@@ -32,7 +32,7 @@ def buscar_y_editar_mef(driver, mef):
 def extraer_datos_web(url, archivo_excel, usuario, contrasena):
     # Configuración del WebDriver de Edge para modo headless
     options = Options()
-    options.binary_location = EDGE_BINARY_PATH
+    options.binary_location = NAV_BINARY_PATH
     options.add_argument(f'user-data-dir={USER_PROFILE_PATH}')
     options.add_argument("--headless")  # Ejecutar en modo headless
     options.add_argument("--disable-gpu")  # Desactivar el GPU

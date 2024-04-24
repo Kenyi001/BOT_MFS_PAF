@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory,
 from selenium_scripts.new_PAF_PTM import ejecutar_automatizacion_new
 from selenium_scripts.extraccion_datos_web import extraer_datos_web
 from selenium_scripts.Modification_PAF_PTM import ejecutar_automatizacion_modification_new
-from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH, URL_INICIO_SESION
+from config import WEBDRIVER_PATH, NAV_BINARY_PATH, USER_PROFILE_PATH, URL_INICIO_SESION
 app = Flask(__name__)
 
 download_url = None

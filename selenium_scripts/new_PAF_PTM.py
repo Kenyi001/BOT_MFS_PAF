@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
-from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
+from config import WEBDRIVER_PATH, NAV_BINARY_PATH, USER_PROFILE_PATH
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
@@ -232,7 +232,7 @@ def ejecutar_automatizacion_new(url_inicio_sesion, ruta_archivo_excel, usuario, 
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
-    options.binary_location = EDGE_BINARY_PATH
+    options.binary_location = NAV_BINARY_PATH
     options.add_argument(f'user-data-dir={USER_PROFILE_PATH}')  # Si necesitas cargar un perfil de usuario específico
     service = Service(WEBDRIVER_PATH)
     driver = webdriver.Edge(service=service, options=options)

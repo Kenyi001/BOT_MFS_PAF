@@ -1,7 +1,7 @@
 import sys
 import time
 import pandas as pd
-from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
+from config import WEBDRIVER_PATH, NAV_BINARY_PATH, USER_PROFILE_PATH
 from selenium import webdriver
 from datetime import datetime
 from selenium.webdriver.common.by import By
@@ -173,7 +173,7 @@ def ejecutar_automatizacion_modificacion(ruta_excel, username, password):
     try:
         # Configuración del WebDriver de Edge
         webdriver_path = WEBDRIVER_PATH
-        edge_dev_path = EDGE_BINARY_PATH
+        edge_dev_path = NAV_BINARY_PATH
         perfil_usuario = USER_PROFILE_PATH
 
         options = Options()

@@ -1,8 +1,2 @@
 werkzeug - WARNING -  * Debugger is active!
-werkzeug - INFO -  * Debugger PIN: 117-237-795
-werkzeug - INFO - 127.0.0.1 - - [22/Apr/2024 11:38:21] "GET / HTTP/1.1" 200 -
-werkzeug - INFO - 127.0.0.1 - - [22/Apr/2024 11:38:21] "GET /static/style.css HTTP/1.1" 200 -
-werkzeug - INFO - 127.0.0.1 - - [22/Apr/2024 11:38:21] "GET /static/script.js HTTP/1.1" 200 -
-werkzeug - INFO - 127.0.0.1 - - [22/Apr/2024 11:38:22] "GET /static/headImg.webp HTTP/1.1" 200 -
-root - ERROR - Error processing Planilla de Control de Altas PTMs_Ene2024 (3).xlsx: 'Response' object is not iterable
-werkzeug - INFO - 127.0.0.1 - - [22/Apr/2024 11:39:30] "[35m[1mPOST /upload HTTP/1.1[0m" 502 -
+werkzeug - INFO -  * Debugger PIN: 414-430-516
