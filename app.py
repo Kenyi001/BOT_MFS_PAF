@@ -7,7 +7,8 @@ from selenium_scripts.Modification_PAF_PTM import ejecutar_automatizacion_modifi
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'D:\\Comercial - Daniel\\BOT_MFS_PAF\\data'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'data')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
