@@ -53,7 +53,7 @@ def iniciar_sesion(driver, url_inicio_sesion, usuario, contrasena):
 
 def buscar_y_editar_mef(driver, mef):
     """Busca y edita el MEF especificado en el formulario web."""
-    intentos = 2  # Número de reintentos permitidos
+    intentos = 1  # Número de reintentos permitidos
     for intento in range(intentos):
         try:
             driver.get(URL_REGISTRO_PAF)
@@ -260,13 +260,13 @@ def extraer_datos_web(url, archivo_excel, usuario, contrasena):
         df_extraido = pd.DataFrame(datos_extraidos)
 
         # Crear carpeta para guardar el archivo si no existe
-        ruta_carpeta = os.path.join(ruta_actual, 'datos_extraidos')
+        ruta_carpeta = os.path.join(ruta_actual, 'Reporte data PTM')
         if not os.path.exists(ruta_carpeta):
             os.makedirs(ruta_carpeta)
 
         # Generar el nombre del archivo con formato de fecha y hora
         formato_fecha_hora = datetime.now().strftime("%Y%m%d_%H%M")
-        nombre_archivo = f"datos_extraidos_{formato_fecha_hora}.xlsx"
+        nombre_archivo = f"PTM_extraidos_{formato_fecha_hora}.xlsx"
         nombre_archivo_salida = os.path.join(ruta_carpeta, nombre_archivo)
 
         # Guardar los datos extraídos en un nuevo archivo Excel
@@ -274,10 +274,12 @@ def extraer_datos_web(url, archivo_excel, usuario, contrasena):
 
         print(f"Datos extraídos guardados en '{nombre_archivo_salida}'.")
 
-        if error:
-            mostrar_ventana_emergente()
+
 
     except Exception as e:
         print(f"Ocurrió un error inesperado: {str(e)}")
     finally:
         driver.quit()
+
+        if error:
+            mostrar_ventana_emergente()

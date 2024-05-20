@@ -1,7 +1,6 @@
-# BOT de Automatizacion ASFI
+# BOT PTM - ASFI
 
-Un bot con la capacidad de realizar la *Subida* y *Modificacion* de datos de los PAF (PTM) en cara a la plataforma de la ASFI
-, envia formulario (Alta PTM) y modifica datos de los PAF (cambio de datos de un PTM).
+Esta aplicación está diseñada para automatizar tareas específicas relacionadas con la gestión de Puntos de Transferencia Monetaria (PTM) y la extracción de datos web. Ofrece una interfaz gráfica amigable que permite al usuario interactuar fácilmente con sus funcionalidades.
 
 ## Comenzando
 
@@ -9,88 +8,97 @@ Estas instrucciones te proporcionarán una copia del proyecto en funcionamiento 
 
 ### Prerrequisitos
 
-Lo que necesitas para instalar el software y cómo instalarlos.
+Lo que necesitas para instalar el software:
 
-python >= 3.6 <br> pip >= 19.0
+- Python 3.7+
+- pip (gestor de paquetes de Python)
+- Navegador Microsoft Edge
+- Microsoft Edge WebDriver
 
+se desarrollo en el ide de **PyCharm 2024.1**
 ### Instalación
 
-Una serie de ejemplos paso a paso que te dicen cómo hacer un entorno de desarrollo en ejecución.
+1. Clona el repositorio en tu máquina local:
 
-Clona el repositorio:
+   ```sh
+   git clone https://github.com/tu_usuario/tu_proyecto.git
+cd tu_proyecto
+2. Crea y activa un entorno virtual:
 
-```bash
-git clone [URL del repositorio]
+   ```sh
+   python -m venv venv
+source venv/bin/activate  # En Windows usa `venv\Scripts\activate`
+3. Instala las dependencias necesarias:
 
-cd [nombre del repositorio]
-```
-Instala las dependencias:
+   ```sh
+   pip install -r requirements.txt
+4. Configura los archivos de configuración:
 
-```bash
-pip install -r requirements.txt
-```
+Asegúrate de tener config.py con las rutas correctas para 
 
-### Configuración
+WEBDRIVER_PATH, EDGE_BINARY_PATH, y USER_PROFILE_PATH.
 
-Para que el bot funcione correctamente, necesitas configurar las siguientes variables de entorno:
+Coloca el WebDriver de Edge en la ruta especificada en config.py.
 
-Reemplaza `[Ruta del webdriver]`, `[Ruta del ejecutable de Edge]` y `[Ruta del perfil de usuario]` con las rutas correspondientes en tu sistema.
+### Uso
+1. Para ejecutar la aplicación, usa el siguiente comando:
+   ```sh
+   python main2.py
 
-en caso de que no tengas el perfil de usuario, puedes crearlo con el siguiente comando:
+La aplicación te pedirá las rutas y credenciales necesarias para la automatización.
 
-```bash
-msedge.exe --profile-directory="Profile 1"
-```
+### Funcionalidades
+1. Solicitar Rutas: Permite al usuario configurar las rutas necesarias para el funcionamiento del bot.
 
-```bash
-# Ruta del webdriver
-export WEBDRIVER_PATH=[Ruta del webdriver]
+2. Automatización de Nuevo PAF/PTM: Realiza la creación de nuevos registros de PTM basándose en un archivo Excel proporcionado por el usuario. 
 
-# Ruta del ejecutable de Edge
-export EDGE_PATH=[Ruta del ejecutable de Edge]
+   Los campos predeterminados son:
+   - Tipo de Sucursal: Punto de Atención Corresponsal No Financiero
+   - Nivel de Seguridad: Bajo
+   - Fax: 0
+   - Coordenadas: lat_gps y lng_gps
+   - Horario de Atención: 
+     - 00:00 a 00:00 son sin atencion
+     - 00:01 a 00:01 son 24 hrs
+     
 
-# Ruta del perfil de usuario
-export USER_DATA_DIR=[Ruta del perfil de usuario]
-```
+3. Extracción de Datos Web: Extrae datos específicos desde una web utilizando la información proporcionada en un archivo Excel.
+   Ejecución de pruebas
 
-### Ejecución
+4. Para ejecutar las pruebas automatizadas, usa:
 
-Para ejecutar el bot, ejecuta el siguiente comando:
-
-```bash
-python main.py
-```
-
-### Luego configura las variables en el archivo .env
-
-Ejecución de pruebas
-Explica cómo ejecutar las pruebas automatizadas para este sistema.
-
-### Ejemplo
-python -m unittest discover
+   ```sh
+   pytest
+Asegúrate de que tienes las dependencias necesarias instaladas y que el WebDriver está configurado correctamente.
 
 ### Despliegue
-Agrega notas adicionales sobre cómo desplegar esto en un sistema en vivo.
+Para crear un ejecutable de la aplicación:
+
+1. Instala PyInstaller:
+
+   ```sh
+   pip install pyinstaller
+   
+2. Ejecuta PyInstaller con el siguiente comando:
+
+   ```sh
+   pyinstaller --onefile --windowed --icon=\you\path\BOT_MFS_PAF\Static\Tigo Money logo.webp --name=Bot_PTM_Asfi main2.py
+Esto generará un archivo ejecutable que puedes distribuir.
 
 ### Construido con
-Python - El lenguaje de programación usado
-
-### Contribuir
-Por favor, lee CONTRIBUTING.md para detalles sobre nuestro código de conducta, y el proceso para enviarnos pull requests.
-
-### Versionado
-Usamos SemVer para el versionado. Para las versiones disponibles, mira las tags en este repositorio.
-<br>1.3.6
+- Python - El lenguaje de programación usado.
+- PyQt5 - Librería para la creación de la interfaz gráfica.
+- Selenium - Para la automatización de navegadores web.
+- Pandas - Para la manipulación de datos.
+- openpyxl - Para trabajar con archivos Excel.
 
 ### Autores
-Dax Kenji Tellez Duran - Tellezd
-Licencia
-Este proyecto está licenciado bajo la Licencia XYZ - mira el archivo LICENSE.md para detalles.
+Dax Kenji Tellez Duran - todo el proyecto - Tellezd
 
 ### Reconocimientos
-Hat tip a cualquier persona cuyo código fue usado
-Inspiración
-etc
-
-Recuerda cambiar los marcadores de posición como "[URL del repositorio]", "[TuUsuario]", y cualquier otra información específica por los detalles reales de tu proyecto. Esto es solo un punto de partida; ajusta y expande cada sección para adaptarse a las necesidades y la complejidad de tu proyecto.
-
+Quisiera expresar mi más profundo 
+agradecimiento a Daniel, cuyo apoyo incondicional 
+ha sido fundamental en este proyecto. 
+Su confianza en mis capacidades me ha permitido dar 
+el primer paso y avanzar con seguridad. También quiero agradecer a Marcos Salome, cuyas propuestas de mejora siempre han sido valiosas y han enriquecido mi trabajo. 
+Finalmente, mi gratitud a mi tutor Mauricio Perico por brindarme la oportunidad de estar en su equipo y por su orientación constante. Su apoyo ha sido invaluable en este viaje. Gracias a todos.
