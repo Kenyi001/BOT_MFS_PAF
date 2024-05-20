@@ -35,29 +35,12 @@ pip install -r requirements.txt
 Para ejecutar el bot, ejecuta el siguiente comando:
 
 ```bash
-python main.py
+python main2.py
 ```
-
-### Luego configura las variables en el archivo .env
-
-Ejecución de pruebas
-Explica cómo ejecutar las pruebas automatizadas para este sistema.
-
-### Ejemplo
-python -m unittest discover
-
-### Despliegue
-Agrega notas adicionales sobre cómo desplegar esto en un sistema en vivo.
-
-### Construido con
-Python - El lenguaje de programación usado
-
-### Contribuir
-Por favor, lee CONTRIBUTING.md para detalles sobre nuestro código de conducta, y el proceso para enviarnos pull requests.
 
 ### Versionado
 Usamos SemVer para el versionado. Para las versiones disponibles, mira las tags en este repositorio.
-<br>1.3.6
+<br>1.0.0
 
 ### Autores
 Dax Kenji Tellez Duran - Tellezd
