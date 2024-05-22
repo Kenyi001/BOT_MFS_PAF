@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>test_iat.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_iat.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">DataFrame</span><span class="s2">,</span>
+    <span class="s1">Series</span><span class="s2">,</span>
+    <span class="s1">period_range</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_iat</span><span class="s2">(</span><span class="s1">float_frame</span><span class="s2">):</span>
+    <span class="s0">for </span><span class="s1">i</span><span class="s2">, </span><span class="s1">row </span><span class="s0">in </span><span class="s1">enumerate</span><span class="s2">(</span><span class="s1">float_frame</span><span class="s2">.</span><span class="s1">index</span><span class="s2">):</span>
+        <span class="s0">for </span><span class="s1">j</span><span class="s2">, </span><span class="s1">col </span><span class="s0">in </span><span class="s1">enumerate</span><span class="s2">(</span><span class="s1">float_frame</span><span class="s2">.</span><span class="s1">columns</span><span class="s2">):</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">float_frame</span><span class="s2">.</span><span class="s1">iat</span><span class="s2">[</span><span class="s1">i</span><span class="s2">, </span><span class="s1">j</span><span class="s2">]</span>
+            <span class="s1">expected </span><span class="s2">= </span><span class="s1">float_frame</span><span class="s2">.</span><span class="s1">at</span><span class="s2">[</span><span class="s1">row</span><span class="s2">, </span><span class="s1">col</span><span class="s2">]</span>
+            <span class="s0">assert </span><span class="s1">result </span><span class="s2">== </span><span class="s1">expected</span>
+
+
+<span class="s0">def </span><span class="s1">test_iat_duplicate_columns</span><span class="s2">():</span>
+    <span class="s3"># https://github.com/pandas-dev/pandas/issues/11754</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">([[</span><span class="s4">1</span><span class="s2">, </span><span class="s4">2</span><span class="s2">]], </span><span class="s1">columns</span><span class="s2">=[</span><span class="s5">&quot;x&quot;</span><span class="s2">, </span><span class="s5">&quot;x&quot;</span><span class="s2">])</span>
+    <span class="s0">assert </span><span class="s1">df</span><span class="s2">.</span><span class="s1">iat</span><span class="s2">[</span><span class="s4">0</span><span class="s2">, </span><span class="s4">0</span><span class="s2">] == </span><span class="s4">1</span>
+
+
+<span class="s0">def </span><span class="s1">test_iat_getitem_series_with_period_index</span><span class="s2">():</span>
+    <span class="s3"># GH#4390, iat incorrectly indexing</span>
+    <span class="s1">index </span><span class="s2">= </span><span class="s1">period_range</span><span class="s2">(</span><span class="s5">&quot;1/1/2001&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">10</span><span class="s2">)</span>
+    <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">default_rng</span><span class="s2">(</span><span class="s4">2</span><span class="s2">).</span><span class="s1">standard_normal</span><span class="s2">(</span><span class="s4">10</span><span class="s2">), </span><span class="s1">index</span><span class="s2">=</span><span class="s1">index</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">[</span><span class="s1">index</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]]</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">iat</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]</span>
+    <span class="s0">assert </span><span class="s1">expected </span><span class="s2">== </span><span class="s1">result</span>
+
+
+<span class="s0">def </span><span class="s1">test_iat_setitem_item_cache_cleared</span><span class="s2">(</span><span class="s1">indexer_ial</span><span class="s2">, </span><span class="s1">using_copy_on_write</span><span class="s2">):</span>
+    <span class="s3"># GH#45684</span>
+    <span class="s1">data </span><span class="s2">= {</span><span class="s5">&quot;x&quot;</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">8</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">), </span><span class="s5">&quot;y&quot;</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">(</span><span class="s4">0</span><span class="s2">)}</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">data</span><span class="s2">).</span><span class="s1">copy</span><span class="s2">()</span>
+    <span class="s1">ser </span><span class="s2">= </span><span class="s1">df</span><span class="s2">[</span><span class="s5">&quot;y&quot;</span><span class="s2">]</span>
+
+    <span class="s3"># previously this iat setting would split the block and fail to clear</span>
+    <span class="s3">#  the item_cache.</span>
+    <span class="s1">indexer_ial</span><span class="s2">(</span><span class="s1">df</span><span class="s2">)[</span><span class="s4">7</span><span class="s2">, </span><span class="s4">0</span><span class="s2">] = </span><span class="s4">9999</span>
+
+    <span class="s1">indexer_ial</span><span class="s2">(</span><span class="s1">df</span><span class="s2">)[</span><span class="s4">7</span><span class="s2">, </span><span class="s4">1</span><span class="s2">] = </span><span class="s4">1234</span>
+
+    <span class="s0">assert </span><span class="s1">df</span><span class="s2">.</span><span class="s1">iat</span><span class="s2">[</span><span class="s4">7</span><span class="s2">, </span><span class="s4">1</span><span class="s2">] == </span><span class="s4">1234</span>
+    <span class="s0">if not </span><span class="s1">using_copy_on_write</span><span class="s2">:</span>
+        <span class="s0">assert </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[-</span><span class="s4">1</span><span class="s2">] == </span><span class="s4">1234</span>
+    <span class="s0">assert </span><span class="s1">df</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[-</span><span class="s4">1</span><span class="s2">, -</span><span class="s4">1</span><span class="s2">] == </span><span class="s4">1234</span>
+</pre>
+</body>
+</html>

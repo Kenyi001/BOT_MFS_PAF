@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>test_indexing_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_indexing_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">array_api </span><span class="s0">as </span><span class="s1">xp</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span>
+    <span class="s3">&quot;x, indices, axis, expected&quot;</span><span class="s2">,</span>
+    <span class="s2">[</span>
+        <span class="s2">([</span><span class="s4">2</span><span class="s2">, </span><span class="s4">3</span><span class="s2">], [</span><span class="s4">1</span><span class="s2">, </span><span class="s4">1</span><span class="s2">, </span><span class="s4">0</span><span class="s2">], </span><span class="s4">0</span><span class="s2">,  [</span><span class="s4">3</span><span class="s2">, </span><span class="s4">3</span><span class="s2">, </span><span class="s4">2</span><span class="s2">]),</span>
+        <span class="s2">([</span><span class="s4">2</span><span class="s2">, </span><span class="s4">3</span><span class="s2">], [</span><span class="s4">1</span><span class="s2">, </span><span class="s4">1</span><span class="s2">, </span><span class="s4">0</span><span class="s2">], -</span><span class="s4">1</span><span class="s2">, [</span><span class="s4">3</span><span class="s2">, </span><span class="s4">3</span><span class="s2">, </span><span class="s4">2</span><span class="s2">]),</span>
+        <span class="s2">([[</span><span class="s4">2</span><span class="s2">, </span><span class="s4">3</span><span class="s2">]], [</span><span class="s4">1</span><span class="s2">], -</span><span class="s4">1</span><span class="s2">, [[</span><span class="s4">3</span><span class="s2">]]),</span>
+        <span class="s2">([[</span><span class="s4">2</span><span class="s2">, </span><span class="s4">3</span><span class="s2">]], [</span><span class="s4">0</span><span class="s2">, </span><span class="s4">0</span><span class="s2">], </span><span class="s4">0</span><span class="s2">, [[</span><span class="s4">2</span><span class="s2">, </span><span class="s4">3</span><span class="s2">], [</span><span class="s4">2</span><span class="s2">, </span><span class="s4">3</span><span class="s2">]]),</span>
+    <span class="s2">],</span>
+<span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_take_function</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Indices respect relative order of a descending stable-sort 
+ 
+    See https://github.com/numpy/numpy/issues/20778 
+    &quot;&quot;&quot;</span>
+    <span class="s1">x </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+    <span class="s1">indices </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">indices</span><span class="s2">)</span>
+    <span class="s1">out </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">take</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">)</span>
+    <span class="s0">assert </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">all</span><span class="s2">(</span><span class="s1">out </span><span class="s2">== </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">expected</span><span class="s2">))</span>
+</pre>
+</body>
+</html>

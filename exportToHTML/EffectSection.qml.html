@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>EffectSection.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+EffectSection.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2020 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of Qt Quick 3D.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:GPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 3 or (at your option) any later version</span>
+<span class="s0">** approved by the KDE Free Qt Foundation. The licenses are as published by</span>
+<span class="s0">** the Free Software Foundation and appearing in the file LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.15</span>
+<span class="s2">import </span><span class="s1">HelperWidgets </span><span class="s3">2.0</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Layouts </span><span class="s3">1.12</span>
+
+<span class="s1">Section </span><span class="s4">{</span>
+    <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Effect&quot;</span><span class="s4">)</span>
+    <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+
+    <span class="s1">SectionLayout </span><span class="s4">{</span>
+        <span class="s1">Label </span><span class="s4">{</span>
+            <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Passes&quot;</span><span class="s4">)</span>
+            <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Render passes of the effect.&quot;</span><span class="s4">)</span>
+        <span class="s4">}</span>
+        <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+            <span class="s1">EditableListView </span><span class="s4">{</span>
+                <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">passes</span>
+                <span class="s1">model</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">passes</span><span class="s4">.</span><span class="s1">expressionAsList</span>
+                <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Pass&quot;</span>
+
+                <span class="s1">onAdd</span><span class="s4">: </span><span class="s2">function</span><span class="s4">(</span><span class="s1">value</span><span class="s4">) { </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">passes</span><span class="s4">.</span><span class="s1">idListAdd</span><span class="s4">(</span><span class="s1">value</span><span class="s4">) }</span>
+                <span class="s1">onRemove</span><span class="s4">: </span><span class="s2">function</span><span class="s4">(</span><span class="s1">idx</span><span class="s4">) { </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">passes</span><span class="s4">.</span><span class="s1">idListRemove</span><span class="s4">(</span><span class="s1">idx</span><span class="s4">) }</span>
+                <span class="s1">onReplace</span><span class="s4">: </span><span class="s2">function </span><span class="s4">(</span><span class="s1">idx</span><span class="s4">, </span><span class="s1">value</span><span class="s4">) { </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">passes</span><span class="s4">.</span><span class="s1">idListReplace</span><span class="s4">(</span><span class="s1">idx</span><span class="s4">, </span><span class="s1">value</span><span class="s4">) }</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

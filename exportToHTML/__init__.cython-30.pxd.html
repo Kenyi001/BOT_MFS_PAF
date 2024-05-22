@@ -1,0 +1,1072 @@
+<html>
+<head>
+<title>__init__.cython-30.pxd</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+__init__.cython-30.pxd</font>
+</center></td></tr></table>
+<pre><span class="s0"># NumPy static imports for Cython &gt;= 3.0</span>
+<span class="s0">#</span>
+<span class="s0"># If any of the PyArray_* functions are called, import_array must be</span>
+<span class="s0"># called first.  This is done automatically by Cython 3.0+ if a call</span>
+<span class="s0"># is not detected inside of the module.</span>
+<span class="s0">#</span>
+<span class="s0"># Author: Dag Sverre Seljebotn</span>
+<span class="s0">#</span>
+
+<span class="s2">from </span><span class="s1">cpython</span><span class="s3">.</span><span class="s1">ref </span><span class="s2">cimport </span><span class="s1">Py_INCREF</span>
+<span class="s2">from </span><span class="s1">cpython</span><span class="s3">.</span><span class="s1">object </span><span class="s2">cimport </span><span class="s1">PyObject</span><span class="s3">, </span><span class="s1">PyTypeObject</span><span class="s3">, </span><span class="s1">PyObject_TypeCheck</span>
+<span class="s2">cimport </span><span class="s1">libc</span><span class="s3">.</span><span class="s1">stdio </span><span class="s2">as </span><span class="s1">stdio</span>
+
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s3">*:</span>
+    <span class="s0"># Leave a marker that the NumPy declarations came from NumPy itself and not from Cython.</span>
+    <span class="s0"># See https://github.com/cython/cython/issues/3573</span>
+    <span class="s4">&quot;&quot;&quot; 
+    /* Using NumPy API declarations from &quot;numpy/__init__.cython-30.pxd&quot; */ 
+    &quot;&quot;&quot;</span>
+
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s4">&quot;Python.h&quot;</span><span class="s3">:</span>
+    <span class="s2">ctypedef </span><span class="s1">int Py_intptr_t</span>
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s4">&quot;numpy/arrayobject.h&quot;</span><span class="s3">:</span>
+    <span class="s2">ctypedef </span><span class="s1">Py_intptr_t npy_intp</span>
+    <span class="s2">ctypedef </span><span class="s1">size_t npy_uintp</span>
+
+    <span class="s2">cdef </span><span class="s1">enum NPY_TYPES</span><span class="s3">:</span>
+        <span class="s1">NPY_BOOL</span>
+        <span class="s1">NPY_BYTE</span>
+        <span class="s1">NPY_UBYTE</span>
+        <span class="s1">NPY_SHORT</span>
+        <span class="s1">NPY_USHORT</span>
+        <span class="s1">NPY_INT</span>
+        <span class="s1">NPY_UINT</span>
+        <span class="s1">NPY_LONG</span>
+        <span class="s1">NPY_ULONG</span>
+        <span class="s1">NPY_LONGLONG</span>
+        <span class="s1">NPY_ULONGLONG</span>
+        <span class="s1">NPY_FLOAT</span>
+        <span class="s1">NPY_DOUBLE</span>
+        <span class="s1">NPY_LONGDOUBLE</span>
+        <span class="s1">NPY_CFLOAT</span>
+        <span class="s1">NPY_CDOUBLE</span>
+        <span class="s1">NPY_CLONGDOUBLE</span>
+        <span class="s1">NPY_OBJECT</span>
+        <span class="s1">NPY_STRING</span>
+        <span class="s1">NPY_UNICODE</span>
+        <span class="s1">NPY_VOID</span>
+        <span class="s1">NPY_DATETIME</span>
+        <span class="s1">NPY_TIMEDELTA</span>
+        <span class="s1">NPY_NTYPES</span>
+        <span class="s1">NPY_NOTYPE</span>
+
+        <span class="s1">NPY_INT8</span>
+        <span class="s1">NPY_INT16</span>
+        <span class="s1">NPY_INT32</span>
+        <span class="s1">NPY_INT64</span>
+        <span class="s1">NPY_INT128</span>
+        <span class="s1">NPY_INT256</span>
+        <span class="s1">NPY_UINT8</span>
+        <span class="s1">NPY_UINT16</span>
+        <span class="s1">NPY_UINT32</span>
+        <span class="s1">NPY_UINT64</span>
+        <span class="s1">NPY_UINT128</span>
+        <span class="s1">NPY_UINT256</span>
+        <span class="s1">NPY_FLOAT16</span>
+        <span class="s1">NPY_FLOAT32</span>
+        <span class="s1">NPY_FLOAT64</span>
+        <span class="s1">NPY_FLOAT80</span>
+        <span class="s1">NPY_FLOAT96</span>
+        <span class="s1">NPY_FLOAT128</span>
+        <span class="s1">NPY_FLOAT256</span>
+        <span class="s1">NPY_COMPLEX32</span>
+        <span class="s1">NPY_COMPLEX64</span>
+        <span class="s1">NPY_COMPLEX128</span>
+        <span class="s1">NPY_COMPLEX160</span>
+        <span class="s1">NPY_COMPLEX192</span>
+        <span class="s1">NPY_COMPLEX256</span>
+        <span class="s1">NPY_COMPLEX512</span>
+
+        <span class="s1">NPY_INTP</span>
+
+    <span class="s2">ctypedef </span><span class="s1">enum NPY_ORDER</span><span class="s3">:</span>
+        <span class="s1">NPY_ANYORDER</span>
+        <span class="s1">NPY_CORDER</span>
+        <span class="s1">NPY_FORTRANORDER</span>
+        <span class="s1">NPY_KEEPORDER</span>
+
+    <span class="s2">ctypedef </span><span class="s1">enum NPY_CASTING</span><span class="s3">:</span>
+        <span class="s1">NPY_NO_CASTING</span>
+        <span class="s1">NPY_EQUIV_CASTING</span>
+        <span class="s1">NPY_SAFE_CASTING</span>
+        <span class="s1">NPY_SAME_KIND_CASTING</span>
+        <span class="s1">NPY_UNSAFE_CASTING</span>
+
+    <span class="s2">ctypedef </span><span class="s1">enum NPY_CLIPMODE</span><span class="s3">:</span>
+        <span class="s1">NPY_CLIP</span>
+        <span class="s1">NPY_WRAP</span>
+        <span class="s1">NPY_RAISE</span>
+
+    <span class="s2">ctypedef </span><span class="s1">enum NPY_SCALARKIND</span><span class="s3">:</span>
+        <span class="s1">NPY_NOSCALAR</span><span class="s3">,</span>
+        <span class="s1">NPY_BOOL_SCALAR</span><span class="s3">,</span>
+        <span class="s1">NPY_INTPOS_SCALAR</span><span class="s3">,</span>
+        <span class="s1">NPY_INTNEG_SCALAR</span><span class="s3">,</span>
+        <span class="s1">NPY_FLOAT_SCALAR</span><span class="s3">,</span>
+        <span class="s1">NPY_COMPLEX_SCALAR</span><span class="s3">,</span>
+        <span class="s1">NPY_OBJECT_SCALAR</span>
+
+    <span class="s2">ctypedef </span><span class="s1">enum NPY_SORTKIND</span><span class="s3">:</span>
+        <span class="s1">NPY_QUICKSORT</span>
+        <span class="s1">NPY_HEAPSORT</span>
+        <span class="s1">NPY_MERGESORT</span>
+
+    <span class="s2">ctypedef </span><span class="s1">enum NPY_SEARCHSIDE</span><span class="s3">:</span>
+        <span class="s1">NPY_SEARCHLEFT</span>
+        <span class="s1">NPY_SEARCHRIGHT</span>
+
+    <span class="s1">enum</span><span class="s3">:</span>
+        <span class="s0"># DEPRECATED since NumPy 1.7 ! Do not use in new code!</span>
+        <span class="s1">NPY_C_CONTIGUOUS</span>
+        <span class="s1">NPY_F_CONTIGUOUS</span>
+        <span class="s1">NPY_CONTIGUOUS</span>
+        <span class="s1">NPY_FORTRAN</span>
+        <span class="s1">NPY_OWNDATA</span>
+        <span class="s1">NPY_FORCECAST</span>
+        <span class="s1">NPY_ENSURECOPY</span>
+        <span class="s1">NPY_ENSUREARRAY</span>
+        <span class="s1">NPY_ELEMENTSTRIDES</span>
+        <span class="s1">NPY_ALIGNED</span>
+        <span class="s1">NPY_NOTSWAPPED</span>
+        <span class="s1">NPY_WRITEABLE</span>
+        <span class="s1">NPY_ARR_HAS_DESCR</span>
+
+        <span class="s1">NPY_BEHAVED</span>
+        <span class="s1">NPY_BEHAVED_NS</span>
+        <span class="s1">NPY_CARRAY</span>
+        <span class="s1">NPY_CARRAY_RO</span>
+        <span class="s1">NPY_FARRAY</span>
+        <span class="s1">NPY_FARRAY_RO</span>
+        <span class="s1">NPY_DEFAULT</span>
+
+        <span class="s1">NPY_IN_ARRAY</span>
+        <span class="s1">NPY_OUT_ARRAY</span>
+        <span class="s1">NPY_INOUT_ARRAY</span>
+        <span class="s1">NPY_IN_FARRAY</span>
+        <span class="s1">NPY_OUT_FARRAY</span>
+        <span class="s1">NPY_INOUT_FARRAY</span>
+
+        <span class="s1">NPY_UPDATE_ALL</span>
+
+    <span class="s1">enum</span><span class="s3">:</span>
+        <span class="s0"># Added in NumPy 1.7 to replace the deprecated enums above.</span>
+        <span class="s1">NPY_ARRAY_C_CONTIGUOUS</span>
+        <span class="s1">NPY_ARRAY_F_CONTIGUOUS</span>
+        <span class="s1">NPY_ARRAY_OWNDATA</span>
+        <span class="s1">NPY_ARRAY_FORCECAST</span>
+        <span class="s1">NPY_ARRAY_ENSURECOPY</span>
+        <span class="s1">NPY_ARRAY_ENSUREARRAY</span>
+        <span class="s1">NPY_ARRAY_ELEMENTSTRIDES</span>
+        <span class="s1">NPY_ARRAY_ALIGNED</span>
+        <span class="s1">NPY_ARRAY_NOTSWAPPED</span>
+        <span class="s1">NPY_ARRAY_WRITEABLE</span>
+        <span class="s1">NPY_ARRAY_WRITEBACKIFCOPY</span>
+
+        <span class="s1">NPY_ARRAY_BEHAVED</span>
+        <span class="s1">NPY_ARRAY_BEHAVED_NS</span>
+        <span class="s1">NPY_ARRAY_CARRAY</span>
+        <span class="s1">NPY_ARRAY_CARRAY_RO</span>
+        <span class="s1">NPY_ARRAY_FARRAY</span>
+        <span class="s1">NPY_ARRAY_FARRAY_RO</span>
+        <span class="s1">NPY_ARRAY_DEFAULT</span>
+
+        <span class="s1">NPY_ARRAY_IN_ARRAY</span>
+        <span class="s1">NPY_ARRAY_OUT_ARRAY</span>
+        <span class="s1">NPY_ARRAY_INOUT_ARRAY</span>
+        <span class="s1">NPY_ARRAY_IN_FARRAY</span>
+        <span class="s1">NPY_ARRAY_OUT_FARRAY</span>
+        <span class="s1">NPY_ARRAY_INOUT_FARRAY</span>
+
+        <span class="s1">NPY_ARRAY_UPDATE_ALL</span>
+
+    <span class="s2">cdef </span><span class="s1">enum</span><span class="s3">:</span>
+        <span class="s1">NPY_MAXDIMS</span>
+
+    <span class="s1">npy_intp NPY_MAX_ELSIZE</span>
+
+    <span class="s2">ctypedef </span><span class="s1">void </span><span class="s3">(*</span><span class="s1">PyArray_VectorUnaryFunc</span><span class="s3">)(</span><span class="s1">void </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*, </span><span class="s1">npy_intp</span><span class="s3">, </span><span class="s1">void </span><span class="s3">*,  </span><span class="s1">void </span><span class="s3">*)</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct PyArray_ArrayDescr</span><span class="s3">:</span>
+        <span class="s0"># shape is a tuple, but Cython doesn't support &quot;tuple shape&quot;</span>
+        <span class="s0"># inside a non-PyObject declaration, so we have to declare it</span>
+        <span class="s0"># as just a PyObject*.</span>
+        <span class="s1">PyObject</span><span class="s3">* </span><span class="s1">shape</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct PyArray_Descr</span><span class="s3">:</span>
+        <span class="s2">pass</span>
+
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">dtype </span><span class="s3">[</span><span class="s1">object PyArray_Descr</span><span class="s3">, </span><span class="s1">check_size ignore</span><span class="s3">]:</span>
+        <span class="s0"># Use PyDataType_* macros when possible, however there are no macros</span>
+        <span class="s0"># for accessing some of the fields, so some are defined.</span>
+        <span class="s2">cdef </span><span class="s1">PyTypeObject</span><span class="s3">* </span><span class="s1">typeobj</span>
+        <span class="s2">cdef </span><span class="s1">char kind</span>
+        <span class="s2">cdef </span><span class="s1">char type</span>
+        <span class="s0"># Numpy sometimes mutates this without warning (e.g. it'll</span>
+        <span class="s0"># sometimes change &quot;|&quot; to &quot;&lt;&quot; in shared dtype objects on</span>
+        <span class="s0"># little-endian machines). If this matters to you, use</span>
+        <span class="s0"># PyArray_IsNativeByteOrder(dtype.byteorder) instead of</span>
+        <span class="s0"># directly accessing this field.</span>
+        <span class="s2">cdef </span><span class="s1">char byteorder</span>
+        <span class="s2">cdef </span><span class="s1">char flags</span>
+        <span class="s2">cdef </span><span class="s1">int type_num</span>
+        <span class="s2">cdef </span><span class="s1">int itemsize </span><span class="s4">&quot;elsize&quot;</span>
+        <span class="s2">cdef </span><span class="s1">int alignment</span>
+        <span class="s2">cdef </span><span class="s1">object fields</span>
+        <span class="s2">cdef </span><span class="s1">tuple names</span>
+        <span class="s0"># Use PyDataType_HASSUBARRAY to test whether this field is</span>
+        <span class="s0"># valid (the pointer can be NULL). Most users should access</span>
+        <span class="s0"># this field via the inline helper method PyDataType_SHAPE.</span>
+        <span class="s2">cdef </span><span class="s1">PyArray_ArrayDescr</span><span class="s3">* </span><span class="s1">subarray</span>
+
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">flatiter </span><span class="s3">[</span><span class="s1">object PyArrayIterObject</span><span class="s3">, </span><span class="s1">check_size ignore</span><span class="s3">]:</span>
+        <span class="s0"># Use through macros</span>
+        <span class="s2">pass</span>
+
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">broadcast </span><span class="s3">[</span><span class="s1">object PyArrayMultiIterObject</span><span class="s3">, </span><span class="s1">check_size ignore</span><span class="s3">]:</span>
+        <span class="s0"># Use through macros</span>
+        <span class="s2">pass</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct PyArrayObject</span><span class="s3">:</span>
+        <span class="s0"># For use in situations where ndarray can't replace PyArrayObject*,</span>
+        <span class="s0"># like PyArrayObject**.</span>
+        <span class="s2">pass</span>
+
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">[</span><span class="s1">object PyArrayObject</span><span class="s3">, </span><span class="s1">check_size ignore</span><span class="s3">]:</span>
+        <span class="s2">cdef </span><span class="s1">__cythonbufferdefaults__ </span><span class="s3">= {</span><span class="s4">&quot;mode&quot;</span><span class="s3">: </span><span class="s4">&quot;strided&quot;</span><span class="s3">}</span>
+
+        <span class="s0"># NOTE: no field declarations since direct access is deprecated since NumPy 1.7</span>
+        <span class="s0"># Instead, we use properties that map to the corresponding C-API functions.</span>
+
+        <span class="s3">@</span><span class="s1">property</span>
+        <span class="s2">cdef </span><span class="s1">inline PyObject</span><span class="s3">* </span><span class="s1">base</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+            <span class="s4">&quot;&quot;&quot;Returns a borrowed reference to the object owning the data/memory. 
+            &quot;&quot;&quot;</span>
+            <span class="s2">return </span><span class="s1">PyArray_BASE</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+        <span class="s3">@</span><span class="s1">property</span>
+        <span class="s2">cdef </span><span class="s1">inline dtype descr</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+            <span class="s4">&quot;&quot;&quot;Returns an owned reference to the dtype of the array. 
+            &quot;&quot;&quot;</span>
+            <span class="s2">return </span><span class="s3">&lt;</span><span class="s1">dtype</span><span class="s3">&gt;</span><span class="s1">PyArray_DESCR</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+        <span class="s3">@</span><span class="s1">property</span>
+        <span class="s2">cdef </span><span class="s1">inline int ndim</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+            <span class="s4">&quot;&quot;&quot;Returns the number of dimensions in the array. 
+            &quot;&quot;&quot;</span>
+            <span class="s2">return </span><span class="s1">PyArray_NDIM</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+        <span class="s3">@</span><span class="s1">property</span>
+        <span class="s2">cdef </span><span class="s1">inline npy_intp </span><span class="s3">*</span><span class="s1">shape</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+            <span class="s4">&quot;&quot;&quot;Returns a pointer to the dimensions/shape of the array. 
+            The number of elements matches the number of dimensions of the array (ndim). 
+            Can return NULL for 0-dimensional arrays. 
+            &quot;&quot;&quot;</span>
+            <span class="s2">return </span><span class="s1">PyArray_DIMS</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+        <span class="s3">@</span><span class="s1">property</span>
+        <span class="s2">cdef </span><span class="s1">inline npy_intp </span><span class="s3">*</span><span class="s1">strides</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+            <span class="s4">&quot;&quot;&quot;Returns a pointer to the strides of the array. 
+            The number of elements matches the number of dimensions of the array (ndim). 
+            &quot;&quot;&quot;</span>
+            <span class="s2">return </span><span class="s1">PyArray_STRIDES</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+        <span class="s3">@</span><span class="s1">property</span>
+        <span class="s2">cdef </span><span class="s1">inline npy_intp size</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+            <span class="s4">&quot;&quot;&quot;Returns the total size (in number of elements) of the array. 
+            &quot;&quot;&quot;</span>
+            <span class="s2">return </span><span class="s1">PyArray_SIZE</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+        <span class="s3">@</span><span class="s1">property</span>
+        <span class="s2">cdef </span><span class="s1">inline char</span><span class="s3">* </span><span class="s1">data</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+            <span class="s4">&quot;&quot;&quot;The pointer to the data buffer as a char*. 
+            This is provided for legacy reasons to avoid direct struct field access. 
+            For new code that needs this access, you probably want to cast the result 
+            of `PyArray_DATA()` instead, which returns a 'void*'. 
+            &quot;&quot;&quot;</span>
+            <span class="s2">return </span><span class="s1">PyArray_BYTES</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">ctypedef </span><span class="s1">unsigned char      npy_bool</span>
+
+    <span class="s2">ctypedef </span><span class="s1">signed char      npy_byte</span>
+    <span class="s2">ctypedef </span><span class="s1">signed short     npy_short</span>
+    <span class="s2">ctypedef </span><span class="s1">signed int       npy_int</span>
+    <span class="s2">ctypedef </span><span class="s1">signed long      npy_long</span>
+    <span class="s2">ctypedef </span><span class="s1">signed long long npy_longlong</span>
+
+    <span class="s2">ctypedef </span><span class="s1">unsigned char      npy_ubyte</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned short     npy_ushort</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned int       npy_uint</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned long      npy_ulong</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned long long npy_ulonglong</span>
+
+    <span class="s2">ctypedef </span><span class="s1">float        npy_float</span>
+    <span class="s2">ctypedef </span><span class="s1">double       npy_double</span>
+    <span class="s2">ctypedef </span><span class="s1">long double  npy_longdouble</span>
+
+    <span class="s2">ctypedef </span><span class="s1">signed char        npy_int8</span>
+    <span class="s2">ctypedef </span><span class="s1">signed short       npy_int16</span>
+    <span class="s2">ctypedef </span><span class="s1">signed int         npy_int32</span>
+    <span class="s2">ctypedef </span><span class="s1">signed long long   npy_int64</span>
+    <span class="s2">ctypedef </span><span class="s1">signed long long   npy_int96</span>
+    <span class="s2">ctypedef </span><span class="s1">signed long long   npy_int128</span>
+
+    <span class="s2">ctypedef </span><span class="s1">unsigned char      npy_uint8</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned short     npy_uint16</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned int       npy_uint32</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned long long npy_uint64</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned long long npy_uint96</span>
+    <span class="s2">ctypedef </span><span class="s1">unsigned long long npy_uint128</span>
+
+    <span class="s2">ctypedef </span><span class="s1">float        npy_float32</span>
+    <span class="s2">ctypedef </span><span class="s1">double       npy_float64</span>
+    <span class="s2">ctypedef </span><span class="s1">long double  npy_float80</span>
+    <span class="s2">ctypedef </span><span class="s1">long double  npy_float96</span>
+    <span class="s2">ctypedef </span><span class="s1">long double  npy_float128</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_cfloat</span><span class="s3">:</span>
+        <span class="s1">float real</span>
+        <span class="s1">float imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_cdouble</span><span class="s3">:</span>
+        <span class="s1">double real</span>
+        <span class="s1">double imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_clongdouble</span><span class="s3">:</span>
+        <span class="s1">long double real</span>
+        <span class="s1">long double imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_complex64</span><span class="s3">:</span>
+        <span class="s1">float real</span>
+        <span class="s1">float imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_complex128</span><span class="s3">:</span>
+        <span class="s1">double real</span>
+        <span class="s1">double imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_complex160</span><span class="s3">:</span>
+        <span class="s1">long double real</span>
+        <span class="s1">long double imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_complex192</span><span class="s3">:</span>
+        <span class="s1">long double real</span>
+        <span class="s1">long double imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct npy_complex256</span><span class="s3">:</span>
+        <span class="s1">long double real</span>
+        <span class="s1">long double imag</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct PyArray_Dims</span><span class="s3">:</span>
+        <span class="s1">npy_intp </span><span class="s3">*</span><span class="s1">ptr</span>
+        <span class="s1">int len</span>
+
+    <span class="s1">int _import_array</span><span class="s3">() </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s0"># A second definition so _import_array isn't marked as used when we use it here.</span>
+    <span class="s0"># Do not use - subject to change any time.</span>
+    <span class="s1">int __pyx_import_array </span><span class="s4">&quot;_import_array&quot;</span><span class="s3">() </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+
+    <span class="s0">#</span>
+    <span class="s0"># Macros from ndarrayobject.h</span>
+    <span class="s0">#</span>
+    <span class="s1">bint PyArray_CHKFLAGS</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">, </span><span class="s1">int flags</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_IS_C_CONTIGUOUS</span><span class="s3">(</span><span class="s1">ndarray arr</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_IS_F_CONTIGUOUS</span><span class="s3">(</span><span class="s1">ndarray arr</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISCONTIGUOUS</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISWRITEABLE</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISALIGNED</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">int PyArray_NDIM</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISONESEGMENT</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISFORTRAN</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int PyArray_FORTRANIF</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">PyArray_DATA</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">char</span><span class="s3">* </span><span class="s1">PyArray_BYTES</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">npy_intp</span><span class="s3">* </span><span class="s1">PyArray_DIMS</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">npy_intp</span><span class="s3">* </span><span class="s1">PyArray_STRIDES</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">npy_intp PyArray_DIM</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">size_t</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">npy_intp PyArray_STRIDE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">size_t</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">PyObject </span><span class="s3">*</span><span class="s1">PyArray_BASE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil  </span><span class="s0"># returns borrowed reference!</span>
+    <span class="s1">PyArray_Descr </span><span class="s3">*</span><span class="s1">PyArray_DESCR</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil  </span><span class="s0"># returns borrowed reference to dtype!</span>
+    <span class="s1">PyArray_Descr </span><span class="s3">*</span><span class="s1">PyArray_DTYPE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil  </span><span class="s0"># returns borrowed reference to dtype! NP 1.7+ alias for descr.</span>
+    <span class="s1">int PyArray_FLAGS</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_CLEARFLAGS</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int flags</span><span class="s3">) </span><span class="s1">nogil  </span><span class="s0"># Added in NumPy 1.7</span>
+    <span class="s1">void PyArray_ENABLEFLAGS</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int flags</span><span class="s3">) </span><span class="s1">nogil  </span><span class="s0"># Added in NumPy 1.7</span>
+    <span class="s1">npy_intp PyArray_ITEMSIZE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int PyArray_TYPE</span><span class="s3">(</span><span class="s1">ndarray arr</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">object PyArray_GETITEM</span><span class="s3">(</span><span class="s1">ndarray arr</span><span class="s3">, </span><span class="s1">void </span><span class="s3">*</span><span class="s1">itemptr</span><span class="s3">)</span>
+    <span class="s1">int PyArray_SETITEM</span><span class="s3">(</span><span class="s1">ndarray arr</span><span class="s3">, </span><span class="s1">void </span><span class="s3">*</span><span class="s1">itemptr</span><span class="s3">, </span><span class="s1">object obj</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+
+    <span class="s1">bint PyTypeNum_ISBOOL</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISUNSIGNED</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISSIGNED</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISINTEGER</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISFLOAT</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISNUMBER</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISSTRING</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISCOMPLEX</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISPYTHON</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISFLEXIBLE</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISUSERDEF</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISEXTENDED</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyTypeNum_ISOBJECT</span><span class="s3">(</span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">bint PyDataType_ISBOOL</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISUNSIGNED</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISSIGNED</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISINTEGER</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISFLOAT</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISNUMBER</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISSTRING</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISCOMPLEX</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISPYTHON</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISFLEXIBLE</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISUSERDEF</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISEXTENDED</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISOBJECT</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_HASFIELDS</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_HASSUBARRAY</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">bint PyArray_ISBOOL</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISUNSIGNED</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISSIGNED</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISINTEGER</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISFLOAT</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISNUMBER</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISSTRING</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISCOMPLEX</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISPYTHON</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISFLEXIBLE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISUSERDEF</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISEXTENDED</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISOBJECT</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_HASFIELDS</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">bint PyArray_ISVARIABLE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">bint PyArray_SAFEALIGNEDCOPY</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISNBO</span><span class="s3">(</span><span class="s1">char</span><span class="s3">) </span><span class="s1">nogil              </span><span class="s0"># works on ndarray.byteorder</span>
+    <span class="s1">bint PyArray_IsNativeByteOrder</span><span class="s3">(</span><span class="s1">char</span><span class="s3">) </span><span class="s1">nogil </span><span class="s0"># works on ndarray.byteorder</span>
+    <span class="s1">bint PyArray_ISNOTSWAPPED</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISBYTESWAPPED</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">bint PyArray_FLAGSWAP</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">bint PyArray_ISCARRAY</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISCARRAY_RO</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISFARRAY</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISFARRAY_RO</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISBEHAVED</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ISBEHAVED_RO</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+
+
+    <span class="s1">bint PyDataType_ISNOTSWAPPED</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyDataType_ISBYTESWAPPED</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">bint PyArray_DescrCheck</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+
+    <span class="s1">bint PyArray_Check</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">bint PyArray_CheckExact</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+
+    <span class="s0"># Cannot be supported due to out arg:</span>
+    <span class="s0"># bint PyArray_HasArrayInterfaceType(object, dtype, object, object&amp;)</span>
+    <span class="s0"># bint PyArray_HasArrayInterface(op, out)</span>
+
+
+    <span class="s1">bint PyArray_IsZeroDim</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s0"># Cannot be supported due to ## ## in macro:</span>
+    <span class="s0"># bint PyArray_IsScalar(object, verbatim work)</span>
+    <span class="s1">bint PyArray_CheckScalar</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">bint PyArray_IsPythonNumber</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">bint PyArray_IsPythonScalar</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">bint PyArray_IsAnyScalar</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">bint PyArray_CheckAnyScalar</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+
+    <span class="s1">ndarray PyArray_GETCONTIGUOUS</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">bint PyArray_SAMESHAPE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">npy_intp PyArray_SIZE</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">npy_intp PyArray_NBYTES</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">object PyArray_FROM_O</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_FROM_OF</span><span class="s3">(</span><span class="s1">object m</span><span class="s3">, </span><span class="s1">int flags</span><span class="s3">)</span>
+    <span class="s1">object PyArray_FROM_OT</span><span class="s3">(</span><span class="s1">object m</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">)</span>
+    <span class="s1">object PyArray_FROM_OTF</span><span class="s3">(</span><span class="s1">object m</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">, </span><span class="s1">int flags</span><span class="s3">)</span>
+    <span class="s1">object PyArray_FROMANY</span><span class="s3">(</span><span class="s1">object m</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">, </span><span class="s1">int min</span><span class="s3">, </span><span class="s1">int max</span><span class="s3">, </span><span class="s1">int flags</span><span class="s3">)</span>
+    <span class="s1">object PyArray_ZEROS</span><span class="s3">(</span><span class="s1">int nd</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">* </span><span class="s1">dims</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">, </span><span class="s1">int fortran</span><span class="s3">)</span>
+    <span class="s1">object PyArray_EMPTY</span><span class="s3">(</span><span class="s1">int nd</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">* </span><span class="s1">dims</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">, </span><span class="s1">int fortran</span><span class="s3">)</span>
+    <span class="s1">void PyArray_FILLWBYTE</span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int val</span><span class="s3">)</span>
+    <span class="s1">npy_intp PyArray_REFCOUNT</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_ContiguousFromAny</span><span class="s3">(</span><span class="s1">op</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int min_depth</span><span class="s3">, </span><span class="s1">int max_depth</span><span class="s3">)</span>
+    <span class="s1">unsigned char PyArray_EquivArrTypes</span><span class="s3">(</span><span class="s1">ndarray a1</span><span class="s3">, </span><span class="s1">ndarray a2</span><span class="s3">)</span>
+    <span class="s1">bint PyArray_EquivByteorders</span><span class="s3">(</span><span class="s1">int b1</span><span class="s3">, </span><span class="s1">int b2</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">object PyArray_SimpleNew</span><span class="s3">(</span><span class="s1">int nd</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">* </span><span class="s1">dims</span><span class="s3">, </span><span class="s1">int typenum</span><span class="s3">)</span>
+    <span class="s1">object PyArray_SimpleNewFromData</span><span class="s3">(</span><span class="s1">int nd</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">* </span><span class="s1">dims</span><span class="s3">, </span><span class="s1">int typenum</span><span class="s3">, </span><span class="s1">void</span><span class="s3">* </span><span class="s1">data</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_SimpleNewFromDescr(int nd, npy_intp* dims, dtype descr)</span>
+    <span class="s1">object PyArray_ToScalar</span><span class="s3">(</span><span class="s1">void</span><span class="s3">* </span><span class="s1">data</span><span class="s3">, </span><span class="s1">ndarray arr</span><span class="s3">)</span>
+
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">PyArray_GETPTR1</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">, </span><span class="s1">npy_intp i</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">PyArray_GETPTR2</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">, </span><span class="s1">npy_intp i</span><span class="s3">, </span><span class="s1">npy_intp j</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">PyArray_GETPTR3</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">, </span><span class="s1">npy_intp i</span><span class="s3">, </span><span class="s1">npy_intp j</span><span class="s3">, </span><span class="s1">npy_intp k</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">PyArray_GETPTR4</span><span class="s3">(</span><span class="s1">ndarray m</span><span class="s3">, </span><span class="s1">npy_intp i</span><span class="s3">, </span><span class="s1">npy_intp j</span><span class="s3">, </span><span class="s1">npy_intp k</span><span class="s3">, </span><span class="s1">npy_intp l</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s0"># Cannot be supported due to out arg</span>
+    <span class="s0"># void PyArray_DESCR_REPLACE(descr)</span>
+
+
+    <span class="s1">object PyArray_Copy</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_FromObject</span><span class="s3">(</span><span class="s1">object op</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">, </span><span class="s1">int min_depth</span><span class="s3">, </span><span class="s1">int max_depth</span><span class="s3">)</span>
+    <span class="s1">object PyArray_ContiguousFromObject</span><span class="s3">(</span><span class="s1">object op</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">, </span><span class="s1">int min_depth</span><span class="s3">, </span><span class="s1">int max_depth</span><span class="s3">)</span>
+    <span class="s1">object PyArray_CopyFromObject</span><span class="s3">(</span><span class="s1">object op</span><span class="s3">, </span><span class="s1">int type</span><span class="s3">, </span><span class="s1">int min_depth</span><span class="s3">, </span><span class="s1">int max_depth</span><span class="s3">)</span>
+
+    <span class="s1">object PyArray_Cast</span><span class="s3">(</span><span class="s1">ndarray mp</span><span class="s3">, </span><span class="s1">int type_num</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Take</span><span class="s3">(</span><span class="s1">ndarray ap</span><span class="s3">, </span><span class="s1">object items</span><span class="s3">, </span><span class="s1">int axis</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Put</span><span class="s3">(</span><span class="s1">ndarray ap</span><span class="s3">, </span><span class="s1">object items</span><span class="s3">, </span><span class="s1">object values</span><span class="s3">)</span>
+
+    <span class="s1">void PyArray_ITER_RESET</span><span class="s3">(</span><span class="s1">flatiter it</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_ITER_NEXT</span><span class="s3">(</span><span class="s1">flatiter it</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_ITER_GOTO</span><span class="s3">(</span><span class="s1">flatiter it</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">* </span><span class="s1">destination</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_ITER_GOTO1D</span><span class="s3">(</span><span class="s1">flatiter it</span><span class="s3">, </span><span class="s1">npy_intp ind</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">PyArray_ITER_DATA</span><span class="s3">(</span><span class="s1">flatiter it</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_ITER_NOTDONE</span><span class="s3">(</span><span class="s1">flatiter it</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">void PyArray_MultiIter_RESET</span><span class="s3">(</span><span class="s1">broadcast multi</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_MultiIter_NEXT</span><span class="s3">(</span><span class="s1">broadcast multi</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_MultiIter_GOTO</span><span class="s3">(</span><span class="s1">broadcast multi</span><span class="s3">, </span><span class="s1">npy_intp dest</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_MultiIter_GOTO1D</span><span class="s3">(</span><span class="s1">broadcast multi</span><span class="s3">, </span><span class="s1">npy_intp ind</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">PyArray_MultiIter_DATA</span><span class="s3">(</span><span class="s1">broadcast multi</span><span class="s3">, </span><span class="s1">npy_intp i</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void PyArray_MultiIter_NEXTi</span><span class="s3">(</span><span class="s1">broadcast multi</span><span class="s3">, </span><span class="s1">npy_intp i</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">bint PyArray_MultiIter_NOTDONE</span><span class="s3">(</span><span class="s1">broadcast multi</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s0"># Functions from __multiarray_api.h</span>
+
+    <span class="s0"># Functions taking dtype and returning object/ndarray are disabled</span>
+    <span class="s0"># for now as they steal dtype references. I'm conservative and disable</span>
+    <span class="s0"># more than is probably needed until it can be checked further.</span>
+    <span class="s1">int PyArray_SetNumericOps </span><span class="s3">(</span><span class="s1">object</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">object PyArray_GetNumericOps </span><span class="s3">()</span>
+    <span class="s1">int PyArray_INCREF </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">except </span><span class="s3">*  </span><span class="s0"># uses PyArray_Item_INCREF...</span>
+    <span class="s1">int PyArray_XDECREF </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">except </span><span class="s3">*  </span><span class="s0"># uses PyArray_Item_DECREF...</span>
+    <span class="s1">void PyArray_SetStringFunction </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">dtype PyArray_DescrFromType </span><span class="s3">(</span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_TypeObjectFromType </span><span class="s3">(</span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">char </span><span class="s3">* </span><span class="s1">PyArray_Zero </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">char </span><span class="s3">* </span><span class="s1">PyArray_One </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_CastToType (ndarray, dtype, int)</span>
+    <span class="s1">int PyArray_CastTo </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_CastAnyTo </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_CanCastSafely </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)  </span><span class="s0"># writes errors</span>
+    <span class="s1">npy_bool PyArray_CanCastTo </span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">)  </span><span class="s0"># writes errors</span>
+    <span class="s1">int PyArray_ObjectType </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s1">dtype PyArray_DescrFromObject </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">)</span>
+    <span class="s0">#ndarray* PyArray_ConvertToCommonType (object, int *)</span>
+    <span class="s1">dtype PyArray_DescrFromScalar </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">dtype PyArray_DescrFromTypeObject </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">npy_intp PyArray_Size </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_Scalar (void *, dtype, object)</span>
+    <span class="s0">#object PyArray_FromScalar (object, dtype)</span>
+    <span class="s1">void PyArray_ScalarAsCtype </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s0">#int PyArray_CastScalarToCtype (object, void *, dtype)</span>
+    <span class="s0">#int PyArray_CastScalarDirect (object, dtype, void *, int)</span>
+    <span class="s1">object PyArray_ScalarFromObject </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s0">#PyArray_VectorUnaryFunc * PyArray_GetCastFunc (dtype, int)</span>
+    <span class="s1">object PyArray_FromDims </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">int </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_FromDimsAndDataAndDescr (int, int *, dtype, char *)</span>
+    <span class="s0">#object PyArray_FromAny (object, dtype, int, int, int, object)</span>
+    <span class="s1">object PyArray_EnsureArray </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_EnsureAnyArray </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_FromFile (stdio.FILE *, dtype, npy_intp, char *)</span>
+    <span class="s0">#object PyArray_FromString (char *, npy_intp, dtype, npy_intp, char *)</span>
+    <span class="s0">#object PyArray_FromBuffer (object, dtype, npy_intp, npy_intp)</span>
+    <span class="s0">#object PyArray_FromIter (object, dtype, npy_intp)</span>
+    <span class="s1">object PyArray_Return </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_GetField (ndarray, dtype, int)</span>
+    <span class="s0">#int PyArray_SetField (ndarray, dtype, int, object) except -1</span>
+    <span class="s1">object PyArray_Byteswap </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">npy_bool</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Resize </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">PyArray_Dims </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">NPY_ORDER</span><span class="s3">)</span>
+    <span class="s1">int PyArray_MoveInto </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_CopyInto </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_CopyAnyInto </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_CopyObject </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">object PyArray_NewCopy </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">NPY_ORDER</span><span class="s3">)</span>
+    <span class="s1">object PyArray_ToList </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_ToString </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">NPY_ORDER</span><span class="s3">)</span>
+    <span class="s1">int PyArray_ToFile </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">stdio</span><span class="s3">.</span><span class="s1">FILE </span><span class="s3">*, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">char </span><span class="s3">*) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_Dump </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">object PyArray_Dumps </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">int PyArray_ValidType </span><span class="s3">(</span><span class="s1">int</span><span class="s3">)  </span><span class="s0"># Cannot error</span>
+    <span class="s1">void PyArray_UpdateFlags </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_New </span><span class="s3">(</span><span class="s1">type</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_NewFromDescr (type, dtype, int, npy_intp *, npy_intp *, void *, int, object)</span>
+    <span class="s0">#dtype PyArray_DescrNew (dtype)</span>
+    <span class="s1">dtype PyArray_DescrNewFromType </span><span class="s3">(</span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">double PyArray_GetPriority </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">double</span><span class="s3">)  </span><span class="s0"># clears errors as of 1.25</span>
+    <span class="s1">object PyArray_IterNew </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_MultiIterNew </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, ...)</span>
+
+    <span class="s1">int PyArray_PyIntAsInt </span><span class="s3">(</span><span class="s1">object</span><span class="s3">) </span><span class="s2">except</span><span class="s1">? </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">npy_intp PyArray_PyIntAsIntp </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">int PyArray_Broadcast </span><span class="s3">(</span><span class="s1">broadcast</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">void PyArray_FillObjectArray </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">) </span><span class="s2">except </span><span class="s3">*</span>
+    <span class="s1">int PyArray_FillWithScalar </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">npy_bool PyArray_CheckStrides </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*)</span>
+    <span class="s1">dtype PyArray_DescrNewByteorder </span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">char</span><span class="s3">)</span>
+    <span class="s1">object PyArray_IterAllButAxis </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int </span><span class="s3">*)</span>
+    <span class="s0">#object PyArray_CheckFromAny (object, dtype, int, int, int, object)</span>
+    <span class="s0">#object PyArray_FromArray (ndarray, dtype, int)</span>
+    <span class="s1">object PyArray_FromInterface </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_FromStructInterface </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_FromArrayAttr (object, dtype, object)</span>
+    <span class="s0">#NPY_SCALARKIND PyArray_ScalarKind (int, ndarray*)</span>
+    <span class="s1">int PyArray_CanCoerceScalar </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">NPY_SCALARKIND</span><span class="s3">)</span>
+    <span class="s1">object PyArray_NewFlagsObject </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">npy_bool PyArray_CanCastScalar </span><span class="s3">(</span><span class="s1">type</span><span class="s3">, </span><span class="s1">type</span><span class="s3">)</span>
+    <span class="s0">#int PyArray_CompareUCS4 (npy_ucs4 *, npy_ucs4 *, register size_t)</span>
+    <span class="s1">int PyArray_RemoveSmallest </span><span class="s3">(</span><span class="s1">broadcast</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_ElementStrides </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">void PyArray_Item_INCREF </span><span class="s3">(</span><span class="s1">char </span><span class="s3">*, </span><span class="s1">dtype</span><span class="s3">) </span><span class="s2">except </span><span class="s3">*</span>
+    <span class="s1">void PyArray_Item_XDECREF </span><span class="s3">(</span><span class="s1">char </span><span class="s3">*, </span><span class="s1">dtype</span><span class="s3">) </span><span class="s2">except </span><span class="s3">*</span>
+    <span class="s1">object PyArray_FieldNames </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Transpose </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">PyArray_Dims </span><span class="s3">*)</span>
+    <span class="s1">object PyArray_TakeFrom </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">NPY_CLIPMODE</span><span class="s3">)</span>
+    <span class="s1">object PyArray_PutTo </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">NPY_CLIPMODE</span><span class="s3">)</span>
+    <span class="s1">object PyArray_PutMask </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Repeat </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Choose </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">NPY_CLIPMODE</span><span class="s3">)</span>
+    <span class="s1">int PyArray_Sort </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">NPY_SORTKIND</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">object PyArray_ArgSort </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">NPY_SORTKIND</span><span class="s3">)</span>
+    <span class="s1">object PyArray_SearchSorted </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">NPY_SEARCHSIDE</span><span class="s3">, </span><span class="s1">PyObject </span><span class="s3">*)</span>
+    <span class="s1">object PyArray_ArgMax </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_ArgMin </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Reshape </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Newshape </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">PyArray_Dims </span><span class="s3">*, </span><span class="s1">NPY_ORDER</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Squeeze </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_View (ndarray, dtype, type)</span>
+    <span class="s1">object PyArray_SwapAxes </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Max </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Min </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Ptp </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Mean </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Trace </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Diagonal </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Clip </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Conjugate </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Nonzero </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Std </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Sum </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_CumSum </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Prod </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_CumProd </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_All </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Any </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Compress </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Flatten </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">NPY_ORDER</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Ravel </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">NPY_ORDER</span><span class="s3">)</span>
+    <span class="s1">npy_intp PyArray_MultiplyList </span><span class="s3">(</span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">int PyArray_MultiplyIntList </span><span class="s3">(</span><span class="s1">int </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">void </span><span class="s3">* </span><span class="s1">PyArray_GetPtr </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">npy_intp</span><span class="s3">*)</span>
+    <span class="s1">int PyArray_CompareLists </span><span class="s3">(</span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s0">#int PyArray_AsCArray (object*, void *, npy_intp *, int, dtype)</span>
+    <span class="s0">#int PyArray_As1D (object*, char **, int *, int)</span>
+    <span class="s0">#int PyArray_As2D (object*, char ***, int *, int *, int)</span>
+    <span class="s1">int PyArray_Free </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s0">#int PyArray_Converter (object, object*)</span>
+    <span class="s1">int PyArray_IntpFromSequence </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">object PyArray_Concatenate </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_InnerProduct </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_MatrixProduct </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_CopyAndTranspose </span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Correlate </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">int PyArray_TypestrConvert </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s0">#int PyArray_DescrConverter (object, dtype*) except 0</span>
+    <span class="s0">#int PyArray_DescrConverter2 (object, dtype*) except 0</span>
+    <span class="s1">int PyArray_IntpConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">PyArray_Dims </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s0">#int PyArray_BufferConverter (object, chunk) except 0</span>
+    <span class="s1">int PyArray_AxisConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s1">int PyArray_BoolConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">npy_bool </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s1">int PyArray_ByteorderConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">char </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s1">int PyArray_OrderConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">NPY_ORDER </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s1">unsigned char PyArray_EquivTypes </span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">)  </span><span class="s0"># clears errors</span>
+    <span class="s0">#object PyArray_Zeros (int, npy_intp *, dtype, int)</span>
+    <span class="s0">#object PyArray_Empty (int, npy_intp *, dtype, int)</span>
+    <span class="s1">object PyArray_Where </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">, </span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Arange </span><span class="s3">(</span><span class="s1">double</span><span class="s3">, </span><span class="s1">double</span><span class="s3">, </span><span class="s1">double</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s0">#object PyArray_ArangeObj (object, object, object, dtype)</span>
+    <span class="s1">int PyArray_SortkindConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">NPY_SORTKIND </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s1">object PyArray_LexSort </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">object PyArray_Round </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">ndarray</span><span class="s3">)</span>
+    <span class="s1">unsigned char PyArray_EquivTypenums </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">int PyArray_RegisterDataType </span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_RegisterCastFunc </span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">PyArray_VectorUnaryFunc </span><span class="s3">*) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyArray_RegisterCanCast </span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">NPY_SCALARKIND</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s0">#void PyArray_InitArrFuncs (PyArray_ArrFuncs *)</span>
+    <span class="s1">object PyArray_IntTupleFromIntp </span><span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">npy_intp </span><span class="s3">*)</span>
+    <span class="s1">int PyArray_TypeNumFromName </span><span class="s3">(</span><span class="s1">char </span><span class="s3">*)</span>
+    <span class="s1">int PyArray_ClipmodeConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">NPY_CLIPMODE </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s0">#int PyArray_OutputConverter (object, ndarray*) except 0</span>
+    <span class="s1">object PyArray_BroadcastToShape </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">void _PyArray_SigintHandler </span><span class="s3">(</span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">void</span><span class="s3">* </span><span class="s1">_PyArray_GetSigintBuf </span><span class="s3">()</span>
+    <span class="s0">#int PyArray_DescrAlignConverter (object, dtype*) except 0</span>
+    <span class="s0">#int PyArray_DescrAlignConverter2 (object, dtype*) except 0</span>
+    <span class="s1">int PyArray_SearchsideConverter </span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">void </span><span class="s3">*) </span><span class="s2">except </span><span class="s5">0</span>
+    <span class="s1">object PyArray_CheckAxis </span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">int </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">npy_intp PyArray_OverflowMultiplyList </span><span class="s3">(</span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">int PyArray_CompareString </span><span class="s3">(</span><span class="s1">char </span><span class="s3">*, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">size_t</span><span class="s3">)</span>
+    <span class="s1">int PyArray_SetBaseObject</span><span class="s3">(</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">base</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1 </span><span class="s0"># NOTE: steals a reference to base! Use &quot;set_array_base()&quot; instead.</span>
+
+
+<span class="s0"># Typedefs that matches the runtime dtype objects in</span>
+<span class="s0"># the numpy module.</span>
+
+<span class="s0"># The ones that are commented out needs an IFDEF function</span>
+<span class="s0"># in Cython to enable them only on the right systems.</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_int8       int8_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_int16      int16_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_int32      int32_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_int64      int64_t</span>
+<span class="s0">#ctypedef npy_int96      int96_t</span>
+<span class="s0">#ctypedef npy_int128     int128_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_uint8      uint8_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_uint16     uint16_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_uint32     uint32_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_uint64     uint64_t</span>
+<span class="s0">#ctypedef npy_uint96     uint96_t</span>
+<span class="s0">#ctypedef npy_uint128    uint128_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_float32    float32_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_float64    float64_t</span>
+<span class="s0">#ctypedef npy_float80    float80_t</span>
+<span class="s0">#ctypedef npy_float128   float128_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">float complex  complex64_t</span>
+<span class="s2">ctypedef </span><span class="s1">double complex complex128_t</span>
+
+<span class="s0"># The int types are mapped a bit surprising --</span>
+<span class="s0"># numpy.int corresponds to 'l' and numpy.long to 'q'</span>
+<span class="s2">ctypedef </span><span class="s1">npy_long       int_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_longlong   longlong_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_ulong      uint_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_ulonglong  ulonglong_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_intp       intp_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_uintp      uintp_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_double     float_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_double     double_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_longdouble longdouble_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_cfloat      cfloat_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_cdouble     cdouble_t</span>
+<span class="s2">ctypedef </span><span class="s1">npy_clongdouble clongdouble_t</span>
+
+<span class="s2">ctypedef </span><span class="s1">npy_cdouble     complex_t</span>
+
+<span class="s2">cdef </span><span class="s1">inline object PyArray_MultiIterNew1</span><span class="s3">(</span><span class="s1">a</span><span class="s3">):</span>
+    <span class="s2">return </span><span class="s1">PyArray_MultiIterNew</span><span class="s3">(</span><span class="s5">1</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">a</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline object PyArray_MultiIterNew2</span><span class="s3">(</span><span class="s1">a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">):</span>
+    <span class="s2">return </span><span class="s1">PyArray_MultiIterNew</span><span class="s3">(</span><span class="s5">2</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">a</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">b</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline object PyArray_MultiIterNew3</span><span class="s3">(</span><span class="s1">a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c</span><span class="s3">):</span>
+    <span class="s2">return </span><span class="s1">PyArray_MultiIterNew</span><span class="s3">(</span><span class="s5">3</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">a</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">b</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt; </span><span class="s1">c</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline object PyArray_MultiIterNew4</span><span class="s3">(</span><span class="s1">a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c</span><span class="s3">, </span><span class="s1">d</span><span class="s3">):</span>
+    <span class="s2">return </span><span class="s1">PyArray_MultiIterNew</span><span class="s3">(</span><span class="s5">4</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">a</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">b</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">c</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt; </span><span class="s1">d</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline object PyArray_MultiIterNew5</span><span class="s3">(</span><span class="s1">a</span><span class="s3">, </span><span class="s1">b</span><span class="s3">, </span><span class="s1">c</span><span class="s3">, </span><span class="s1">d</span><span class="s3">, </span><span class="s1">e</span><span class="s3">):</span>
+    <span class="s2">return </span><span class="s1">PyArray_MultiIterNew</span><span class="s3">(</span><span class="s5">5</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">a</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">b</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt;</span><span class="s1">c</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt; </span><span class="s1">d</span><span class="s3">, &lt;</span><span class="s1">void</span><span class="s3">*&gt; </span><span class="s1">e</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline tuple PyDataType_SHAPE</span><span class="s3">(</span><span class="s1">dtype d</span><span class="s3">):</span>
+    <span class="s2">if </span><span class="s1">PyDataType_HASSUBARRAY</span><span class="s3">(</span><span class="s1">d</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s3">&lt;</span><span class="s1">tuple</span><span class="s3">&gt;</span><span class="s1">d</span><span class="s3">.</span><span class="s1">subarray</span><span class="s3">.</span><span class="s1">shape</span>
+    <span class="s2">else</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s3">()</span>
+
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s4">&quot;numpy/ndarrayobject.h&quot;</span><span class="s3">:</span>
+    <span class="s1">PyTypeObject PyTimedeltaArrType_Type</span>
+    <span class="s1">PyTypeObject PyDatetimeArrType_Type</span>
+    <span class="s2">ctypedef </span><span class="s1">int64_t npy_timedelta</span>
+    <span class="s2">ctypedef </span><span class="s1">int64_t npy_datetime</span>
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s4">&quot;numpy/ndarraytypes.h&quot;</span><span class="s3">:</span>
+    <span class="s2">ctypedef </span><span class="s1">struct PyArray_DatetimeMetaData</span><span class="s3">:</span>
+        <span class="s1">NPY_DATETIMEUNIT base</span>
+        <span class="s1">int64_t num</span>
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s4">&quot;numpy/arrayscalars.h&quot;</span><span class="s3">:</span>
+
+    <span class="s0"># abstract types</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">generic </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">number </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">integer </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">signedinteger </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">unsignedinteger </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">inexact </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">floating </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">complexfloating </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">flexible </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">character </span><span class="s3">[</span><span class="s1">object PyObject</span><span class="s3">]:</span>
+        <span class="s2">pass</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct PyDatetimeScalarObject</span><span class="s3">:</span>
+        <span class="s0"># PyObject_HEAD</span>
+        <span class="s1">npy_datetime obval</span>
+        <span class="s1">PyArray_DatetimeMetaData obmeta</span>
+
+    <span class="s2">ctypedef </span><span class="s1">struct PyTimedeltaScalarObject</span><span class="s3">:</span>
+        <span class="s0"># PyObject_HEAD</span>
+        <span class="s1">npy_timedelta obval</span>
+        <span class="s1">PyArray_DatetimeMetaData obmeta</span>
+
+    <span class="s2">ctypedef </span><span class="s1">enum NPY_DATETIMEUNIT</span><span class="s3">:</span>
+        <span class="s1">NPY_FR_Y</span>
+        <span class="s1">NPY_FR_M</span>
+        <span class="s1">NPY_FR_W</span>
+        <span class="s1">NPY_FR_D</span>
+        <span class="s1">NPY_FR_B</span>
+        <span class="s1">NPY_FR_h</span>
+        <span class="s1">NPY_FR_m</span>
+        <span class="s1">NPY_FR_s</span>
+        <span class="s1">NPY_FR_ms</span>
+        <span class="s1">NPY_FR_us</span>
+        <span class="s1">NPY_FR_ns</span>
+        <span class="s1">NPY_FR_ps</span>
+        <span class="s1">NPY_FR_fs</span>
+        <span class="s1">NPY_FR_as</span>
+        <span class="s1">NPY_FR_GENERIC</span>
+
+
+<span class="s0">#</span>
+<span class="s0"># ufunc API</span>
+<span class="s0">#</span>
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s4">&quot;numpy/ufuncobject.h&quot;</span><span class="s3">:</span>
+
+    <span class="s2">ctypedef </span><span class="s1">void </span><span class="s3">(*</span><span class="s1">PyUFuncGenericFunction</span><span class="s3">) (</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+
+    <span class="s2">ctypedef class </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">ufunc </span><span class="s3">[</span><span class="s1">object PyUFuncObject</span><span class="s3">, </span><span class="s1">check_size ignore</span><span class="s3">]:</span>
+        <span class="s2">cdef</span><span class="s3">:</span>
+            <span class="s1">int nin</span><span class="s3">, </span><span class="s1">nout</span><span class="s3">, </span><span class="s1">nargs</span>
+            <span class="s1">int identity</span>
+            <span class="s1">PyUFuncGenericFunction </span><span class="s3">*</span><span class="s1">functions</span>
+            <span class="s1">void </span><span class="s3">**</span><span class="s1">data</span>
+            <span class="s1">int ntypes</span>
+            <span class="s1">int check_return</span>
+            <span class="s1">char </span><span class="s3">*</span><span class="s1">name</span>
+            <span class="s1">char </span><span class="s3">*</span><span class="s1">types</span>
+            <span class="s1">char </span><span class="s3">*</span><span class="s1">doc</span>
+            <span class="s1">void </span><span class="s3">*</span><span class="s1">ptr</span>
+            <span class="s1">PyObject </span><span class="s3">*</span><span class="s1">obj</span>
+            <span class="s1">PyObject </span><span class="s3">*</span><span class="s1">userloops</span>
+
+    <span class="s2">cdef </span><span class="s1">enum</span><span class="s3">:</span>
+        <span class="s1">PyUFunc_Zero</span>
+        <span class="s1">PyUFunc_One</span>
+        <span class="s1">PyUFunc_None</span>
+        <span class="s1">UFUNC_ERR_IGNORE</span>
+        <span class="s1">UFUNC_ERR_WARN</span>
+        <span class="s1">UFUNC_ERR_RAISE</span>
+        <span class="s1">UFUNC_ERR_CALL</span>
+        <span class="s1">UFUNC_ERR_PRINT</span>
+        <span class="s1">UFUNC_ERR_LOG</span>
+        <span class="s1">UFUNC_MASK_DIVIDEBYZERO</span>
+        <span class="s1">UFUNC_MASK_OVERFLOW</span>
+        <span class="s1">UFUNC_MASK_UNDERFLOW</span>
+        <span class="s1">UFUNC_MASK_INVALID</span>
+        <span class="s1">UFUNC_SHIFT_DIVIDEBYZERO</span>
+        <span class="s1">UFUNC_SHIFT_OVERFLOW</span>
+        <span class="s1">UFUNC_SHIFT_UNDERFLOW</span>
+        <span class="s1">UFUNC_SHIFT_INVALID</span>
+        <span class="s1">UFUNC_FPE_DIVIDEBYZERO</span>
+        <span class="s1">UFUNC_FPE_OVERFLOW</span>
+        <span class="s1">UFUNC_FPE_UNDERFLOW</span>
+        <span class="s1">UFUNC_FPE_INVALID</span>
+        <span class="s1">UFUNC_ERR_DEFAULT</span>
+        <span class="s1">UFUNC_ERR_DEFAULT2</span>
+
+    <span class="s1">object PyUFunc_FromFuncAndData</span><span class="s3">(</span><span class="s1">PyUFuncGenericFunction </span><span class="s3">*,</span>
+          <span class="s1">void </span><span class="s3">**, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">)</span>
+    <span class="s1">int PyUFunc_RegisterLoopForType</span><span class="s3">(</span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">int</span><span class="s3">,</span>
+                                    <span class="s1">PyUFuncGenericFunction</span><span class="s3">, </span><span class="s1">int </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">void PyUFunc_f_f_As_d_d \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_d_d \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_f_f \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_g_g \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_F_F_As_D_D \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_F_F \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_D_D \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_G_G \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_O_O \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_ff_f_As_dd_d \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_ff_f \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_dd_d \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_gg_g \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_FF_F_As_DD_D \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_DD_D \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_FF_F \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_GG_G \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_OO_O \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_O_O_method \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_OO_O_method \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_On_Om \</span>
+         <span class="s3">(</span><span class="s1">char </span><span class="s3">**, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">npy_intp </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">*)</span>
+    <span class="s1">int PyUFunc_GetPyValues \</span>
+        <span class="s3">(</span><span class="s1">char </span><span class="s3">*, </span><span class="s1">int </span><span class="s3">*, </span><span class="s1">int </span><span class="s3">*, </span><span class="s1">PyObject </span><span class="s3">**)</span>
+    <span class="s1">int PyUFunc_checkfperr \</span>
+           <span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">PyObject </span><span class="s3">*, </span><span class="s1">int </span><span class="s3">*)</span>
+    <span class="s1">void PyUFunc_clearfperr</span><span class="s3">()</span>
+    <span class="s1">int PyUFunc_getfperr</span><span class="s3">()</span>
+    <span class="s1">int PyUFunc_handlefperr \</span>
+        <span class="s3">(</span><span class="s1">int</span><span class="s3">, </span><span class="s1">PyObject </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int </span><span class="s3">*) </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+    <span class="s1">int PyUFunc_ReplaceLoopBySignature \</span>
+        <span class="s3">(</span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">PyUFuncGenericFunction</span><span class="s3">, </span><span class="s1">int </span><span class="s3">*, </span><span class="s1">PyUFuncGenericFunction </span><span class="s3">*)</span>
+    <span class="s1">object PyUFunc_FromFuncAndDataAndSignature \</span>
+             <span class="s3">(</span><span class="s1">PyUFuncGenericFunction </span><span class="s3">*, </span><span class="s1">void </span><span class="s3">**, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">int</span><span class="s3">,</span>
+              <span class="s1">int</span><span class="s3">, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">char </span><span class="s3">*, </span><span class="s1">int</span><span class="s3">, </span><span class="s1">char </span><span class="s3">*)</span>
+
+    <span class="s1">int _import_umath</span><span class="s3">() </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span>
+
+<span class="s2">cdef </span><span class="s1">inline void set_array_base</span><span class="s3">(</span><span class="s1">ndarray arr</span><span class="s3">, </span><span class="s1">object base</span><span class="s3">):</span>
+    <span class="s1">Py_INCREF</span><span class="s3">(</span><span class="s1">base</span><span class="s3">) </span><span class="s0"># important to do this before stealing the reference below!</span>
+    <span class="s1">PyArray_SetBaseObject</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">base</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline object get_array_base</span><span class="s3">(</span><span class="s1">ndarray arr</span><span class="s3">):</span>
+    <span class="s1">base </span><span class="s3">= </span><span class="s1">PyArray_BASE</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+    <span class="s2">if </span><span class="s1">base </span><span class="s2">is </span><span class="s1">NULL</span><span class="s3">:</span>
+        <span class="s2">return None</span>
+    <span class="s2">return </span><span class="s3">&lt;</span><span class="s1">object</span><span class="s3">&gt;</span><span class="s1">base</span>
+
+<span class="s0"># Versions of the import_* functions which are more suitable for</span>
+<span class="s0"># Cython code.</span>
+<span class="s2">cdef </span><span class="s1">inline int import_array</span><span class="s3">() </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span><span class="s3">:</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">__pyx_import_array</span><span class="s3">()</span>
+    <span class="s2">except </span><span class="s1">Exception</span><span class="s3">:</span>
+        <span class="s2">raise </span><span class="s1">ImportError</span><span class="s3">(</span><span class="s4">&quot;numpy.core.multiarray failed to import&quot;</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline int import_umath</span><span class="s3">() </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span><span class="s3">:</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">_import_umath</span><span class="s3">()</span>
+    <span class="s2">except </span><span class="s1">Exception</span><span class="s3">:</span>
+        <span class="s2">raise </span><span class="s1">ImportError</span><span class="s3">(</span><span class="s4">&quot;numpy.core.umath failed to import&quot;</span><span class="s3">)</span>
+
+<span class="s2">cdef </span><span class="s1">inline int import_ufunc</span><span class="s3">() </span><span class="s2">except </span><span class="s3">-</span><span class="s5">1</span><span class="s3">:</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">_import_umath</span><span class="s3">()</span>
+    <span class="s2">except </span><span class="s1">Exception</span><span class="s3">:</span>
+        <span class="s2">raise </span><span class="s1">ImportError</span><span class="s3">(</span><span class="s4">&quot;numpy.core.umath failed to import&quot;</span><span class="s3">)</span>
+
+
+<span class="s2">cdef </span><span class="s1">inline bint is_timedelta64_object</span><span class="s3">(</span><span class="s1">object obj</span><span class="s3">):</span>
+    <span class="s4">&quot;&quot;&quot; 
+    Cython equivalent of `isinstance(obj, np.timedelta64)` 
+ 
+    Parameters 
+    ---------- 
+    obj : object 
+ 
+    Returns 
+    ------- 
+    bool 
+    &quot;&quot;&quot;</span>
+    <span class="s2">return </span><span class="s1">PyObject_TypeCheck</span><span class="s3">(</span><span class="s1">obj</span><span class="s3">, &amp;</span><span class="s1">PyTimedeltaArrType_Type</span><span class="s3">)</span>
+
+
+<span class="s2">cdef </span><span class="s1">inline bint is_datetime64_object</span><span class="s3">(</span><span class="s1">object obj</span><span class="s3">):</span>
+    <span class="s4">&quot;&quot;&quot; 
+    Cython equivalent of `isinstance(obj, np.datetime64)` 
+ 
+    Parameters 
+    ---------- 
+    obj : object 
+ 
+    Returns 
+    ------- 
+    bool 
+    &quot;&quot;&quot;</span>
+    <span class="s2">return </span><span class="s1">PyObject_TypeCheck</span><span class="s3">(</span><span class="s1">obj</span><span class="s3">, &amp;</span><span class="s1">PyDatetimeArrType_Type</span><span class="s3">)</span>
+
+
+<span class="s2">cdef </span><span class="s1">inline npy_datetime get_datetime64_value</span><span class="s3">(</span><span class="s1">object obj</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+    <span class="s4">&quot;&quot;&quot; 
+    returns the int64 value underlying scalar numpy datetime64 object 
+ 
+    Note that to interpret this as a datetime, the corresponding unit is 
+    also needed.  That can be found using `get_datetime64_unit`. 
+    &quot;&quot;&quot;</span>
+    <span class="s2">return </span><span class="s3">(&lt;</span><span class="s1">PyDatetimeScalarObject</span><span class="s3">*&gt;</span><span class="s1">obj</span><span class="s3">).</span><span class="s1">obval</span>
+
+
+<span class="s2">cdef </span><span class="s1">inline npy_timedelta get_timedelta64_value</span><span class="s3">(</span><span class="s1">object obj</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+    <span class="s4">&quot;&quot;&quot; 
+    returns the int64 value underlying scalar numpy timedelta64 object 
+    &quot;&quot;&quot;</span>
+    <span class="s2">return </span><span class="s3">(&lt;</span><span class="s1">PyTimedeltaScalarObject</span><span class="s3">*&gt;</span><span class="s1">obj</span><span class="s3">).</span><span class="s1">obval</span>
+
+
+<span class="s2">cdef </span><span class="s1">inline NPY_DATETIMEUNIT get_datetime64_unit</span><span class="s3">(</span><span class="s1">object obj</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+    <span class="s4">&quot;&quot;&quot; 
+    returns the unit part of the dtype for a numpy datetime64 object. 
+    &quot;&quot;&quot;</span>
+    <span class="s2">return </span><span class="s3">&lt;</span><span class="s1">NPY_DATETIMEUNIT</span><span class="s3">&gt;(&lt;</span><span class="s1">PyDatetimeScalarObject</span><span class="s3">*&gt;</span><span class="s1">obj</span><span class="s3">).</span><span class="s1">obmeta</span><span class="s3">.</span><span class="s1">base</span>
+</pre>
+</body>
+</html>

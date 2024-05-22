@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>modificacion_PAF_PTM.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+modificacion_PAF_PTM.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">time</span>
+<span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">from </span><span class="s1">config </span><span class="s0">import </span><span class="s1">WEBDRIVER_PATH</span><span class="s2">, </span><span class="s1">EDGE_BINARY_PATH</span><span class="s2">, </span><span class="s1">USER_PROFILE_PATH</span>
+<span class="s0">from </span><span class="s1">selenium </span><span class="s0">import </span><span class="s1">webdriver</span>
+<span class="s0">from </span><span class="s1">datetime </span><span class="s0">import </span><span class="s1">datetime</span>
+<span class="s0">from </span><span class="s1">selenium</span><span class="s2">.</span><span class="s1">webdriver</span><span class="s2">.</span><span class="s1">common</span><span class="s2">.</span><span class="s1">by </span><span class="s0">import </span><span class="s1">By</span>
+<span class="s0">from </span><span class="s1">selenium</span><span class="s2">.</span><span class="s1">webdriver</span><span class="s2">.</span><span class="s1">edge</span><span class="s2">.</span><span class="s1">options </span><span class="s0">import </span><span class="s1">Options</span>
+<span class="s0">from </span><span class="s1">selenium</span><span class="s2">.</span><span class="s1">webdriver</span><span class="s2">.</span><span class="s1">edge</span><span class="s2">.</span><span class="s1">service </span><span class="s0">import </span><span class="s1">Service</span>
+<span class="s0">from </span><span class="s1">selenium</span><span class="s2">.</span><span class="s1">webdriver</span><span class="s2">.</span><span class="s1">support</span><span class="s2">.</span><span class="s1">ui </span><span class="s0">import </span><span class="s1">Select</span>
+<span class="s0">from </span><span class="s1">selenium</span><span class="s2">.</span><span class="s1">webdriver</span><span class="s2">.</span><span class="s1">support</span><span class="s2">.</span><span class="s1">ui </span><span class="s0">import </span><span class="s1">WebDriverWait</span>
+<span class="s0">from </span><span class="s1">selenium</span><span class="s2">.</span><span class="s1">webdriver</span><span class="s2">.</span><span class="s1">support </span><span class="s0">import </span><span class="s1">expected_conditions </span><span class="s0">as </span><span class="s1">EC</span>
+<span class="s0">from </span><span class="s1">selenium</span><span class="s2">.</span><span class="s1">common</span><span class="s2">.</span><span class="s1">exceptions </span><span class="s0">import </span><span class="s1">TimeoutException</span>
+
+<span class="s0">def </span><span class="s1">es_hora_mayor_o_igual</span><span class="s2">(</span><span class="s1">hora</span><span class="s2">, </span><span class="s1">hora_comparacion</span><span class="s2">=</span><span class="s3">&quot;23:00&quot;</span><span class="s2">):</span>
+    <span class="s1">hora_formato </span><span class="s2">= </span><span class="s1">datetime</span><span class="s2">.</span><span class="s1">strptime</span><span class="s2">(</span><span class="s1">hora</span><span class="s2">, </span><span class="s3">&quot;%H:%M&quot;</span><span class="s2">)</span>
+    <span class="s1">hora_comparacion_formato </span><span class="s2">= </span><span class="s1">datetime</span><span class="s2">.</span><span class="s1">strptime</span><span class="s2">(</span><span class="s1">hora_comparacion</span><span class="s2">, </span><span class="s3">&quot;%H:%M&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">hora_formato </span><span class="s2">&gt;= </span><span class="s1">hora_comparacion_formato</span>
+<span class="s0">def </span><span class="s1">realizar_acciones_basedo_en_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, *</span><span class="s1">horarios</span><span class="s2">):</span>
+    <span class="s4"># Comprobar si alguno de los horarios es mayor o igual a 23:00</span>
+    <span class="s0">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">es_hora_mayor_o_igual</span><span class="s2">(</span><span class="s1">hora</span><span class="s2">) </span><span class="s0">for </span><span class="s1">hora </span><span class="s0">in </span><span class="s1">horarios</span><span class="s2">):</span>
+        <span class="s4"># Código para hacer clic en Guardar y luego en la ventana emergente</span>
+        <span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span>
+            <span class="s1">EC</span><span class="s2">.</span><span class="s1">element_to_be_clickable</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_btnAdicionarHorario&quot;</span><span class="s2">))</span>
+        <span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+        <span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span>
+            <span class="s1">EC</span><span class="s2">.</span><span class="s1">element_to_be_clickable</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_ASPxPopupControlMensaje_HCB-1&quot;</span><span class="s2">))</span>
+        <span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s4"># Código para hacer clic en Guardar si los horarios son menores a 23:00</span>
+        <span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span>
+            <span class="s1">EC</span><span class="s2">.</span><span class="s1">element_to_be_clickable</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_btnAdicionarHorario&quot;</span><span class="s2">))</span>
+        <span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+<span class="s0">def </span><span class="s1">seleccionar_dias</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">dias</span><span class="s2">):</span>
+    <span class="s0">for </span><span class="s1">dia </span><span class="s0">in </span><span class="s1">dias</span><span class="s2">:</span>
+        <span class="s1">checkbox </span><span class="s2">= </span><span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span><span class="s1">EC</span><span class="s2">.</span><span class="s1">element_to_be_clickable</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">CSS_SELECTOR</span><span class="s2">, </span><span class="s3">f&quot;td:nth-child(</span><span class="s0">{</span><span class="s1">dia</span><span class="s0">}</span><span class="s3">) &gt; label&quot;</span><span class="s2">)))</span>
+        <span class="s1">checkbox</span><span class="s2">.</span><span class="s1">click</span><span class="s2">()</span>
+<span class="s0">def </span><span class="s1">buscar_y_eliminar_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">dia_buscado</span><span class="s2">):</span>
+    <span class="s4"># Esperar a que la tabla de horarios esté visible</span>
+    <span class="s1">tabla_horarios </span><span class="s2">= </span><span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span>
+        <span class="s1">EC</span><span class="s2">.</span><span class="s1">visibility_of_element_located</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_gvHorariosAtencion_DXMainTable&quot;</span><span class="s2">))</span>
+    <span class="s2">)</span>
+    <span class="s4"># Encontrar todas las filas en la tabla</span>
+    <span class="s1">filas </span><span class="s2">= </span><span class="s1">tabla_horarios</span><span class="s2">.</span><span class="s1">find_elements</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">TAG_NAME</span><span class="s2">, </span><span class="s3">&quot;tr&quot;</span><span class="s2">)</span>
+    <span class="s4"># Iterar a través de las filas para encontrar el día buscado</span>
+    <span class="s0">for </span><span class="s1">fila </span><span class="s0">in </span><span class="s1">filas</span><span class="s2">:</span>
+        <span class="s1">celdas </span><span class="s2">= </span><span class="s1">fila</span><span class="s2">.</span><span class="s1">find_elements</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">TAG_NAME</span><span class="s2">, </span><span class="s3">&quot;td&quot;</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">celdas</span><span class="s2">) &gt; </span><span class="s5">1 </span><span class="s0">and </span><span class="s1">dia_buscado </span><span class="s0">in </span><span class="s1">celdas</span><span class="s2">[</span><span class="s5">0</span><span class="s2">].</span><span class="s1">text</span><span class="s2">:</span>
+            <span class="s4"># Encontrar el botón Borrar en esta fila y hacer clic</span>
+            <span class="s1">boton_borrar </span><span class="s2">= </span><span class="s1">celdas</span><span class="s2">[-</span><span class="s5">1</span><span class="s2">].</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">TAG_NAME</span><span class="s2">, </span><span class="s3">&quot;a&quot;</span><span class="s2">)</span>
+            <span class="s1">boton_borrar</span><span class="s2">.</span><span class="s1">click</span><span class="s2">()</span>
+            <span class="s0">return  </span><span class="s4"># Sale de la función después de encontrar y hacer clic en el botón</span>
+<span class="s0">def </span><span class="s1">establecer_tipo_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">tipo_horario_id</span><span class="s2">, </span><span class="s1">tipo_horario_text</span><span class="s2">):</span>
+    <span class="s1">select_element </span><span class="s2">= </span><span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span>
+        <span class="s1">EC</span><span class="s2">.</span><span class="s1">element_to_be_clickable</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s1">tipo_horario_id</span><span class="s2">))</span>
+    <span class="s2">)</span>
+    <span class="s1">Select</span><span class="s2">(</span><span class="s1">select_element</span><span class="s2">).</span><span class="s1">select_by_visible_text</span><span class="s2">(</span><span class="s1">tipo_horario_text</span><span class="s2">)</span>
+
+<span class="s0">def </span><span class="s1">establecer_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">tipo_horario_text</span><span class="s2">, </span><span class="s1">entrada1</span><span class="s2">, </span><span class="s1">salida1</span><span class="s2">, </span><span class="s1">entrada2</span><span class="s2">, </span><span class="s1">salida2</span><span class="s2">, </span><span class="s1">prefijo_id</span><span class="s2">):</span>
+    <span class="s4"># Seleccionar tipo de horario</span>
+    <span class="s1">establecer_tipo_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s3">f'</span><span class="s0">{</span><span class="s1">prefijo_id</span><span class="s0">}</span><span class="s3">ddlTipoHorario'</span><span class="s2">, </span><span class="s1">tipo_horario_text</span><span class="s2">)</span>
+
+    <span class="s4"># Configurar los horarios usando JavaScript</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_timeEntrada1_I&quot;</span><span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">execute_script</span><span class="s2">(</span><span class="s3">f&quot;document.getElementById('</span><span class="s0">{</span><span class="s1">prefijo_id</span><span class="s0">}</span><span class="s3">timeEntrada1_I').value = '</span><span class="s0">{</span><span class="s1">entrada1</span><span class="s0">}</span><span class="s3">';&quot;</span><span class="s2">)</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_timeSalida1_I&quot;</span><span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">execute_script</span><span class="s2">(</span><span class="s3">f&quot;document.getElementById('</span><span class="s0">{</span><span class="s1">prefijo_id</span><span class="s0">}</span><span class="s3">timeSalida1_I').value = '</span><span class="s0">{</span><span class="s1">salida1</span><span class="s0">}</span><span class="s3">';&quot;</span><span class="s2">)</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_timeEntrada2_I&quot;</span><span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">execute_script</span><span class="s2">(</span><span class="s3">f&quot;document.getElementById('</span><span class="s0">{</span><span class="s1">prefijo_id</span><span class="s0">}</span><span class="s3">timeEntrada2_I').value = '</span><span class="s0">{</span><span class="s1">entrada2</span><span class="s0">}</span><span class="s3">';&quot;</span><span class="s2">)</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_timeSalida2_I&quot;</span><span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">execute_script</span><span class="s2">(</span><span class="s3">f&quot;document.getElementById('</span><span class="s0">{</span><span class="s1">prefijo_id</span><span class="s0">}</span><span class="s3">timeSalida2_I').value = '</span><span class="s0">{</span><span class="s1">salida2</span><span class="s0">}</span><span class="s3">';&quot;</span><span class="s2">)</span>
+
+<span class="s0">def </span><span class="s1">ejecutar_automatizacion_modificacion</span><span class="s2">(</span><span class="s1">ruta_excel</span><span class="s2">):</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s4"># Configuración del WebDriver de Edge</span>
+        <span class="s1">webdriver_path </span><span class="s2">= </span><span class="s1">WEBDRIVER_PATH</span>
+        <span class="s1">edge_dev_path </span><span class="s2">= </span><span class="s1">EDGE_BINARY_PATH</span>
+        <span class="s1">perfil_usuario </span><span class="s2">= </span><span class="s1">USER_PROFILE_PATH</span>
+
+        <span class="s1">options </span><span class="s2">= </span><span class="s1">Options</span><span class="s2">()</span>
+        <span class="s1">options</span><span class="s2">.</span><span class="s1">binary_location </span><span class="s2">= </span><span class="s1">edge_dev_path</span>
+        <span class="s1">options</span><span class="s2">.</span><span class="s1">add_argument</span><span class="s2">(</span><span class="s3">f'user-data-dir=</span><span class="s0">{</span><span class="s1">perfil_usuario</span><span class="s0">}</span><span class="s3">'</span><span class="s2">)</span>
+        <span class="s1">service </span><span class="s2">= </span><span class="s1">Service</span><span class="s2">(</span><span class="s1">webdriver_path</span><span class="s2">)</span>
+        <span class="s1">driver </span><span class="s2">= </span><span class="s1">webdriver</span><span class="s2">.</span><span class="s1">Edge</span><span class="s2">(</span><span class="s1">service</span><span class="s2">=</span><span class="s1">service</span><span class="s2">, </span><span class="s1">options</span><span class="s2">=</span><span class="s1">options</span><span class="s2">)</span>
+
+        <span class="s1">mensaje_deseado </span><span class="s2">= </span><span class="s3">&quot;Se guardo el registro de Punto de Atención con la asignación&quot;</span>
+        <span class="s4"># Lee los datos desde el archivo Excel y forza todas las columnas a ser tratadas como texto</span>
+        <span class="s1">df </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">read_excel</span><span class="s2">(</span>
+            <span class="s1">ruta_excel</span><span class="s2">,</span>
+            <span class="s1">sheet_name</span><span class="s2">=</span><span class="s3">&quot;Cargas_de_Alta_BOT&quot;</span><span class="s2">,</span>
+            <span class="s1">dtype</span><span class="s2">=</span><span class="s1">str  </span><span class="s4"># Forza todas las columnas a ser tratadas como texto</span>
+        <span class="s2">)</span>
+
+        <span class="s1">driver</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;https://appweb.asfi.gob.bo/RMI/Login.aspx?ReturnUrl=%2fRMI%2fDefault.aspx&quot;</span><span class="s2">)</span>
+
+        <span class="s0">try</span><span class="s2">:</span>
+            <span class="s1">nueva_url </span><span class="s2">= </span><span class="s3">&quot;https://appweb.asfi.gob.bo/RMI/Default.aspx&quot;</span>
+            <span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">60</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span><span class="s1">EC</span><span class="s2">.</span><span class="s1">url_to_be</span><span class="s2">(</span><span class="s1">nueva_url</span><span class="s2">))</span>
+            <span class="s1">hora_iniciacion </span><span class="s2">= </span><span class="s1">datetime</span><span class="s2">.</span><span class="s1">now</span><span class="s2">().</span><span class="s1">strftime</span><span class="s2">(</span><span class="s3">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="s2">)</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s3">f&quot;Inicio de sesión exitoso, URL actualizada a las </span><span class="s0">{</span><span class="s1">hora_iniciacion</span><span class="s0">}</span><span class="s3">.&quot;</span><span class="s2">)</span>
+        <span class="s0">except </span><span class="s1">TimeoutException</span><span class="s2">:</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;Tiempo de espera excedido para el cambio de URL después del inicio de sesión.&quot;</span><span class="s2">)</span>
+
+        <span class="s1">contador_row </span><span class="s2">= </span><span class="s5">0</span>
+        <span class="s0">for </span><span class="s1">index</span><span class="s2">, </span><span class="s1">row </span><span class="s0">in </span><span class="s1">df</span><span class="s2">.</span><span class="s1">iterrows</span><span class="s2">():</span>
+            <span class="s1">contador_row </span><span class="s2">+= </span><span class="s5">1</span>
+            <span class="s1">mef </span><span class="s2">= </span><span class="s1">str</span><span class="s2">(</span><span class="s1">row</span><span class="s2">[</span><span class="s3">'MEF'</span><span class="s2">])[-</span><span class="s5">4</span><span class="s2">:]</span>
+            <span class="s4"># nueva_direccion = row['DIRECCIONES']</span>
+            <span class="s4"># nombre_comercio = row['NOMBRE_PTM']</span>
+
+            <span class="s4"># Asignaciones correctas dentro del bucle</span>
+            <span class="s1">horario_entrada1_SAB </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_SAB_MAÑ_INI&quot;</span><span class="s2">]</span>
+            <span class="s1">horario_salida1_SAB </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_SAB_MAÑ_FIN&quot;</span><span class="s2">]</span>
+            <span class="s1">horario_entrada2_SAB </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_SAB_TAR_INI&quot;</span><span class="s2">]</span>
+            <span class="s1">horario_salida2_SAB </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_SAB_TAR_FIN&quot;</span><span class="s2">]</span>
+            <span class="s1">horario_entrada1_DOM </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_DOM_MAÑ_INI&quot;</span><span class="s2">]</span>
+            <span class="s1">horario_salida1_DOM </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_DOM_MAÑ_FIN&quot;</span><span class="s2">]</span>
+            <span class="s1">horario_entrada2_DOM </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_DOM_TAR_INI&quot;</span><span class="s2">]</span>
+            <span class="s1">horario_salida2_DOM </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;HORARIO_DOM_TAR_FIN&quot;</span><span class="s2">]</span>
+            <span class="s1">tipo_de_horario_SAB </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;TIPO_HORARIO_SAB&quot;</span><span class="s2">]</span>
+            <span class="s1">tipo_de_horario_DOM </span><span class="s2">= </span><span class="s1">row</span><span class="s2">[</span><span class="s3">&quot;TIPO_HORARIO_DOM&quot;</span><span class="s2">]</span>
+
+            <span class="s4"># Horario Lunes-Viernes, Sábado y Domingo</span>
+            <span class="s1">horario_sabado </span><span class="s2">= </span><span class="s1">horario_entrada1_SAB </span><span class="s2">+ </span><span class="s3">&quot;-&quot; </span><span class="s2">+ </span><span class="s1">horario_salida1_SAB </span><span class="s2">+ </span><span class="s3">&quot;-&quot; </span><span class="s2">+ </span><span class="s1">horario_entrada2_SAB </span><span class="s2">+ </span><span class="s3">&quot;-&quot; </span><span class="s2">+ </span><span class="s1">horario_salida2_SAB</span>
+            <span class="s1">horario_domingo </span><span class="s2">= </span><span class="s1">horario_entrada1_DOM </span><span class="s2">+ </span><span class="s3">&quot;-&quot; </span><span class="s2">+ </span><span class="s1">horario_salida1_DOM </span><span class="s2">+ </span><span class="s3">&quot;-&quot; </span><span class="s2">+ </span><span class="s1">horario_entrada2_DOM </span><span class="s2">+ </span><span class="s3">&quot;-&quot; </span><span class="s2">+ </span><span class="s1">horario_salida2_DOM</span>
+
+            <span class="s1">driver</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;https://appweb.asfi.gob.bo/RMI/RegistroParticipante/puntoAtencion.aspx&quot;</span><span class="s2">)</span>
+
+            <span class="s1">input_mef </span><span class="s2">= </span><span class="s1">driver</span><span class="s2">.</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_gridPuntoAtencion1_DXFREditorcol3_I&quot;</span><span class="s2">)</span>
+            <span class="s1">input_mef</span><span class="s2">.</span><span class="s1">clear</span><span class="s2">()</span>
+            <span class="s1">input_mef</span><span class="s2">.</span><span class="s1">send_keys</span><span class="s2">(</span><span class="s1">mef</span><span class="s2">)</span>
+            <span class="s1">time</span><span class="s2">.</span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">5</span><span class="s2">)</span>
+
+            <span class="s4"># Añadido no Probado</span>
+            <span class="s1">wait </span><span class="s2">= </span><span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">)</span>
+            <span class="s1">element </span><span class="s2">= </span><span class="s1">wait</span><span class="s2">.</span><span class="s1">until</span><span class="s2">(</span><span class="s1">EC</span><span class="s2">.</span><span class="s1">visibility_of_element_located</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_btnEditar&quot;</span><span class="s2">)))</span>
+
+            <span class="s1">boton_editar </span><span class="s2">= </span><span class="s1">driver</span><span class="s2">.</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_btnEditar&quot;</span><span class="s2">)</span>
+            <span class="s1">boton_editar</span><span class="s2">.</span><span class="s1">click</span><span class="s2">()</span>
+
+            <span class="s4"># Verificar y configurar horario para Sábado</span>
+            <span class="s0">if </span><span class="s1">tipo_de_horario_SAB </span><span class="s2">!= </span><span class="s3">&quot;-Sin Atención-&quot;</span><span class="s2">:</span>
+                <span class="s1">buscar_y_eliminar_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s3">&quot;Sabado&quot;</span><span class="s2">)  </span><span class="s4"># Eliminar horario de sábado</span>
+                <span class="s1">seleccionar_dias</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, [</span><span class="s5">6</span><span class="s2">])</span>
+                <span class="s1">establecer_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">tipo_de_horario_SAB</span><span class="s2">, </span><span class="s1">horario_entrada1_SAB</span><span class="s2">, </span><span class="s1">horario_salida1_SAB</span><span class="s2">,</span>
+                                   <span class="s1">horario_entrada2_SAB</span><span class="s2">, </span><span class="s1">horario_salida2_SAB</span><span class="s2">, </span><span class="s3">'MainContent_DefaultContent_'</span><span class="s2">)</span>
+
+                <span class="s4"># Llamar a la función para guardar y realizar acciones basadas en el horario</span>
+                <span class="s1">realizar_acciones_basedo_en_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">horario_salida2_SAB</span><span class="s2">)</span>
+
+            <span class="s4"># Verificar y configurar horario para Domingo</span>
+            <span class="s0">if </span><span class="s1">tipo_de_horario_DOM </span><span class="s2">!= </span><span class="s3">&quot;-Sin Atención-&quot;</span><span class="s2">:</span>
+                <span class="s1">buscar_y_eliminar_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s3">&quot;Domingo&quot;</span><span class="s2">)  </span><span class="s4"># Eliminar horario de domingo</span>
+                <span class="s0">if </span><span class="s1">horario_domingo </span><span class="s2">!= </span><span class="s1">horario_sabado </span><span class="s0">and </span><span class="s1">tipo_de_horario_SAB </span><span class="s2">!= </span><span class="s3">&quot;-Sin Atención-&quot;</span><span class="s2">:</span>
+                    <span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">10</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span>
+                        <span class="s1">EC</span><span class="s2">.</span><span class="s1">element_to_be_clickable</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_btnAdicionarHorario&quot;</span><span class="s2">))).</span><span class="s1">click</span><span class="s2">()</span>
+                <span class="s1">seleccionar_dias</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, [</span><span class="s5">7</span><span class="s2">])</span>
+                <span class="s1">establecer_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">tipo_de_horario_DOM</span><span class="s2">, </span><span class="s1">horario_entrada1_DOM</span><span class="s2">, </span><span class="s1">horario_salida1_DOM</span><span class="s2">,</span>
+                                   <span class="s1">horario_entrada2_DOM</span><span class="s2">, </span><span class="s1">horario_salida2_DOM</span><span class="s2">, </span><span class="s3">'MainContent_DefaultContent_'</span><span class="s2">)</span>
+
+                <span class="s4"># Llamar a la función para guardar y realizar acciones basadas en el horario</span>
+                <span class="s1">realizar_acciones_basedo_en_horario</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s1">horario_salida2_DOM</span><span class="s2">)</span>
+
+            <span class="s4"># campo_direccion = driver.find_element(By.ID, &quot;MainContent_DefaultContent_txtDireccion&quot;)</span>
+            <span class="s4"># campo_direccion.clear()</span>
+
+            <span class="s4"># Reemplaza 'ID_del_elemento' con el ID de un elemento que se carga después de la recarga de la página</span>
+            <span class="s4"># WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, &quot;MainContent_DefaultContent_txtDireccion&quot;)))</span>
+
+            <span class="s4"># Identifica el elemento por su ID</span>
+            <span class="s4"># id_elemento = &quot;MainContent_DefaultContent_txtDireccion&quot;</span>
+
+            <span class="s4"># Ejecuta un script de JavaScript para cambiar el valor del elemento</span>
+            <span class="s4"># driver.execute_script(f&quot;document.getElementById('{id_elemento}').value = '{nueva_direccion}';&quot;)</span>
+
+            <span class="s4"># Identifica el elemento por su ID</span>
+            <span class="s4">#id_elemento_nombre_comercio = &quot;MainContent_DefaultContent_txtNombre&quot;</span>
+
+            <span class="s4"># Ejecuta un script de JavaScript para cambiar el valor del elemento</span>
+            <span class="s4">#driver.execute_script(f&quot;document.getElementById('{id_elemento_nombre_comercio}').value = '{nombre_comercio}';&quot;)</span>
+
+            <span class="s4"># time.sleep(60)</span>
+            <span class="s1">driver</span><span class="s2">.</span><span class="s1">find_element</span><span class="s2">(</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_btnGrabar&quot;</span><span class="s2">).</span><span class="s1">click</span><span class="s2">()</span>
+
+            <span class="s0">try</span><span class="s2">:</span>
+
+                <span class="s4"># Esperar hasta que el elemento con el mensaje se haga visible</span>
+                <span class="s1">mensaje_element </span><span class="s2">= </span><span class="s1">WebDriverWait</span><span class="s2">(</span><span class="s1">driver</span><span class="s2">, </span><span class="s5">20</span><span class="s2">).</span><span class="s1">until</span><span class="s2">(</span>
+                    <span class="s1">EC</span><span class="s2">.</span><span class="s1">visibility_of_element_located</span><span class="s2">((</span><span class="s1">By</span><span class="s2">.</span><span class="s1">ID</span><span class="s2">, </span><span class="s3">&quot;MainContent_DefaultContent_lblMensaje&quot;</span><span class="s2">))</span>
+                <span class="s2">)</span>
+                <span class="s1">mensaje_texto </span><span class="s2">= </span><span class="s1">mensaje_element</span><span class="s2">.</span><span class="s1">text</span><span class="s2">[:-</span><span class="s5">6</span><span class="s2">]</span>
+
+                <span class="s0">if </span><span class="s1">mensaje_deseado </span><span class="s0">in </span><span class="s1">mensaje_texto</span><span class="s2">:</span>
+                    <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;El mensaje deseado está presente:&quot;</span><span class="s2">, </span><span class="s1">mensaje_texto</span><span class="s2">, </span><span class="s3">&quot; - &quot;</span><span class="s2">, </span><span class="s1">contador_row</span><span class="s2">, </span><span class="s3">&quot; - &quot;</span><span class="s2">, </span><span class="s1">mef</span><span class="s2">)</span>
+                <span class="s0">else</span><span class="s2">:</span>
+                    <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;El mensaje deseado no está presente:&quot;</span><span class="s2">, </span><span class="s1">mensaje_texto</span><span class="s2">, </span><span class="s3">&quot; - &quot;</span><span class="s2">, </span><span class="s1">contador_row</span><span class="s2">, </span><span class="s3">&quot; - &quot;</span><span class="s2">, </span><span class="s1">mef</span><span class="s2">)</span>
+                    <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;Deteniendo el bot de modificación.&quot;</span><span class="s2">)</span>
+                    <span class="s1">sys</span><span class="s2">.</span><span class="s1">exit</span><span class="s2">()</span>
+            <span class="s0">except </span><span class="s1">TimeoutException</span><span class="s2">:</span>
+                <span class="s1">print</span><span class="s2">(</span>
+                    <span class="s3">&quot;Tiempo de espera excedido esperando el mensaje después de grabar. Verifica si el ID del elemento es correcto o si la página está tomando demasiado tiempo para responder.&quot;</span><span class="s2">)</span>
+                <span class="s1">sys</span><span class="s2">.</span><span class="s1">exit</span><span class="s2">()</span>
+    <span class="s0">except </span><span class="s1">TimeoutException </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s3">f&quot;Error: Tiempo de espera excedido - </span><span class="s0">{</span><span class="s1">e</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+    <span class="s0">except </span><span class="s1">Exception </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s3">f&quot;Error inesperado: </span><span class="s0">{</span><span class="s1">e</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+    <span class="s0">finally</span><span class="s2">:</span>
+        <span class="s1">hora_finalizacion </span><span class="s2">= </span><span class="s1">datetime</span><span class="s2">.</span><span class="s1">now</span><span class="s2">().</span><span class="s1">strftime</span><span class="s2">(</span><span class="s3">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="s2">)</span>
+        <span class="s1">print</span><span class="s2">(</span><span class="s3">f&quot;El bot finalizó (con éxito o error) a las </span><span class="s0">{</span><span class="s1">hora_finalizacion</span><span class="s0">}</span><span class="s3">.&quot;</span><span class="s2">)</span>
+        <span class="s1">driver</span><span class="s2">.</span><span class="s1">quit</span><span class="s2">()</span>
+
+    <span class="s1">driver</span><span class="s2">.</span><span class="s1">quit</span><span class="s2">()</span></pre>
+</body>
+</html>

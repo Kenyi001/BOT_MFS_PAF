@@ -1,0 +1,139 @@
+<html>
+<head>
+<title>lib2def.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+.s6 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+lib2def.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">re</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">subprocess</span>
+
+<span class="s1">__doc__ </span><span class="s2">= </span><span class="s3">&quot;&quot;&quot;This module generates a DEF file from the symbols in 
+an MSVC-compiled DLL import library.  It correctly discriminates between 
+data and functions.  The data is collected from the output of the program 
+nm(1). 
+ 
+Usage: 
+    python lib2def.py [libname.lib] [output.def] 
+or 
+    python lib2def.py [libname.lib] &gt; output.def 
+ 
+libname.lib defaults to python&lt;py_ver&gt;.lib and output.def defaults to stdout 
+ 
+Author: Robert Kern &lt;kernr@mail.ncifcrf.gov&gt; 
+Last Update: April 30, 1999 
+&quot;&quot;&quot;</span>
+
+<span class="s1">__version__ </span><span class="s2">= </span><span class="s3">'0.1a'</span>
+
+<span class="s1">py_ver </span><span class="s2">= </span><span class="s3">&quot;%d%d&quot; </span><span class="s2">% </span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info</span><span class="s2">[:</span><span class="s4">2</span><span class="s2">])</span>
+
+<span class="s1">DEFAULT_NM </span><span class="s2">= [</span><span class="s3">'nm'</span><span class="s2">, </span><span class="s3">'-Cs'</span><span class="s2">]</span>
+
+<span class="s1">DEF_HEADER </span><span class="s2">= </span><span class="s3">&quot;&quot;&quot;LIBRARY         python%s.dll 
+;CODE           PRELOAD MOVEABLE DISCARDABLE 
+;DATA           PRELOAD SINGLE 
+ 
+EXPORTS 
+&quot;&quot;&quot; </span><span class="s2">% </span><span class="s1">py_ver</span>
+<span class="s5"># the header of the DEF file</span>
+
+<span class="s1">FUNC_RE </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">compile</span><span class="s2">(</span><span class="s3">r&quot;^(.*) in python%s\.dll&quot; </span><span class="s2">% </span><span class="s1">py_ver</span><span class="s2">, </span><span class="s1">re</span><span class="s2">.</span><span class="s1">MULTILINE</span><span class="s2">)</span>
+<span class="s1">DATA_RE </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">compile</span><span class="s2">(</span><span class="s3">r&quot;^_imp__(.*) in python%s\.dll&quot; </span><span class="s2">% </span><span class="s1">py_ver</span><span class="s2">, </span><span class="s1">re</span><span class="s2">.</span><span class="s1">MULTILINE</span><span class="s2">)</span>
+
+<span class="s0">def </span><span class="s1">parse_cmd</span><span class="s2">():</span>
+    <span class="s6">&quot;&quot;&quot;Parses the command-line arguments. 
+ 
+libfile, deffile = parse_cmd()&quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">) == </span><span class="s4">3</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">][-</span><span class="s4">4</span><span class="s2">:] == </span><span class="s3">'.lib' </span><span class="s0">and </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">2</span><span class="s2">][-</span><span class="s4">4</span><span class="s2">:] == </span><span class="s3">'.def'</span><span class="s2">:</span>
+            <span class="s1">libfile</span><span class="s2">, </span><span class="s1">deffile </span><span class="s2">= </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">:]</span>
+        <span class="s0">elif </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">][-</span><span class="s4">4</span><span class="s2">:] == </span><span class="s3">'.def' </span><span class="s0">and </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">2</span><span class="s2">][-</span><span class="s4">4</span><span class="s2">:] == </span><span class="s3">'.lib'</span><span class="s2">:</span>
+            <span class="s1">deffile</span><span class="s2">, </span><span class="s1">libfile </span><span class="s2">= </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">:]</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;I'm assuming that your first argument is the library&quot;</span><span class="s2">)</span>
+            <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;and the second is the DEF file.&quot;</span><span class="s2">)</span>
+    <span class="s0">elif </span><span class="s1">len</span><span class="s2">(</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">) == </span><span class="s4">2</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">][-</span><span class="s4">4</span><span class="s2">:] == </span><span class="s3">'.def'</span><span class="s2">:</span>
+            <span class="s1">deffile </span><span class="s2">= </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">]</span>
+            <span class="s1">libfile </span><span class="s2">= </span><span class="s3">'python%s.lib' </span><span class="s2">% </span><span class="s1">py_ver</span>
+        <span class="s0">elif </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">][-</span><span class="s4">4</span><span class="s2">:] == </span><span class="s3">'.lib'</span><span class="s2">:</span>
+            <span class="s1">deffile </span><span class="s2">= </span><span class="s0">None</span>
+            <span class="s1">libfile </span><span class="s2">= </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s4">1</span><span class="s2">]</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s1">libfile </span><span class="s2">= </span><span class="s3">'python%s.lib' </span><span class="s2">% </span><span class="s1">py_ver</span>
+        <span class="s1">deffile </span><span class="s2">= </span><span class="s0">None</span>
+    <span class="s0">return </span><span class="s1">libfile</span><span class="s2">, </span><span class="s1">deffile</span>
+
+<span class="s0">def </span><span class="s1">getnm</span><span class="s2">(</span><span class="s1">nm_cmd</span><span class="s2">=[</span><span class="s3">'nm'</span><span class="s2">, </span><span class="s3">'-Cs'</span><span class="s2">, </span><span class="s3">'python%s.lib' </span><span class="s2">% </span><span class="s1">py_ver</span><span class="s2">], </span><span class="s1">shell</span><span class="s2">=</span><span class="s0">True</span><span class="s2">):</span>
+    <span class="s6">&quot;&quot;&quot;Returns the output of nm_cmd via a pipe. 
+ 
+nm_output = getnm(nm_cmd = 'nm -Cs py_lib')&quot;&quot;&quot;</span>
+    <span class="s1">p </span><span class="s2">= </span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">Popen</span><span class="s2">(</span><span class="s1">nm_cmd</span><span class="s2">, </span><span class="s1">shell</span><span class="s2">=</span><span class="s1">shell</span><span class="s2">, </span><span class="s1">stdout</span><span class="s2">=</span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">PIPE</span><span class="s2">,</span>
+                         <span class="s1">stderr</span><span class="s2">=</span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">PIPE</span><span class="s2">, </span><span class="s1">text</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s1">nm_output</span><span class="s2">, </span><span class="s1">nm_err </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">communicate</span><span class="s2">()</span>
+    <span class="s0">if </span><span class="s1">p</span><span class="s2">.</span><span class="s1">returncode </span><span class="s2">!= </span><span class="s4">0</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s3">'failed to run &quot;%s&quot;: &quot;%s&quot;' </span><span class="s2">% (</span>
+                                     <span class="s3">' '</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">nm_cmd</span><span class="s2">), </span><span class="s1">nm_err</span><span class="s2">))</span>
+    <span class="s0">return </span><span class="s1">nm_output</span>
+
+<span class="s0">def </span><span class="s1">parse_nm</span><span class="s2">(</span><span class="s1">nm_output</span><span class="s2">):</span>
+    <span class="s6">&quot;&quot;&quot;Returns a tuple of lists: dlist for the list of data 
+symbols and flist for the list of function symbols. 
+ 
+dlist, flist = parse_nm(nm_output)&quot;&quot;&quot;</span>
+    <span class="s1">data </span><span class="s2">= </span><span class="s1">DATA_RE</span><span class="s2">.</span><span class="s1">findall</span><span class="s2">(</span><span class="s1">nm_output</span><span class="s2">)</span>
+    <span class="s1">func </span><span class="s2">= </span><span class="s1">FUNC_RE</span><span class="s2">.</span><span class="s1">findall</span><span class="s2">(</span><span class="s1">nm_output</span><span class="s2">)</span>
+
+    <span class="s1">flist </span><span class="s2">= []</span>
+    <span class="s0">for </span><span class="s1">sym </span><span class="s0">in </span><span class="s1">data</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">sym </span><span class="s0">in </span><span class="s1">func </span><span class="s0">and </span><span class="s2">(</span><span class="s1">sym</span><span class="s2">[:</span><span class="s4">2</span><span class="s2">] == </span><span class="s3">'Py' </span><span class="s0">or </span><span class="s1">sym</span><span class="s2">[:</span><span class="s4">3</span><span class="s2">] == </span><span class="s3">'_Py' </span><span class="s0">or </span><span class="s1">sym</span><span class="s2">[:</span><span class="s4">4</span><span class="s2">] == </span><span class="s3">'init'</span><span class="s2">):</span>
+            <span class="s1">flist</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">sym</span><span class="s2">)</span>
+
+    <span class="s1">dlist </span><span class="s2">= []</span>
+    <span class="s0">for </span><span class="s1">sym </span><span class="s0">in </span><span class="s1">data</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">sym </span><span class="s0">not in </span><span class="s1">flist </span><span class="s0">and </span><span class="s2">(</span><span class="s1">sym</span><span class="s2">[:</span><span class="s4">2</span><span class="s2">] == </span><span class="s3">'Py' </span><span class="s0">or </span><span class="s1">sym</span><span class="s2">[:</span><span class="s4">3</span><span class="s2">] == </span><span class="s3">'_Py'</span><span class="s2">):</span>
+            <span class="s1">dlist</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">sym</span><span class="s2">)</span>
+
+    <span class="s1">dlist</span><span class="s2">.</span><span class="s1">sort</span><span class="s2">()</span>
+    <span class="s1">flist</span><span class="s2">.</span><span class="s1">sort</span><span class="s2">()</span>
+    <span class="s0">return </span><span class="s1">dlist</span><span class="s2">, </span><span class="s1">flist</span>
+
+<span class="s0">def </span><span class="s1">output_def</span><span class="s2">(</span><span class="s1">dlist</span><span class="s2">, </span><span class="s1">flist</span><span class="s2">, </span><span class="s1">header</span><span class="s2">, </span><span class="s1">file </span><span class="s2">= </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">stdout</span><span class="s2">):</span>
+    <span class="s6">&quot;&quot;&quot;Outputs the final DEF file to a file defaulting to stdout. 
+ 
+output_def(dlist, flist, header, file = sys.stdout)&quot;&quot;&quot;</span>
+    <span class="s0">for </span><span class="s1">data_sym </span><span class="s0">in </span><span class="s1">dlist</span><span class="s2">:</span>
+        <span class="s1">header </span><span class="s2">= </span><span class="s1">header </span><span class="s2">+ </span><span class="s3">'</span><span class="s0">\t</span><span class="s3">%s DATA</span><span class="s0">\n</span><span class="s3">' </span><span class="s2">% </span><span class="s1">data_sym</span>
+    <span class="s1">header </span><span class="s2">= </span><span class="s1">header </span><span class="s2">+ </span><span class="s3">'</span><span class="s0">\n</span><span class="s3">' </span><span class="s5"># blank line</span>
+    <span class="s0">for </span><span class="s1">func_sym </span><span class="s0">in </span><span class="s1">flist</span><span class="s2">:</span>
+        <span class="s1">header </span><span class="s2">= </span><span class="s1">header </span><span class="s2">+ </span><span class="s3">'</span><span class="s0">\t</span><span class="s3">%s</span><span class="s0">\n</span><span class="s3">' </span><span class="s2">% </span><span class="s1">func_sym</span>
+    <span class="s1">file</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s1">header</span><span class="s2">)</span>
+
+<span class="s0">if </span><span class="s1">__name__ </span><span class="s2">== </span><span class="s3">'__main__'</span><span class="s2">:</span>
+    <span class="s1">libfile</span><span class="s2">, </span><span class="s1">deffile </span><span class="s2">= </span><span class="s1">parse_cmd</span><span class="s2">()</span>
+    <span class="s0">if </span><span class="s1">deffile </span><span class="s0">is None</span><span class="s2">:</span>
+        <span class="s1">deffile </span><span class="s2">= </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">stdout</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s1">deffile </span><span class="s2">= </span><span class="s1">open</span><span class="s2">(</span><span class="s1">deffile</span><span class="s2">, </span><span class="s3">'w'</span><span class="s2">)</span>
+    <span class="s1">nm_cmd </span><span class="s2">= </span><span class="s1">DEFAULT_NM </span><span class="s2">+ [</span><span class="s1">str</span><span class="s2">(</span><span class="s1">libfile</span><span class="s2">)]</span>
+    <span class="s1">nm_output </span><span class="s2">= </span><span class="s1">getnm</span><span class="s2">(</span><span class="s1">nm_cmd</span><span class="s2">, </span><span class="s1">shell</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+    <span class="s1">dlist</span><span class="s2">, </span><span class="s1">flist </span><span class="s2">= </span><span class="s1">parse_nm</span><span class="s2">(</span><span class="s1">nm_output</span><span class="s2">)</span>
+    <span class="s1">output_def</span><span class="s2">(</span><span class="s1">dlist</span><span class="s2">, </span><span class="s1">flist</span><span class="s2">, </span><span class="s1">DEF_HEADER</span><span class="s2">, </span><span class="s1">deffile</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

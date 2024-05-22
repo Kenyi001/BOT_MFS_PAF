@@ -1,0 +1,492 @@
+<html>
+<head>
+<title>core.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+core.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">collections</span><span class="s2">.</span><span class="s1">abc </span><span class="s0">import </span><span class="s1">Callable</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span><span class="s2">, </span><span class="s1">TypeVar</span>
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">ndarray</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">float64</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">amax </span><span class="s0">as </span><span class="s1">amax</span><span class="s2">,</span>
+    <span class="s1">amin </span><span class="s0">as </span><span class="s1">amin</span><span class="s2">,</span>
+    <span class="s1">bool_ </span><span class="s0">as </span><span class="s1">bool_</span><span class="s2">,</span>
+    <span class="s1">expand_dims </span><span class="s0">as </span><span class="s1">expand_dims</span><span class="s2">,</span>
+    <span class="s1">clip </span><span class="s0">as </span><span class="s1">clip</span><span class="s2">,</span>
+    <span class="s1">indices </span><span class="s0">as </span><span class="s1">indices</span><span class="s2">,</span>
+    <span class="s1">ones_like </span><span class="s0">as </span><span class="s1">ones_like</span><span class="s2">,</span>
+    <span class="s1">squeeze </span><span class="s0">as </span><span class="s1">squeeze</span><span class="s2">,</span>
+    <span class="s1">zeros_like </span><span class="s0">as </span><span class="s1">zeros_like</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">lib</span><span class="s2">.</span><span class="s1">function_base </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">angle </span><span class="s0">as </span><span class="s1">angle</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s3"># TODO: Set the `bound` to something more suitable once we</span>
+<span class="s3"># have proper shape support</span>
+<span class="s1">_ShapeType </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s4">&quot;_ShapeType&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">Any</span><span class="s2">)</span>
+<span class="s1">_DType_co </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s4">&quot;_DType_co&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">], </span><span class="s1">covariant</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+<span class="s1">__all__</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]</span>
+
+<span class="s1">MaskType </span><span class="s2">= </span><span class="s1">bool_</span>
+<span class="s1">nomask</span><span class="s2">: </span><span class="s1">bool_</span>
+
+<span class="s0">class </span><span class="s1">MaskedArrayFutureWarning</span><span class="s2">(</span><span class="s1">FutureWarning</span><span class="s2">): ...</span>
+<span class="s0">class </span><span class="s1">MAError</span><span class="s2">(</span><span class="s1">Exception</span><span class="s2">): ...</span>
+<span class="s0">class </span><span class="s1">MaskError</span><span class="s2">(</span><span class="s1">MAError</span><span class="s2">): ...</span>
+
+<span class="s0">def </span><span class="s1">default_fill_value</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">minimum_fill_value</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">maximum_fill_value</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">set_fill_value</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">common_fill_value</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">filled</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">getdata</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">subok</span><span class="s2">=...): ...</span>
+<span class="s1">get_data </span><span class="s2">= </span><span class="s1">getdata</span>
+
+<span class="s0">def </span><span class="s1">fix_invalid</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">=..., </span><span class="s1">copy</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+
+<span class="s0">class </span><span class="s1">_MaskedUFunc</span><span class="s2">:</span>
+    <span class="s1">f</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__doc__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__name__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">ufunc</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">_MaskedUnaryOperation</span><span class="s2">(</span><span class="s1">_MaskedUFunc</span><span class="s2">):</span>
+    <span class="s1">fill</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">domain</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mufunc</span><span class="s2">, </span><span class="s1">fill</span><span class="s2">=..., </span><span class="s1">domain</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__call__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">_MaskedBinaryOperation</span><span class="s2">(</span><span class="s1">_MaskedUFunc</span><span class="s2">):</span>
+    <span class="s1">fillx</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">filly</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mbfunc</span><span class="s2">, </span><span class="s1">fillx</span><span class="s2">=..., </span><span class="s1">filly</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__call__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">reduce</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">target</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">outer</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">accumulate</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">target</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+
+<span class="s0">class </span><span class="s1">_DomainedBinaryOperation</span><span class="s2">(</span><span class="s1">_MaskedUFunc</span><span class="s2">):</span>
+    <span class="s1">domain</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">fillx</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">filly</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dbfunc</span><span class="s2">, </span><span class="s1">domain</span><span class="s2">, </span><span class="s1">fillx</span><span class="s2">=..., </span><span class="s1">filly</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__call__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">): ...</span>
+
+<span class="s1">exp</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">conjugate</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">sin</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">cos</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">arctan</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">arcsinh</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">sinh</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">cosh</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">tanh</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">abs</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">absolute</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">fabs</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">negative</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">floor</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">ceil</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">around</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">logical_not</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">sqrt</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">log</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">log2</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">log10</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">tan</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">arcsin</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">arccos</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">arccosh</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+<span class="s1">arctanh</span><span class="s2">: </span><span class="s1">_MaskedUnaryOperation</span>
+
+<span class="s1">add</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">subtract</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">multiply</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">arctan2</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">equal</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">not_equal</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">less_equal</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">greater_equal</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">less</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">greater</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">logical_and</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">alltrue</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">logical_or</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">sometrue</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[..., </span><span class="s1">Any</span><span class="s2">]</span>
+<span class="s1">logical_xor</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">bitwise_and</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">bitwise_or</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">bitwise_xor</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">hypot</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">divide</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">true_divide</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">floor_divide</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">remainder</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">fmod</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+<span class="s1">mod</span><span class="s2">: </span><span class="s1">_MaskedBinaryOperation</span>
+
+<span class="s0">def </span><span class="s1">make_mask_descr</span><span class="s2">(</span><span class="s1">ndtype</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">getmask</span><span class="s2">(</span><span class="s1">a</span><span class="s2">): ...</span>
+<span class="s1">get_mask </span><span class="s2">= </span><span class="s1">getmask</span>
+
+<span class="s0">def </span><span class="s1">getmaskarray</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">is_mask</span><span class="s2">(</span><span class="s1">m</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">make_mask</span><span class="s2">(</span><span class="s1">m</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=..., </span><span class="s1">shrink</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">make_mask_none</span><span class="s2">(</span><span class="s1">newshape</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">mask_or</span><span class="s2">(</span><span class="s1">m1</span><span class="s2">, </span><span class="s1">m2</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=..., </span><span class="s1">shrink</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">flatten_mask</span><span class="s2">(</span><span class="s1">mask</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">masked_where</span><span class="s2">(</span><span class="s1">condition</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_greater</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_greater_equal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_less</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_less_equal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_not_equal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_equal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_inside</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">v1</span><span class="s2">, </span><span class="s1">v2</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_outside</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">v1</span><span class="s2">, </span><span class="s1">v2</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_object</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=..., </span><span class="s1">shrink</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_values</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">rtol</span><span class="s2">=..., </span><span class="s1">atol</span><span class="s2">=..., </span><span class="s1">copy</span><span class="s2">=..., </span><span class="s1">shrink</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">masked_invalid</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+
+<span class="s0">class </span><span class="s1">_MaskedPrintOption</span><span class="s2">:</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">display</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">display</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">set_display</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">s</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">enabled</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">enable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">shrink</span><span class="s2">=...): ...</span>
+
+<span class="s1">masked_print_option</span><span class="s2">: </span><span class="s1">_MaskedPrintOption</span>
+
+<span class="s0">def </span><span class="s1">flatten_structured_array</span><span class="s2">(</span><span class="s1">a</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">MaskedIterator</span><span class="s2">:</span>
+    <span class="s1">ma</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">dataiter</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">maskiter</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">ma</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__iter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__getitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indx</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__setitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">index</span><span class="s2">, </span><span class="s1">value</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__next__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">MaskedArray</span><span class="s2">(</span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">_ShapeType</span><span class="s2">, </span><span class="s1">_DType_co</span><span class="s2">]):</span>
+    <span class="s1">__array_priority__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">data</span><span class="s2">=..., </span><span class="s1">mask</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">copy</span><span class="s2">=..., </span><span class="s1">subok</span><span class="s2">=..., </span><span class="s1">ndmin</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">keep_mask</span><span class="s2">=..., </span><span class="s1">hard_mask</span><span class="s2">=..., </span><span class="s1">shrink</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__array_finalize__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__array_wrap__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">, </span><span class="s1">context</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">view</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">type</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__getitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indx</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__setitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indx</span><span class="s2">, </span><span class="s1">value</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">dtype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">dtype</span><span class="s2">.</span><span class="s1">setter</span>
+    <span class="s0">def </span><span class="s1">dtype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">shape</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">shape</span><span class="s2">.</span><span class="s1">setter</span>
+    <span class="s0">def </span><span class="s1">shape</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">shape</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__setmask__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=...): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">mask</span><span class="s2">.</span><span class="s1">setter</span>
+    <span class="s0">def </span><span class="s1">mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">value</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">recordmask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">recordmask</span><span class="s2">.</span><span class="s1">setter</span>
+    <span class="s0">def </span><span class="s1">recordmask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">harden_mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">soften_mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">hardmask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">unshare_mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">sharedmask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">shrink_mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">baseclass</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s1">data</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">flat</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">flat</span><span class="s2">.</span><span class="s1">setter</span>
+    <span class="s0">def </span><span class="s1">flat</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">value</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">fill_value</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">fill_value</span><span class="s2">.</span><span class="s1">setter</span>
+    <span class="s0">def </span><span class="s1">fill_value</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">value</span><span class="s2">=...): ...</span>
+    <span class="s1">get_fill_value</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">set_fill_value</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">filled</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">compressed</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">compress</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">condition</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__eq__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__ne__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__ge__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__gt__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__le__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__lt__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__add__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__radd__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__sub__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__rsub__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__mul__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__rmul__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__div__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__truediv__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__rtruediv__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__floordiv__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__rfloordiv__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__pow__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__rpow__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__iadd__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__isub__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__imul__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__idiv__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__ifloordiv__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__itruediv__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__ipow__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__float__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__int__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property  </span><span class="s3"># type: ignore[misc]</span>
+    <span class="s0">def </span><span class="s1">imag</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s1">get_imag</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s2">@</span><span class="s1">property  </span><span class="s3"># type: ignore[misc]</span>
+    <span class="s0">def </span><span class="s1">real</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s1">get_real</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">count</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">ravel</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">s</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">resize</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">newshape</span><span class="s2">, </span><span class="s1">refcheck</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">put</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">, </span><span class="s1">values</span><span class="s2">, </span><span class="s1">mode</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">ids</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">iscontiguous</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">all</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">any</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">nonzero</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">trace</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">offset</span><span class="s2">=..., </span><span class="s1">axis1</span><span class="s2">=..., </span><span class="s1">axis2</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">dot</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">strict</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">sum</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">cumsum</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">prod</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s1">product</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">cumprod</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">mean</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">anom</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">var</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">ddof</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">std</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">ddof</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">round</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">decimals</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">argsort</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">kind</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=..., </span><span class="s1">endwith</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">argmin</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., *, </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">argmax</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., *, </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">sort</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">kind</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=..., </span><span class="s1">endwith</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">min</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s3"># NOTE: deprecated</span>
+    <span class="s3"># def tostring(self, fill_value=..., order=...): ...</span>
+    <span class="s0">def </span><span class="s1">max</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">ptp</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">partition</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">argpartition</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">take</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">mode</span><span class="s2">=...): ...</span>
+    <span class="s1">copy</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">diagonal</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">flatten</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">repeat</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">squeeze</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">swapaxes</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">T</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">transpose</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">tolist</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">tobytes</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">tofile</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fid</span><span class="s2">, </span><span class="s1">sep</span><span class="s2">=..., </span><span class="s1">format</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">toflex</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s1">torecords</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__reduce__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__deepcopy__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">memo</span><span class="s2">=...): ...</span>
+
+<span class="s0">class </span><span class="s1">mvoid</span><span class="s2">(</span><span class="s1">MaskedArray</span><span class="s2">[</span><span class="s1">_ShapeType</span><span class="s2">, </span><span class="s1">_DType_co</span><span class="s2">]):</span>
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">data</span><span class="s2">,</span>
+        <span class="s1">mask</span><span class="s2">=...,</span>
+        <span class="s1">dtype</span><span class="s2">=...,</span>
+        <span class="s1">fill_value</span><span class="s2">=...,</span>
+        <span class="s1">hardmask</span><span class="s2">=...,</span>
+        <span class="s1">copy</span><span class="s2">=...,</span>
+        <span class="s1">subok</span><span class="s2">=...,</span>
+    <span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__getitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indx</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__setitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indx</span><span class="s2">, </span><span class="s1">value</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__iter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__len__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">filled</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">tolist</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+
+<span class="s0">def </span><span class="s1">isMaskedArray</span><span class="s2">(</span><span class="s1">x</span><span class="s2">): ...</span>
+<span class="s1">isarray </span><span class="s2">= </span><span class="s1">isMaskedArray</span>
+<span class="s1">isMA </span><span class="s2">= </span><span class="s1">isMaskedArray</span>
+
+<span class="s3"># 0D float64 array</span>
+<span class="s0">class </span><span class="s1">MaskedConstant</span><span class="s2">(</span><span class="s1">MaskedArray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">float64</span><span class="s2">]]):</span>
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">): ...</span>
+    <span class="s1">__class__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__array_finalize__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__array_prepare__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">, </span><span class="s1">context</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__array_wrap__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">, </span><span class="s1">context</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__format__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">format_spec</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__reduce__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__iop__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">): ...</span>
+    <span class="s1">__iadd__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__isub__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__imul__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__ifloordiv__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__itruediv__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__ipow__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">copy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__copy__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__deepcopy__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">memo</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__setattr__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">attr</span><span class="s2">, </span><span class="s1">value</span><span class="s2">): ...</span>
+
+<span class="s1">masked</span><span class="s2">: </span><span class="s1">MaskedConstant</span>
+<span class="s1">masked_singleton</span><span class="s2">: </span><span class="s1">MaskedConstant</span>
+<span class="s1">masked_array </span><span class="s2">= </span><span class="s1">MaskedArray</span>
+
+<span class="s0">def </span><span class="s1">array</span><span class="s2">(</span>
+    <span class="s1">data</span><span class="s2">,</span>
+    <span class="s1">dtype</span><span class="s2">=...,</span>
+    <span class="s1">copy</span><span class="s2">=...,</span>
+    <span class="s1">order</span><span class="s2">=...,</span>
+    <span class="s1">mask</span><span class="s2">=...,</span>
+    <span class="s1">fill_value</span><span class="s2">=...,</span>
+    <span class="s1">keep_mask</span><span class="s2">=...,</span>
+    <span class="s1">hard_mask</span><span class="s2">=...,</span>
+    <span class="s1">shrink</span><span class="s2">=...,</span>
+    <span class="s1">subok</span><span class="s2">=...,</span>
+    <span class="s1">ndmin</span><span class="s2">=...,</span>
+<span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">is_masked</span><span class="s2">(</span><span class="s1">x</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">_extrema_operation</span><span class="s2">(</span><span class="s1">_MaskedUFunc</span><span class="s2">):</span>
+    <span class="s1">compare</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">fill_value_func</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">ufunc</span><span class="s2">, </span><span class="s1">compare</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">): ...</span>
+    <span class="s3"># NOTE: in practice `b` has a default value, but users should</span>
+    <span class="s3"># explicitly provide a value here as the default is deprecated</span>
+    <span class="s0">def </span><span class="s1">__call__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">reduce</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">target</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">outer</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">): ...</span>
+
+<span class="s0">def </span><span class="s1">min</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">max</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">ptp</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=..., </span><span class="s1">keepdims</span><span class="s2">=...): ...</span>
+
+<span class="s0">class </span><span class="s1">_frommethod</span><span class="s2">:</span>
+    <span class="s1">__name__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">__doc__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">reversed</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">methodname</span><span class="s2">, </span><span class="s1">reversed</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">getdoc</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__call__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">params</span><span class="s2">): ...</span>
+
+<span class="s1">all</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">anomalies</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">anom</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">any</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">compress</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">cumprod</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">cumsum</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">copy</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">diagonal</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">harden_mask</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">ids</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">mean</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">nonzero</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">prod</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">product</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">ravel</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">repeat</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">soften_mask</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">std</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">sum</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">swapaxes</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">trace</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">var</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">count</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">argmin</span><span class="s2">: </span><span class="s1">_frommethod</span>
+<span class="s1">argmax</span><span class="s2">: </span><span class="s1">_frommethod</span>
+
+<span class="s1">minimum</span><span class="s2">: </span><span class="s1">_extrema_operation</span>
+<span class="s1">maximum</span><span class="s2">: </span><span class="s1">_extrema_operation</span>
+
+<span class="s0">def </span><span class="s1">take</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">mode</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">power</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, </span><span class="s1">third</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">argsort</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">kind</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=..., </span><span class="s1">endwith</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">sort</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">kind</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=..., </span><span class="s1">endwith</span><span class="s2">=..., </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">compressed</span><span class="s2">(</span><span class="s1">x</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">concatenate</span><span class="s2">(</span><span class="s1">arrays</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">diag</span><span class="s2">(</span><span class="s1">v</span><span class="s2">, </span><span class="s1">k</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">left_shift</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">n</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">right_shift</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">n</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">put</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">, </span><span class="s1">values</span><span class="s2">, </span><span class="s1">mode</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">putmask</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">, </span><span class="s1">values</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">transpose</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">axes</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">new_shape</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">resize</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">new_shape</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">ndim</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">shape</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">size</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">diff</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, /, </span><span class="s1">n</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=..., </span><span class="s1">prepend</span><span class="s2">=..., </span><span class="s1">append</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">where</span><span class="s2">(</span><span class="s1">condition</span><span class="s2">, </span><span class="s1">x</span><span class="s2">=..., </span><span class="s1">y</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">choose</span><span class="s2">(</span><span class="s1">indices</span><span class="s2">, </span><span class="s1">choices</span><span class="s2">, </span><span class="s1">out</span><span class="s2">=..., </span><span class="s1">mode</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">round</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">decimals</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=...): ...</span>
+
+<span class="s0">def </span><span class="s1">inner</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">): ...</span>
+<span class="s1">innerproduct </span><span class="s2">= </span><span class="s1">inner</span>
+
+<span class="s0">def </span><span class="s1">outer</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">): ...</span>
+<span class="s1">outerproduct </span><span class="s2">= </span><span class="s1">outer</span>
+
+<span class="s0">def </span><span class="s1">correlate</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">v</span><span class="s2">, </span><span class="s1">mode</span><span class="s2">=..., </span><span class="s1">propagate_mask</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">convolve</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">v</span><span class="s2">, </span><span class="s1">mode</span><span class="s2">=..., </span><span class="s1">propagate_mask</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">allequal</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">allclose</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, </span><span class="s1">masked_equal</span><span class="s2">=..., </span><span class="s1">rtol</span><span class="s2">=..., </span><span class="s1">atol</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">order</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">asanyarray</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">fromflex</span><span class="s2">(</span><span class="s1">fxarray</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">_convert2ma</span><span class="s2">:</span>
+    <span class="s1">__doc__</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">funcname</span><span class="s2">, </span><span class="s1">params</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">getdoc</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__call__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">params</span><span class="s2">): ...</span>
+
+<span class="s1">arange</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+<span class="s1">empty</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+<span class="s1">empty_like</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+<span class="s1">frombuffer</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+<span class="s1">fromfunction</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+<span class="s1">identity</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+<span class="s1">ones</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+<span class="s1">zeros</span><span class="s2">: </span><span class="s1">_convert2ma</span>
+
+<span class="s0">def </span><span class="s1">append</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">dot</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, </span><span class="s1">strict</span><span class="s2">=..., </span><span class="s1">out</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">mask_rowcols</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+</pre>
+</body>
+</html>

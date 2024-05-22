@@ -1,0 +1,427 @@
+<html>
+<head>
+<title>PieMenuStyle.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #7a7e85;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+PieMenuStyle.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2016 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Extras module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.2</span>
+<span class="s2">import </span><span class="s1">QtGraphicalEffects </span><span class="s3">1.0</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls </span><span class="s3">1.4</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Styles </span><span class="s3">1.4</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Private </span><span class="s3">1.0</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Extras </span><span class="s3">1.4</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Extras</span><span class="s4">.</span><span class="s1">Private </span><span class="s3">1.0</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Extras</span><span class="s4">.</span><span class="s1">Private</span><span class="s4">.</span><span class="s1">CppUtils </span><span class="s3">1.0</span>
+
+<span class="s5">/*! 
+    \qmltype PieMenuStyle 
+    \inqmlmodule QtQuick.Controls.Styles 
+    \since 5.5 
+    \ingroup controlsstyling 
+    \brief Provides custom styling for PieMenu. 
+ 
+    PieMenuStyle is a style for PieMenu that draws each section of the menu as a 
+    filled &quot;slice&quot;. 
+ 
+    You can create a custom pie menu by replacing the following delegates: 
+    \list 
+        \li \l background 
+        \li \l cancel 
+        \li \l menuItem 
+        \li \l title 
+    \endlist 
+ 
+    To customize the appearance of each menuItem without having to define your 
+    own, you can use the \l backgroundColor and \l selectionColor properties. 
+    To customize the drop shadow, use the \l shadowColor, \l shadowRadius and 
+    \l shadowSpread properties. 
+ 
+    Icons that are too large for the section that they are in will be scaled 
+    down appropriately. 
+ 
+    To style individual sections of the menu, use the menuItem component: 
+    \code 
+    PieMenuStyle { 
+        shadowRadius: 0 
+ 
+        menuItem: Item { 
+            id: item 
+            rotation: -90 + sectionCenterAngle(styleData.index) 
+ 
+            Rectangle { 
+                width: parent.height * 0.2 
+                height: width 
+                color: &quot;darkorange&quot; 
+                radius: width / 2 
+                anchors.right: parent.right 
+                anchors.verticalCenter: parent.verticalCenter 
+ 
+                Text { 
+                    id: textItem 
+                    text: control.menuItems[styleData.index].text 
+                    anchors.centerIn: parent 
+                    color: control.currentIndex === styleData.index ? &quot;red&quot; : &quot;white&quot; 
+                    rotation: -item.rotation 
+                } 
+            } 
+        } 
+    } 
+    \endcode 
+ 
+    \image piemenu-menuitem-example.png A custom PieMenu 
+*/</span>
+
+<span class="s1">Style </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">pieMenuStyle</span>
+
+    <span class="s5">/*! 
+        The \l PieMenu that this style is attached to. 
+    */</span>
+    <span class="s1">readonly property PieMenu control</span><span class="s4">: </span><span class="s1">__control</span>
+
+    <span class="s5">/*! The background color. */</span>
+    <span class="s1">property color backgroundColor</span><span class="s4">: </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rgba</span><span class="s4">(</span><span class="s3">0.6</span><span class="s4">, </span><span class="s3">0.6</span><span class="s4">, </span><span class="s3">0.6</span><span class="s4">, </span><span class="s3">0.66</span><span class="s4">)</span>
+
+    <span class="s5">/*! The selection color. */</span>
+    <span class="s1">property color selectionColor</span><span class="s4">: </span><span class="s6">&quot;#eee&quot;</span>
+
+    <span class="s5">/*! 
+        The shadow color. 
+ 
+        \sa DropShadow 
+    */</span>
+    <span class="s1">property color shadowColor</span><span class="s4">: </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rgba</span><span class="s4">(</span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s3">0.26</span><span class="s4">)</span>
+
+    <span class="s5">/*! 
+        The shadow radius. 
+ 
+        \sa DropShadow 
+    */</span>
+    <span class="s1">property real shadowRadius</span><span class="s4">: </span><span class="s3">10</span>
+
+    <span class="s5">/*! 
+        The shadow spread. 
+ 
+        \sa DropShadow 
+    */</span>
+    <span class="s1">property real shadowSpread</span><span class="s4">: </span><span class="s3">0.3</span>
+
+    <span class="s5">/*! 
+        The distance from the center of the menu to the outer edge of the menu. 
+ 
+        \sa cancelRadius 
+    */</span>
+    <span class="s1">readonly property real radius</span><span class="s4">: </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">min</span><span class="s4">(</span><span class="s1">control</span><span class="s4">.</span><span class="s1">width</span><span class="s4">, </span><span class="s1">control</span><span class="s4">.</span><span class="s1">height</span><span class="s4">) * </span><span class="s3">0.5</span>
+
+    <span class="s5">/*! 
+        The radius of the area that is used to cancel the menu. 
+ 
+        \sa radius 
+    */</span>
+    <span class="s1">property real cancelRadius</span><span class="s4">: </span><span class="s1">radius </span><span class="s4">* </span><span class="s3">0.4</span>
+
+    <span class="s5">/*! 
+        The angle (in degrees) at which the first menu item will be drawn. 
+ 
+        The absolute range formed by \a startAngle and \l endAngle must be 
+        less than or equal to \c 360 degrees. 
+ 
+        Menu items are displayed clockwise when \a startAngle is less than 
+        \l endAngle, otherwise they are displayed anti-clockwise. 
+ 
+        \sa endAngle 
+    */</span>
+    <span class="s1">property real startAngle</span><span class="s4">: -</span><span class="s3">90</span>
+
+    <span class="s5">/*! 
+        The angle (in degrees) at which the last menu item will be drawn. 
+ 
+        The absolute range formed by \l startAngle and \a endAngle must be 
+        less than or equal to \c 360 degrees. 
+ 
+        Menu items are displayed clockwise when \l startAngle is less than 
+        \a endAngle, otherwise they are displayed anti-clockwise. 
+ 
+        \sa startAngle 
+    */</span>
+    <span class="s1">property real endAngle</span><span class="s4">: </span><span class="s3">90</span>
+
+    <span class="s5">/*! 
+        \qmlmethod real PieMenuStyle::sectionStartAngle(int itemIndex) 
+        Returns the start of the section at \a itemIndex as an angle in degrees. 
+    */</span>
+    <span class="s2">function </span><span class="s1">sectionStartAngle</span><span class="s4">(</span><span class="s1">itemIndex</span><span class="s4">) {</span>
+        <span class="s2">return </span><span class="s1">MathUtils</span><span class="s4">.</span><span class="s1">radToDegOffset</span><span class="s4">(</span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">sectionStartAngle</span><span class="s4">(</span><span class="s1">itemIndex</span><span class="s4">));</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! 
+        \qmlmethod real PieMenuStyle::sectionCenterAngle(int itemIndex) 
+        Returns the center of the section at \a itemIndex as an angle in 
+        degrees. 
+    */</span>
+    <span class="s2">function </span><span class="s1">sectionCenterAngle</span><span class="s4">(</span><span class="s1">itemIndex</span><span class="s4">) {</span>
+        <span class="s2">return </span><span class="s1">MathUtils</span><span class="s4">.</span><span class="s1">radToDegOffset</span><span class="s4">(</span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">sectionCenterAngle</span><span class="s4">(</span><span class="s1">itemIndex</span><span class="s4">));</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! 
+        \qmlmethod real PieMenuStyle::sectionEndAngle(int itemIndex) 
+        Returns the end of the section at \a itemIndex as an angle in degrees. 
+    */</span>
+    <span class="s2">function </span><span class="s1">sectionEndAngle</span><span class="s4">(</span><span class="s1">itemIndex</span><span class="s4">) {</span>
+        <span class="s2">return </span><span class="s1">MathUtils</span><span class="s4">.</span><span class="s1">radToDegOffset</span><span class="s4">(</span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">sectionEndAngle</span><span class="s4">(</span><span class="s1">itemIndex</span><span class="s4">));</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! 
+        \internal 
+ 
+        The distance in pixels from the center of each menu item's icon to the 
+        center of the menu. A higher value means that the icons will be further 
+        from the center of the menu. 
+    */</span>
+    <span class="s1">readonly property real __iconOffset</span><span class="s4">: </span><span class="s1">cancelRadius </span><span class="s4">+ ((</span><span class="s1">radius </span><span class="s4">- </span><span class="s1">cancelRadius</span><span class="s4">) / </span><span class="s3">2</span><span class="s4">)</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">readonly property real __selectableRadius</span><span class="s4">: </span><span class="s1">radius </span><span class="s4">- </span><span class="s1">cancelRadius</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">property int __implicitWidth</span><span class="s4">: </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">round</span><span class="s4">(</span><span class="s1">TextSingleton</span><span class="s4">.</span><span class="s1">implicitHeight </span><span class="s4">* </span><span class="s3">12.5</span><span class="s4">)</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">property int __implicitHeight</span><span class="s4">: </span><span class="s1">__implicitWidth</span>
+
+    <span class="s5">/*! 
+        The background of the menu. 
+ 
+        By default, there is no background defined. 
+    */</span>
+    <span class="s1">property Component background</span>
+
+    <span class="s5">/*! 
+        The cancel component of the menu. 
+ 
+        This is an area in the center of the menu that closes the menu when 
+        clicked. 
+ 
+        By default, it is not visible. 
+    */</span>
+    <span class="s1">property Component cancel</span><span class="s4">: </span><span class="s2">null</span>
+
+    <span class="s5">/*! 
+        The component that displays the text of the currently selected menu 
+        item, or the title if there is no current item. 
+ 
+        The current item's text is available via the \c styleData.text 
+        property. 
+    */</span>
+    <span class="s1">property Component title</span><span class="s4">: </span><span class="s1">Text </span><span class="s4">{</span>
+        <span class="s1">font</span><span class="s4">.</span><span class="s1">pointSize</span><span class="s4">: </span><span class="s3">20</span>
+        <span class="s1">text</span><span class="s4">: </span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">text</span>
+        <span class="s1">horizontalAlignment</span><span class="s4">: </span><span class="s1">Text</span><span class="s4">.</span><span class="s1">AlignHCenter</span>
+        <span class="s1">verticalAlignment</span><span class="s4">: </span><span class="s1">Text</span><span class="s4">.</span><span class="s1">AlignVCenter</span>
+        <span class="s1">color</span><span class="s4">: </span><span class="s6">&quot;#ccc&quot;</span>
+        <span class="s1">antialiasing</span><span class="s4">: </span><span class="s2">true</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! 
+        This component defines each section of the pie menu. 
+ 
+        This component covers the width and height of the control. 
+ 
+        No mouse events are propagated to this component, which means that 
+        controls like Button will not function when used within it. You can 
+        check if the mouse is over this section by comparing 
+        \c control.currentIndex to \c styleData.index. 
+ 
+        Each instance of this component has access to the following properties: 
+ 
+        \table 
+            \row \li \c {readonly property int} \b styleData.index 
+                \li The index of this menu item. 
+            \row \li \c {readonly property bool} \b styleData.hovered 
+                \li \c true if this menu item is under the mouse. 
+            \row \li \c {readonly property bool} \b styleData.pressed 
+                \li \c true if the mouse is pressed down on this menu item. 
+        \endtable 
+    */</span>
+    <span class="s1">property Component menuItem</span><span class="s4">: </span><span class="s1">Item </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">actionRootDelegateItem</span>
+
+        <span class="s2">function </span><span class="s1">drawRingSection</span><span class="s4">(</span><span class="s1">ctx</span><span class="s4">, </span><span class="s1">x</span><span class="s4">, </span><span class="s1">y</span><span class="s4">, </span><span class="s1">section</span><span class="s4">, </span><span class="s1">r</span><span class="s4">, </span><span class="s1">ringWidth</span><span class="s4">, </span><span class="s1">ringColor</span><span class="s4">) {</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">fillStyle </span><span class="s4">= </span><span class="s1">ringColor</span><span class="s4">;</span>
+
+            <span class="s5">// Draw one section.</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">beginPath</span><span class="s4">();</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">moveTo</span><span class="s4">(</span><span class="s1">x</span><span class="s4">,</span><span class="s1">y</span><span class="s4">);</span>
+
+            <span class="s5">// Canvas draws 0 degrees at 3 o'clock, whereas we want it to draw it at 12.</span>
+            <span class="s2">var </span><span class="s1">start </span><span class="s4">= </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">sectionStartAngle</span><span class="s4">(</span><span class="s1">section</span><span class="s4">);</span>
+            <span class="s2">var </span><span class="s1">end </span><span class="s4">= </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">sectionEndAngle</span><span class="s4">(</span><span class="s1">section</span><span class="s4">);</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">arc</span><span class="s4">(</span><span class="s1">x</span><span class="s4">, </span><span class="s1">y</span><span class="s4">, </span><span class="s1">r</span><span class="s4">, </span><span class="s1">start</span><span class="s4">, </span><span class="s1">end</span><span class="s4">, </span><span class="s1">start </span><span class="s4">&gt; </span><span class="s1">end</span><span class="s4">);</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">();</span>
+
+            <span class="s5">// Either change this to the background color, or use the global composition.</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">fillStyle </span><span class="s4">= </span><span class="s6">&quot;black&quot;</span><span class="s4">;</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">globalCompositeOperation </span><span class="s4">= </span><span class="s6">&quot;destination-out&quot;</span><span class="s4">;</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">beginPath</span><span class="s4">();</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">moveTo</span><span class="s4">(</span><span class="s1">x</span><span class="s4">, </span><span class="s1">y</span><span class="s4">);</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">arc</span><span class="s4">(</span><span class="s1">x</span><span class="s4">, </span><span class="s1">y</span><span class="s4">, </span><span class="s1">ringWidth</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">PI </span><span class="s4">* </span><span class="s3">2</span><span class="s4">);</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">closePath</span><span class="s4">();</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">();</span>
+
+            <span class="s5">// If using the global composition method, make sure to change it back to default.</span>
+            <span class="s1">ctx</span><span class="s4">.</span><span class="s1">globalCompositeOperation </span><span class="s4">= </span><span class="s6">&quot;source-over&quot;</span><span class="s4">;</span>
+        <span class="s4">}</span>
+
+        <span class="s1">Canvas </span><span class="s4">{</span>
+            <span class="s1">id</span><span class="s4">: </span><span class="s1">actionCanvas</span>
+            <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+            <span class="s1">property color currentColor</span><span class="s4">: </span><span class="s1">control</span><span class="s4">.</span><span class="s1">currentIndex </span><span class="s4">=== </span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">index </span><span class="s4">? </span><span class="s1">selectionColor </span><span class="s4">: </span><span class="s1">backgroundColor</span>
+
+            <span class="s1">Connections </span><span class="s4">{</span>
+                <span class="s1">target</span><span class="s4">: </span><span class="s1">pieMenuStyle</span>
+                <span class="s2">function </span><span class="s1">onStartAngleChanged</span><span class="s4">() { </span><span class="s1">actionCanvas</span><span class="s4">.</span><span class="s1">requestPaint</span><span class="s4">() }</span>
+                <span class="s2">function </span><span class="s1">onEndAngleChanged</span><span class="s4">() { </span><span class="s1">actionCanvas</span><span class="s4">.</span><span class="s1">requestPaint</span><span class="s4">() }</span>
+            <span class="s4">}</span>
+
+            <span class="s1">Connections </span><span class="s4">{</span>
+                <span class="s1">target</span><span class="s4">: </span><span class="s1">control</span>
+                <span class="s2">function </span><span class="s1">onCurrentIndexChanged</span><span class="s4">() { </span><span class="s1">actionCanvas</span><span class="s4">.</span><span class="s1">requestPaint</span><span class="s4">() }</span>
+            <span class="s4">}</span>
+
+            <span class="s1">onPaint</span><span class="s4">: {</span>
+                <span class="s2">var </span><span class="s1">ctx </span><span class="s4">= </span><span class="s1">getContext</span><span class="s4">(</span><span class="s6">&quot;2d&quot;</span><span class="s4">);</span>
+                <span class="s1">ctx</span><span class="s4">.</span><span class="s1">reset</span><span class="s4">();</span>
+                <span class="s1">drawRingSection</span><span class="s4">(</span><span class="s1">ctx</span><span class="s4">, </span><span class="s1">width </span><span class="s4">/ </span><span class="s3">2</span><span class="s4">, </span><span class="s1">height </span><span class="s4">/ </span><span class="s3">2</span><span class="s4">, </span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">index</span><span class="s4">, </span><span class="s1">radius</span><span class="s4">, </span><span class="s1">cancelRadius</span><span class="s4">, </span><span class="s1">currentColor</span><span class="s4">);</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+
+        <span class="s1">readonly property </span><span class="s2">var </span><span class="s1">__styleData</span><span class="s4">: </span><span class="s1">styleData</span>
+
+        <span class="s1">PieMenuIcon </span><span class="s4">{</span>
+            <span class="s1">control</span><span class="s4">: </span><span class="s1">pieMenuStyle</span><span class="s4">.</span><span class="s1">control</span>
+            <span class="s1">styleData</span><span class="s4">: </span><span class="s1">__styleData</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">property Component panel</span><span class="s4">: </span><span class="s1">Item </span><span class="s4">{</span>
+        <span class="s1">implicitWidth</span><span class="s4">: </span><span class="s1">__implicitWidth</span>
+        <span class="s1">implicitHeight</span><span class="s4">: </span><span class="s1">__implicitHeight</span>
+
+        <span class="s1">property alias titleItem</span><span class="s4">: </span><span class="s1">titleLoader</span><span class="s4">.</span><span class="s1">item</span>
+
+        <span class="s1">Item </span><span class="s4">{</span>
+            <span class="s1">id</span><span class="s4">: </span><span class="s1">itemgroup</span>
+            <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+            <span class="s1">visible</span><span class="s4">: </span><span class="s2">false</span>
+
+            <span class="s1">Loader </span><span class="s4">{</span>
+                <span class="s1">id</span><span class="s4">: </span><span class="s1">backgroundLoader</span>
+                <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">background</span>
+                <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+            <span class="s4">}</span>
+
+            <span class="s1">Loader </span><span class="s4">{</span>
+                <span class="s1">id</span><span class="s4">: </span><span class="s1">cancelLoader</span>
+                <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">cancel</span>
+                <span class="s1">anchors</span><span class="s4">.</span><span class="s1">centerIn</span><span class="s4">: </span><span class="s1">parent</span>
+            <span class="s4">}</span>
+
+            <span class="s1">Repeater </span><span class="s4">{</span>
+                <span class="s1">id</span><span class="s4">: </span><span class="s1">menuItemRepeater</span>
+                <span class="s1">model</span><span class="s4">: </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">visibleItems</span>
+
+                <span class="s1">delegate</span><span class="s4">: </span><span class="s1">Loader </span><span class="s4">{</span>
+                    <span class="s1">id</span><span class="s4">: </span><span class="s1">menuItemLoader</span>
+                    <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+                    <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">menuItem</span>
+
+                    <span class="s1">readonly property int __index</span><span class="s4">: </span><span class="s1">index</span>
+                    <span class="s1">property QtObject styleData</span><span class="s4">: </span><span class="s1">QtObject </span><span class="s4">{</span>
+                        <span class="s1">readonly property alias index</span><span class="s4">: </span><span class="s1">menuItemLoader</span><span class="s4">.</span><span class="s1">__index</span>
+                        <span class="s1">readonly property bool hovered</span><span class="s4">: </span><span class="s1">control</span><span class="s4">.</span><span class="s1">currentIndex </span><span class="s4">=== </span><span class="s1">index</span>
+                        <span class="s1">readonly property bool pressed</span><span class="s4">: </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">pressedIndex </span><span class="s4">=== </span><span class="s1">index</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+        <span class="s1">DropShadow </span><span class="s4">{</span>
+            <span class="s1">id</span><span class="s4">: </span><span class="s1">dropShadow</span>
+            <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">itemgroup</span>
+            <span class="s1">spread</span><span class="s4">: </span><span class="s1">shadowSpread</span>
+            <span class="s1">samples</span><span class="s4">: </span><span class="s1">shadowRadius </span><span class="s4">* </span><span class="s3">2 </span><span class="s4">+ </span><span class="s3">1</span>
+            <span class="s1">transparentBorder</span><span class="s4">: </span><span class="s2">true</span>
+            <span class="s1">color</span><span class="s4">: </span><span class="s1">shadowColor</span>
+            <span class="s1">source</span><span class="s4">: </span><span class="s1">itemgroup</span>
+        <span class="s4">}</span>
+
+        <span class="s1">Loader </span><span class="s4">{</span>
+            <span class="s1">id</span><span class="s4">: </span><span class="s1">titleLoader</span>
+            <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">title</span>
+            <span class="s1">x</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">x </span><span class="s4">+ </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width </span><span class="s4">/ </span><span class="s3">2 </span><span class="s4">- </span><span class="s1">width </span><span class="s4">/ </span><span class="s3">2</span>
+            <span class="s1">y</span><span class="s4">: -</span><span class="s1">height </span><span class="s4">- </span><span class="s3">10</span>
+
+            <span class="s1">property QtObject styleData</span><span class="s4">: </span><span class="s1">QtObject </span><span class="s4">{</span>
+                <span class="s1">property string text</span><span class="s4">: </span><span class="s1">control</span><span class="s4">.</span><span class="s1">currentIndex </span><span class="s4">!== -</span><span class="s3">1</span>
+                    <span class="s4">? </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">visibleItems</span><span class="s4">[</span><span class="s1">control</span><span class="s4">.</span><span class="s1">currentIndex</span><span class="s4">].</span><span class="s1">text</span>
+                    <span class="s4">: </span><span class="s1">control</span><span class="s4">.</span><span class="s1">title</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

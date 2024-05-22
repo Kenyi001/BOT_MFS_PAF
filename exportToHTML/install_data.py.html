@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>install_data.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+install_data.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s1">have_setuptools </span><span class="s2">= (</span><span class="s3">'setuptools' </span><span class="s0">in </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">)</span>
+
+<span class="s0">from </span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">command</span><span class="s2">.</span><span class="s1">install_data </span><span class="s0">import </span><span class="s1">install_data </span><span class="s0">as </span><span class="s1">old_install_data</span>
+
+<span class="s4">#data installer with improved intelligence over distutils</span>
+<span class="s4">#data files are copied into the project directory instead</span>
+<span class="s4">#of willy-nilly</span>
+<span class="s0">class </span><span class="s1">install_data </span><span class="s2">(</span><span class="s1">old_install_data</span><span class="s2">):</span>
+
+    <span class="s0">def </span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">old_install_data</span><span class="s2">.</span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+
+        <span class="s0">if </span><span class="s1">have_setuptools</span><span class="s2">:</span>
+            <span class="s4"># Run install_clib again, since setuptools does not run sub-commands</span>
+            <span class="s4"># of install automatically</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">run_command</span><span class="s2">(</span><span class="s3">'install_clib'</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">finalize_options </span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">set_undefined_options</span><span class="s2">(</span><span class="s3">'install'</span><span class="s2">,</span>
+                                   <span class="s2">(</span><span class="s3">'install_lib'</span><span class="s2">, </span><span class="s3">'install_dir'</span><span class="s2">),</span>
+                                   <span class="s2">(</span><span class="s3">'root'</span><span class="s2">, </span><span class="s3">'root'</span><span class="s2">),</span>
+                                   <span class="s2">(</span><span class="s3">'force'</span><span class="s2">, </span><span class="s3">'force'</span><span class="s2">),</span>
+                                  <span class="s2">)</span>
+</pre>
+</body>
+</html>

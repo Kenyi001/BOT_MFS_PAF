@@ -1,0 +1,132 @@
+<html>
+<head>
+<title>spawn.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+spawn.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot;distutils.spawn 
+ 
+Provides the 'spawn()' function, a front-end to various platform- 
+specific functions for launching another program in a sub-process. 
+Also provides the 'find_executable()' to search the path for a given 
+executable name. 
+&quot;&quot;&quot;</span>
+
+<span class="s2">import </span><span class="s1">sys</span>
+<span class="s2">import </span><span class="s1">os</span>
+<span class="s2">import </span><span class="s1">subprocess</span>
+
+<span class="s2">from </span><span class="s3">.</span><span class="s1">errors </span><span class="s2">import </span><span class="s1">DistutilsExecError</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">debug </span><span class="s2">import </span><span class="s1">DEBUG</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">_log </span><span class="s2">import </span><span class="s1">log</span>
+
+
+<span class="s2">def </span><span class="s1">spawn</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">search_path</span><span class="s3">=</span><span class="s4">1</span><span class="s3">, </span><span class="s1">verbose</span><span class="s3">=</span><span class="s4">0</span><span class="s3">, </span><span class="s1">dry_run</span><span class="s3">=</span><span class="s4">0</span><span class="s3">, </span><span class="s1">env</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):  </span><span class="s5"># noqa: C901</span>
+    <span class="s0">&quot;&quot;&quot;Run another program, specified as a command list 'cmd', in a new process. 
+ 
+    'cmd' is just the argument list for the new process, ie. 
+    cmd[0] is the program to run and cmd[1:] are the rest of its arguments. 
+    There is no way to run a program with a name different from that of its 
+    executable. 
+ 
+    If 'search_path' is true (the default), the system's executable 
+    search path will be used to find the program; otherwise, cmd[0] 
+    must be the exact path to the executable.  If 'dry_run' is true, 
+    the command will not actually be run. 
+ 
+    Raise DistutilsExecError if running the program fails in any way; just 
+    return on success. 
+    &quot;&quot;&quot;</span>
+    <span class="s5"># cmd is documented as a list, but just in case some code passes a tuple</span>
+    <span class="s5"># in, protect our %-formatting code against horrible death</span>
+    <span class="s1">cmd </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">)</span>
+
+    <span class="s1">log</span><span class="s3">.</span><span class="s1">info</span><span class="s3">(</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">list2cmdline</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">))</span>
+    <span class="s2">if </span><span class="s1">dry_run</span><span class="s3">:</span>
+        <span class="s2">return</span>
+
+    <span class="s2">if </span><span class="s1">search_path</span><span class="s3">:</span>
+        <span class="s1">executable </span><span class="s3">= </span><span class="s1">find_executable</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">[</span><span class="s4">0</span><span class="s3">])</span>
+        <span class="s2">if </span><span class="s1">executable </span><span class="s2">is not None</span><span class="s3">:</span>
+            <span class="s1">cmd</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] = </span><span class="s1">executable</span>
+
+    <span class="s1">env </span><span class="s3">= </span><span class="s1">env </span><span class="s2">if </span><span class="s1">env </span><span class="s2">is not None else </span><span class="s1">dict</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">environ</span><span class="s3">)</span>
+
+    <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s6">'darwin'</span><span class="s3">:</span>
+        <span class="s2">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">util </span><span class="s2">import </span><span class="s1">MACOSX_VERSION_VAR</span><span class="s3">, </span><span class="s1">get_macosx_target_ver</span>
+
+        <span class="s1">macosx_target_ver </span><span class="s3">= </span><span class="s1">get_macosx_target_ver</span><span class="s3">()</span>
+        <span class="s2">if </span><span class="s1">macosx_target_ver</span><span class="s3">:</span>
+            <span class="s1">env</span><span class="s3">[</span><span class="s1">MACOSX_VERSION_VAR</span><span class="s3">] = </span><span class="s1">macosx_target_ver</span>
+
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">proc </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">env</span><span class="s3">=</span><span class="s1">env</span><span class="s3">)</span>
+        <span class="s1">proc</span><span class="s3">.</span><span class="s1">wait</span><span class="s3">()</span>
+        <span class="s1">exitcode </span><span class="s3">= </span><span class="s1">proc</span><span class="s3">.</span><span class="s1">returncode</span>
+    <span class="s2">except </span><span class="s1">OSError </span><span class="s2">as </span><span class="s1">exc</span><span class="s3">:</span>
+        <span class="s2">if not </span><span class="s1">DEBUG</span><span class="s3">:</span>
+            <span class="s1">cmd </span><span class="s3">= </span><span class="s1">cmd</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]</span>
+        <span class="s2">raise </span><span class="s1">DistutilsExecError</span><span class="s3">(</span>
+            <span class="s6">&quot;command {!r} failed: {}&quot;</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">exc</span><span class="s3">.</span><span class="s1">args</span><span class="s3">[-</span><span class="s4">1</span><span class="s3">])</span>
+        <span class="s3">) </span><span class="s2">from </span><span class="s1">exc</span>
+
+    <span class="s2">if </span><span class="s1">exitcode</span><span class="s3">:</span>
+        <span class="s2">if not </span><span class="s1">DEBUG</span><span class="s3">:</span>
+            <span class="s1">cmd </span><span class="s3">= </span><span class="s1">cmd</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]</span>
+        <span class="s2">raise </span><span class="s1">DistutilsExecError</span><span class="s3">(</span>
+            <span class="s6">&quot;command {!r} failed with exit code {}&quot;</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">exitcode</span><span class="s3">)</span>
+        <span class="s3">)</span>
+
+
+<span class="s2">def </span><span class="s1">find_executable</span><span class="s3">(</span><span class="s1">executable</span><span class="s3">, </span><span class="s1">path</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot;Tries to find 'executable' in the directories listed in 'path'. 
+ 
+    A string listing directories separated by 'os.pathsep'; defaults to 
+    os.environ['PATH'].  Returns the complete filename or None if not found. 
+    &quot;&quot;&quot;</span>
+    <span class="s1">_</span><span class="s3">, </span><span class="s1">ext </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">splitext</span><span class="s3">(</span><span class="s1">executable</span><span class="s3">)</span>
+    <span class="s2">if </span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s6">'win32'</span><span class="s3">) </span><span class="s2">and </span><span class="s3">(</span><span class="s1">ext </span><span class="s3">!= </span><span class="s6">'.exe'</span><span class="s3">):</span>
+        <span class="s1">executable </span><span class="s3">= </span><span class="s1">executable </span><span class="s3">+ </span><span class="s6">'.exe'</span>
+
+    <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">executable</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">executable</span>
+
+    <span class="s2">if </span><span class="s1">path </span><span class="s2">is None</span><span class="s3">:</span>
+        <span class="s1">path </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">environ</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s6">'PATH'</span><span class="s3">, </span><span class="s2">None</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">path </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">try</span><span class="s3">:</span>
+                <span class="s1">path </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">confstr</span><span class="s3">(</span><span class="s6">&quot;CS_PATH&quot;</span><span class="s3">)</span>
+            <span class="s2">except </span><span class="s3">(</span><span class="s1">AttributeError</span><span class="s3">, </span><span class="s1">ValueError</span><span class="s3">):</span>
+                <span class="s5"># os.confstr() or CS_PATH is not available</span>
+                <span class="s1">path </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">defpath</span>
+        <span class="s5"># bpo-35755: Don't use os.defpath if the PATH environment variable is</span>
+        <span class="s5"># set to an empty string</span>
+
+    <span class="s5"># PATH='' doesn't match, whereas PATH=':' looks in the current directory</span>
+    <span class="s2">if not </span><span class="s1">path</span><span class="s3">:</span>
+        <span class="s2">return None</span>
+
+    <span class="s1">paths </span><span class="s3">= </span><span class="s1">path</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">pathsep</span><span class="s3">)</span>
+    <span class="s2">for </span><span class="s1">p </span><span class="s2">in </span><span class="s1">paths</span><span class="s3">:</span>
+        <span class="s1">f </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">p</span><span class="s3">, </span><span class="s1">executable</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">f</span><span class="s3">):</span>
+            <span class="s5"># the file exists, we have a shot at spawn working</span>
+            <span class="s2">return </span><span class="s1">f</span>
+    <span class="s2">return None</span>
+</pre>
+</body>
+</html>

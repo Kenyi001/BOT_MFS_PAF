@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>_internal.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_internal.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span><span class="s2">, </span><span class="s1">TypeVar</span><span class="s2">, </span><span class="s1">overload</span><span class="s2">, </span><span class="s1">Generic</span>
+<span class="s0">import </span><span class="s1">ctypes </span><span class="s0">as </span><span class="s1">ct</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">ndarray</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">ctypeslib </span><span class="s0">import </span><span class="s1">c_intp</span>
+
+<span class="s1">_CastT </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_CastT&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">ct</span><span class="s2">.</span><span class="s1">_CanCastTo</span><span class="s2">)  </span><span class="s4"># Copied from `ctypes.cast`</span>
+<span class="s1">_CT </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_CT&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">ct</span><span class="s2">.</span><span class="s1">_CData</span><span class="s2">)</span>
+<span class="s1">_PT </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_PT&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s0">None </span><span class="s2">| </span><span class="s1">int</span><span class="s2">)</span>
+
+<span class="s4"># TODO: Let the likes of `shape_as` and `strides_as` return `None`</span>
+<span class="s4"># for 0D arrays once we've got shape-support</span>
+
+<span class="s0">class </span><span class="s1">_ctypes</span><span class="s2">(</span><span class="s1">Generic</span><span class="s2">[</span><span class="s1">_PT</span><span class="s2">]):</span>
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">array</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">], </span><span class="s1">ptr</span><span class="s2">: </span><span class="s0">None </span><span class="s2">= ...) </span><span class="s1">-&gt; _ctypes</span><span class="s2">[</span><span class="s0">None</span><span class="s2">]: ...</span>
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">array</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">], </span><span class="s1">ptr</span><span class="s2">: </span><span class="s1">_PT</span><span class="s2">) </span><span class="s1">-&gt; _ctypes</span><span class="s2">[</span><span class="s1">_PT</span><span class="s2">]: ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">data</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; _PT</span><span class="s2">: ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">shape</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; ct</span><span class="s2">.</span><span class="s1">Array</span><span class="s2">[</span><span class="s1">c_intp</span><span class="s2">]: ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">strides</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; ct</span><span class="s2">.</span><span class="s1">Array</span><span class="s2">[</span><span class="s1">c_intp</span><span class="s2">]: ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">_as_parameter_</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; ct</span><span class="s2">.</span><span class="s1">c_void_p</span><span class="s2">: ...</span>
+
+    <span class="s0">def </span><span class="s1">data_as</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">: </span><span class="s1">type</span><span class="s2">[</span><span class="s1">_CastT</span><span class="s2">]) </span><span class="s1">-&gt; _CastT</span><span class="s2">: ...</span>
+    <span class="s0">def </span><span class="s1">shape_as</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">: </span><span class="s1">type</span><span class="s2">[</span><span class="s1">_CT</span><span class="s2">]) </span><span class="s1">-&gt; ct</span><span class="s2">.</span><span class="s1">Array</span><span class="s2">[</span><span class="s1">_CT</span><span class="s2">]: ...</span>
+    <span class="s0">def </span><span class="s1">strides_as</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">: </span><span class="s1">type</span><span class="s2">[</span><span class="s1">_CT</span><span class="s2">]) </span><span class="s1">-&gt; ct</span><span class="s2">.</span><span class="s1">Array</span><span class="s2">[</span><span class="s1">_CT</span><span class="s2">]: ...</span>
+</pre>
+</body>
+</html>

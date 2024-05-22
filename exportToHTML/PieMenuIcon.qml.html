@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>PieMenuIcon.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+PieMenuIcon.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2016 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Extras module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.3</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Extras </span><span class="s3">1.4</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Extras</span><span class="s4">.</span><span class="s1">Private </span><span class="s3">1.0</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Extras</span><span class="s4">.</span><span class="s1">Private</span><span class="s4">.</span><span class="s1">CppUtils </span><span class="s3">1.0</span>
+
+<span class="s1">Loader </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">iconLoader</span>
+    <span class="s1">active</span><span class="s4">: </span><span class="s1">iconSource </span><span class="s4">!= </span><span class="s5">&quot;&quot;</span>
+
+    <span class="s1">property PieMenu control</span><span class="s4">: </span><span class="s2">null</span>
+    <span class="s1">property QtObject styleData</span><span class="s4">: </span><span class="s2">null</span>
+
+    <span class="s1">readonly property string iconSource</span><span class="s4">: </span><span class="s1">styleData </span><span class="s4">&amp;&amp; </span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">index </span><span class="s4">&lt; </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">visibleItems</span><span class="s4">.</span><span class="s1">length</span>
+        <span class="s4">? </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">visibleItems</span><span class="s4">[</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">index</span><span class="s4">].</span><span class="s1">iconSource</span>
+        <span class="s4">: </span><span class="s5">&quot;&quot;</span>
+
+    <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">Image </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">iconImage</span>
+        <span class="s1">source</span><span class="s4">: </span><span class="s1">iconSource</span>
+        <span class="s1">x</span><span class="s4">: </span><span class="s1">pos</span><span class="s4">.</span><span class="s1">x</span>
+        <span class="s1">y</span><span class="s4">: </span><span class="s1">pos</span><span class="s4">.</span><span class="s1">y</span>
+        <span class="s1">scale</span><span class="s4">: </span><span class="s1">scaleFactor</span>
+
+        <span class="s1">readonly property point pos</span><span class="s4">: </span><span class="s1">MathUtils</span><span class="s4">.</span><span class="s1">centerAlongCircle</span><span class="s4">(</span>
+            <span class="s1">iconLoader</span><span class="s4">.</span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width </span><span class="s4">/ </span><span class="s3">2</span><span class="s4">, </span><span class="s1">iconLoader</span><span class="s4">.</span><span class="s1">parent</span><span class="s4">.</span><span class="s1">height </span><span class="s4">/ </span><span class="s3">2</span><span class="s4">, </span><span class="s1">width</span><span class="s4">, </span><span class="s1">height</span><span class="s4">,</span>
+            <span class="s1">MathUtils</span><span class="s4">.</span><span class="s1">degToRadOffset</span><span class="s4">(</span><span class="s1">sectionCenterAngle</span><span class="s4">(</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">index</span><span class="s4">)), </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__style</span><span class="s4">.</span><span class="s1">__iconOffset</span><span class="s4">)</span>
+
+        <span class="s6">/* 
+            The icons should scale with the menu at some point, so that they 
+            stay within the bounds of each section. We down-scale the image by 
+            whichever of the following amounts are larger: 
+ 
+            a) The amount by which the largest dimension's diagonal size exceeds 
+            the &quot;selectable&quot; radius. The selectable radius is the distance in pixels 
+            between lines A and B in the incredibly visually appealing image below: 
+ 
+                   __________ 
+                 -      B     - 
+               /                \ 
+             /        ____        \ 
+            |        /  A \        | 
+            --------|      |-------- 
+ 
+            b) The amount by which the diagonal exceeds the circumference of 
+            one section. 
+        */</span>
+        <span class="s1">readonly property real scaleFactor</span><span class="s4">: {</span>
+            <span class="s2">var </span><span class="s1">largestDimension </span><span class="s4">= </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">max</span><span class="s4">(</span><span class="s1">iconImage</span><span class="s4">.</span><span class="s1">sourceSize</span><span class="s4">.</span><span class="s1">width</span><span class="s4">, </span><span class="s1">iconImage</span><span class="s4">.</span><span class="s1">sourceSize</span><span class="s4">.</span><span class="s1">height</span><span class="s4">) * </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">sqrt</span><span class="s4">(</span><span class="s3">2</span><span class="s4">);</span>
+            <span class="s6">// TODO: add padding</span>
+            <span class="s2">var </span><span class="s1">radiusDifference </span><span class="s4">= </span><span class="s1">largestDimension </span><span class="s4">- </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__style</span><span class="s4">.</span><span class="s1">__selectableRadius</span><span class="s4">;</span>
+            <span class="s2">var </span><span class="s1">circumferenceDifference </span><span class="s4">= </span><span class="s1">largestDimension </span><span class="s4">- </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">abs</span><span class="s4">(</span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">circumferenceOfSection</span><span class="s4">);</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">circumferenceDifference </span><span class="s4">&gt; </span><span class="s3">0 </span><span class="s4">|| </span><span class="s1">radiusDifference </span><span class="s4">&gt; </span><span class="s3">0</span><span class="s4">) {</span>
+                <span class="s6">// We need to down-scale.</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">radiusDifference </span><span class="s4">&gt; </span><span class="s1">circumferenceDifference</span><span class="s4">) {</span>
+                    <span class="s2">return </span><span class="s1">control</span><span class="s4">.</span><span class="s1">__style</span><span class="s4">.</span><span class="s1">__selectableRadius </span><span class="s4">/ </span><span class="s1">largestDimension</span><span class="s4">;</span>
+                <span class="s4">} </span><span class="s2">else </span><span class="s4">{</span>
+                    <span class="s2">return </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">abs</span><span class="s4">(</span><span class="s1">control</span><span class="s4">.</span><span class="s1">__protectedScope</span><span class="s4">.</span><span class="s1">circumferenceOfSection</span><span class="s4">) / </span><span class="s1">largestDimension</span><span class="s4">;</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+            <span class="s2">return </span><span class="s3">1</span><span class="s4">;</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

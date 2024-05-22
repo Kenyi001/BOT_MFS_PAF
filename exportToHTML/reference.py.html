@@ -1,0 +1,163 @@
+<html>
+<head>
+<title>reference.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+reference.py</font>
+</center></td></tr></table>
+<pre><span class="s0">''' 
+Reference tzinfo implementations from the Python docs. 
+Used for testing against as they are only correct for the years 
+1987 to 2006. Do not use these for real code. 
+'''</span>
+
+<span class="s2">from </span><span class="s1">datetime </span><span class="s2">import </span><span class="s1">tzinfo</span><span class="s3">, </span><span class="s1">timedelta</span><span class="s3">, </span><span class="s1">datetime</span>
+<span class="s2">from </span><span class="s1">pytz </span><span class="s2">import </span><span class="s1">HOUR</span><span class="s3">, </span><span class="s1">ZERO</span><span class="s3">, </span><span class="s1">UTC</span>
+
+<span class="s1">__all__ </span><span class="s3">= [</span>
+    <span class="s4">'FixedOffset'</span><span class="s3">,</span>
+    <span class="s4">'LocalTimezone'</span><span class="s3">,</span>
+    <span class="s4">'USTimeZone'</span><span class="s3">,</span>
+    <span class="s4">'Eastern'</span><span class="s3">,</span>
+    <span class="s4">'Central'</span><span class="s3">,</span>
+    <span class="s4">'Mountain'</span><span class="s3">,</span>
+    <span class="s4">'Pacific'</span><span class="s3">,</span>
+    <span class="s4">'UTC'</span>
+<span class="s3">]</span>
+
+
+<span class="s5"># A class building tzinfo objects for fixed-offset time zones.</span>
+<span class="s5"># Note that FixedOffset(0, &quot;UTC&quot;) is a different way to build a</span>
+<span class="s5"># UTC tzinfo object.</span>
+<span class="s2">class </span><span class="s1">FixedOffset</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot;Fixed offset in minutes east from UTC.&quot;&quot;&quot;</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">offset</span><span class="s3">, </span><span class="s1">name</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">__offset </span><span class="s3">= </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">minutes</span><span class="s3">=</span><span class="s1">offset</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">__name </span><span class="s3">= </span><span class="s1">name</span>
+
+    <span class="s2">def </span><span class="s1">utcoffset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__offset</span>
+
+    <span class="s2">def </span><span class="s1">tzname</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__name</span>
+
+    <span class="s2">def </span><span class="s1">dst</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">ZERO</span>
+
+
+<span class="s2">import </span><span class="s1">time </span><span class="s2">as </span><span class="s1">_time</span>
+
+<span class="s1">STDOFFSET </span><span class="s3">= </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">seconds</span><span class="s3">=-</span><span class="s1">_time</span><span class="s3">.</span><span class="s1">timezone</span><span class="s3">)</span>
+<span class="s2">if </span><span class="s1">_time</span><span class="s3">.</span><span class="s1">daylight</span><span class="s3">:</span>
+    <span class="s1">DSTOFFSET </span><span class="s3">= </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">seconds</span><span class="s3">=-</span><span class="s1">_time</span><span class="s3">.</span><span class="s1">altzone</span><span class="s3">)</span>
+<span class="s2">else</span><span class="s3">:</span>
+    <span class="s1">DSTOFFSET </span><span class="s3">= </span><span class="s1">STDOFFSET</span>
+
+<span class="s1">DSTDIFF </span><span class="s3">= </span><span class="s1">DSTOFFSET </span><span class="s3">- </span><span class="s1">STDOFFSET</span>
+
+
+<span class="s5"># A class capturing the platform's idea of local time.</span>
+<span class="s2">class </span><span class="s1">LocalTimezone</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">):</span>
+
+    <span class="s2">def </span><span class="s1">utcoffset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_isdst</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">):</span>
+            <span class="s2">return </span><span class="s1">DSTOFFSET</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">STDOFFSET</span>
+
+    <span class="s2">def </span><span class="s1">dst</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_isdst</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">):</span>
+            <span class="s2">return </span><span class="s1">DSTDIFF</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">ZERO</span>
+
+    <span class="s2">def </span><span class="s1">tzname</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">_time</span><span class="s3">.</span><span class="s1">tzname</span><span class="s3">[</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_isdst</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">)]</span>
+
+    <span class="s2">def </span><span class="s1">_isdst</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s1">tt </span><span class="s3">= (</span><span class="s1">dt</span><span class="s3">.</span><span class="s1">year</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">month</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">day</span><span class="s3">,</span>
+              <span class="s1">dt</span><span class="s3">.</span><span class="s1">hour</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">minute</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">second</span><span class="s3">,</span>
+              <span class="s1">dt</span><span class="s3">.</span><span class="s1">weekday</span><span class="s3">(), </span><span class="s6">0</span><span class="s3">, -</span><span class="s6">1</span><span class="s3">)</span>
+        <span class="s1">stamp </span><span class="s3">= </span><span class="s1">_time</span><span class="s3">.</span><span class="s1">mktime</span><span class="s3">(</span><span class="s1">tt</span><span class="s3">)</span>
+        <span class="s1">tt </span><span class="s3">= </span><span class="s1">_time</span><span class="s3">.</span><span class="s1">localtime</span><span class="s3">(</span><span class="s1">stamp</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">tt</span><span class="s3">.</span><span class="s1">tm_isdst </span><span class="s3">&gt; </span><span class="s6">0</span>
+
+<span class="s1">Local </span><span class="s3">= </span><span class="s1">LocalTimezone</span><span class="s3">()</span>
+
+
+<span class="s2">def </span><span class="s1">first_sunday_on_or_after</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">):</span>
+    <span class="s1">days_to_go </span><span class="s3">= </span><span class="s6">6 </span><span class="s3">- </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">weekday</span><span class="s3">()</span>
+    <span class="s2">if </span><span class="s1">days_to_go</span><span class="s3">:</span>
+        <span class="s1">dt </span><span class="s3">+= </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">days_to_go</span><span class="s3">)</span>
+    <span class="s2">return </span><span class="s1">dt</span>
+
+
+<span class="s5"># In the US, DST starts at 2am (standard time) on the first Sunday in April.</span>
+<span class="s1">DSTSTART </span><span class="s3">= </span><span class="s1">datetime</span><span class="s3">(</span><span class="s6">1</span><span class="s3">, </span><span class="s6">4</span><span class="s3">, </span><span class="s6">1</span><span class="s3">, </span><span class="s6">2</span><span class="s3">)</span>
+<span class="s5"># and ends at 2am (DST time; 1am standard time) on the last Sunday of Oct.</span>
+<span class="s5"># which is the first Sunday on or after Oct 25.</span>
+<span class="s1">DSTEND </span><span class="s3">= </span><span class="s1">datetime</span><span class="s3">(</span><span class="s6">1</span><span class="s3">, </span><span class="s6">10</span><span class="s3">, </span><span class="s6">25</span><span class="s3">, </span><span class="s6">1</span><span class="s3">)</span>
+
+
+<span class="s5"># A complete implementation of current DST rules for major US time zones.</span>
+<span class="s2">class </span><span class="s1">USTimeZone</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">):</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">hours</span><span class="s3">, </span><span class="s1">reprname</span><span class="s3">, </span><span class="s1">stdname</span><span class="s3">, </span><span class="s1">dstname</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">stdoffset </span><span class="s3">= </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">hours</span><span class="s3">=</span><span class="s1">hours</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">reprname </span><span class="s3">= </span><span class="s1">reprname</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">stdname </span><span class="s3">= </span><span class="s1">stdname</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">dstname </span><span class="s3">= </span><span class="s1">dstname</span>
+
+    <span class="s2">def </span><span class="s1">__repr__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">reprname</span>
+
+    <span class="s2">def </span><span class="s1">tzname</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">dst</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">):</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">dstname</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">stdname</span>
+
+    <span class="s2">def </span><span class="s1">utcoffset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">stdoffset </span><span class="s3">+ </span><span class="s1">self</span><span class="s3">.</span><span class="s1">dst</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">dst</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">dt </span><span class="s2">is None or </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s5"># An exception may be sensible here, in one or both cases.</span>
+            <span class="s5"># It depends on how you want to treat them.  The default</span>
+            <span class="s5"># fromutc() implementation (called by the default astimezone()</span>
+            <span class="s5"># implementation) passes a datetime with dt.tzinfo is self.</span>
+            <span class="s2">return </span><span class="s1">ZERO</span>
+        <span class="s2">assert </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is </span><span class="s1">self</span>
+
+        <span class="s5"># Find first Sunday in April &amp; the last in October.</span>
+        <span class="s1">start </span><span class="s3">= </span><span class="s1">first_sunday_on_or_after</span><span class="s3">(</span><span class="s1">DSTSTART</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">year</span><span class="s3">=</span><span class="s1">dt</span><span class="s3">.</span><span class="s1">year</span><span class="s3">))</span>
+        <span class="s1">end </span><span class="s3">= </span><span class="s1">first_sunday_on_or_after</span><span class="s3">(</span><span class="s1">DSTEND</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">year</span><span class="s3">=</span><span class="s1">dt</span><span class="s3">.</span><span class="s1">year</span><span class="s3">))</span>
+
+        <span class="s5"># Can't compare naive to aware objects, so strip the timezone from</span>
+        <span class="s5"># dt first.</span>
+        <span class="s2">if </span><span class="s1">start </span><span class="s3">&lt;= </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s2">None</span><span class="s3">) &lt; </span><span class="s1">end</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">HOUR</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">ZERO</span>
+
+<span class="s1">Eastern </span><span class="s3">= </span><span class="s1">USTimeZone</span><span class="s3">(-</span><span class="s6">5</span><span class="s3">, </span><span class="s4">&quot;Eastern&quot;</span><span class="s3">, </span><span class="s4">&quot;EST&quot;</span><span class="s3">, </span><span class="s4">&quot;EDT&quot;</span><span class="s3">)</span>
+<span class="s1">Central </span><span class="s3">= </span><span class="s1">USTimeZone</span><span class="s3">(-</span><span class="s6">6</span><span class="s3">, </span><span class="s4">&quot;Central&quot;</span><span class="s3">, </span><span class="s4">&quot;CST&quot;</span><span class="s3">, </span><span class="s4">&quot;CDT&quot;</span><span class="s3">)</span>
+<span class="s1">Mountain </span><span class="s3">= </span><span class="s1">USTimeZone</span><span class="s3">(-</span><span class="s6">7</span><span class="s3">, </span><span class="s4">&quot;Mountain&quot;</span><span class="s3">, </span><span class="s4">&quot;MST&quot;</span><span class="s3">, </span><span class="s4">&quot;MDT&quot;</span><span class="s3">)</span>
+<span class="s1">Pacific </span><span class="s3">= </span><span class="s1">USTimeZone</span><span class="s3">(-</span><span class="s6">8</span><span class="s3">, </span><span class="s4">&quot;Pacific&quot;</span><span class="s3">, </span><span class="s4">&quot;PST&quot;</span><span class="s3">, </span><span class="s4">&quot;PDT&quot;</span><span class="s3">)</span>
+</pre>
+</body>
+</html>

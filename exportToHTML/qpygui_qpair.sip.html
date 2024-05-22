@@ -1,0 +1,237 @@
+<html>
+<head>
+<title>qpygui_qpair.sip</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qpygui_qpair.sip</font>
+</center></td></tr></table>
+<pre><span class="s0">// This is the SIP interface definition for the QPair based mapped types</span>
+<span class="s0">// specific to the QtGui module.</span>
+<span class="s0">//</span>
+<span class="s0">// Copyright (c) 2023 Riverbank Computing Limited &lt;info@riverbankcomputing.com&gt;</span>
+<span class="s0">// </span>
+<span class="s0">// This file is part of PyQt5.</span>
+<span class="s0">// </span>
+<span class="s0">// This file may be used under the terms of the GNU General Public License</span>
+<span class="s0">// version 3.0 as published by the Free Software Foundation and appearing in</span>
+<span class="s0">// the file LICENSE included in the packaging of this file.  Please review the</span>
+<span class="s0">// following information to ensure the GNU General Public License version 3.0</span>
+<span class="s0">// requirements will be met: http://www.gnu.org/copyleft/gpl.html.</span>
+<span class="s0">// </span>
+<span class="s0">// If you do not wish to use this file under the terms of the GPL version 3.0</span>
+<span class="s0">// then you may purchase a commercial license.  For more information contact</span>
+<span class="s0">// info@riverbankcomputing.com.</span>
+<span class="s0">// </span>
+<span class="s0">// This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE</span>
+<span class="s0">// WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</span>
+
+
+<span class="s0">%If (Qt_5_2_0 -)</span>
+
+<span class="s0">%If (PyQt_OpenGL)</span>
+
+<span class="s0">%MappedType QPair&lt;QOpenGLTexture::Filter, QOpenGLTexture::Filter&gt;</span>
+        <span class="s0">/TypeHint=&quot;Tuple[QOpenGLTexture.Filter, QOpenGLTexture.Filter]&quot;/</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;QOpenGLTexture&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertFromTypeCode</span>
+    <span class="s0">return sipBuildResult(NULL, &quot;(FF)&quot;, sipCpp-&gt;first,</span>
+            <span class="s0">sipType_QOpenGLTexture_Filter, sipCpp-&gt;second,</span>
+            <span class="s0">sipType_QOpenGLTexture_Filter);</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertToTypeCode</span>
+    <span class="s0">if (!sipIsErr)</span>
+        <span class="s0">return (PySequence_Check(sipPy)</span>
+<span class="s0">#if PY_MAJOR_VERSION &lt; 3</span>
+                <span class="s0">&amp;&amp; !PyString_Check(sipPy)</span>
+<span class="s0">#endif</span>
+                <span class="s0">&amp;&amp; !PyUnicode_Check(sipPy));</span>
+
+    <span class="s0">Py_ssize_t len = PySequence_Size(sipPy);</span>
+
+    <span class="s0">if (len != 2)</span>
+    <span class="s0">{</span>
+        <span class="s0">// A negative length should only be an internal error so let the</span>
+        <span class="s0">// original exception stand.</span>
+        <span class="s0">if (len &gt;= 0)</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;sequence has %zd elements but 2 elements are expected&quot;,</span>
+                    <span class="s0">len);</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *firstobj = PySequence_GetItem(sipPy, 0);</span>
+
+    <span class="s0">if (!firstobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int firstv = sipConvertToEnum(firstobj, sipType_QOpenGLTexture_Filter);</span>
+
+    <span class="s0">if (PyErr_Occurred())</span>
+    <span class="s0">{</span>
+        <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                <span class="s0">&quot;the first element has type '%s' but 'QOpenGLTexture.Filter' is expected&quot;,</span>
+                <span class="s0">sipPyTypeName(Py_TYPE(firstobj)));</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *secondobj = PySequence_GetItem(sipPy, 1);</span>
+
+    <span class="s0">if (!secondobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int secondv = sipConvertToEnum(secondobj, sipType_QOpenGLTexture_Filter);</span>
+
+    <span class="s0">if (PyErr_Occurred())</span>
+    <span class="s0">{</span>
+        <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                <span class="s0">&quot;the second element has type '%s' but 'QOpenGLTexture.Filter' is expected&quot;,</span>
+                <span class="s0">sipPyTypeName(Py_TYPE(secondobj)));</span>
+
+        <span class="s0">Py_DECREF(secondobj);</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">*sipCppPtr = new QPair&lt;QOpenGLTexture::Filter, QOpenGLTexture::Filter&gt;(</span>
+            <span class="s0">static_cast&lt;QOpenGLTexture::Filter&gt;(firstv),</span>
+            <span class="s0">static_cast&lt;QOpenGLTexture::Filter&gt;(secondv));</span>
+
+    <span class="s0">Py_DECREF(secondobj);</span>
+    <span class="s0">Py_DECREF(firstobj);</span>
+ 
+    <span class="s0">return sipGetState(sipTransferObj);</span>
+<span class="s0">%End</span>
+<span class="s0">};</span>
+
+<span class="s0">%End</span>
+
+<span class="s0">%End</span>
+
+
+<span class="s0">%If (Qt_5_2_0 -)</span>
+
+<span class="s0">%MappedType QPair&lt;float, float&gt; /TypeHint=&quot;Tuple[float, float]&quot;/</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;qpair.h&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertFromTypeCode</span>
+    <span class="s0">return Py_BuildValue(&quot;(ff)&quot;, sipCpp-&gt;first, sipCpp-&gt;second);</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertToTypeCode</span>
+    <span class="s0">if (!sipIsErr)</span>
+        <span class="s0">return (PySequence_Check(sipPy)</span>
+<span class="s0">#if PY_MAJOR_VERSION &lt; 3</span>
+                <span class="s0">&amp;&amp; !PyString_Check(sipPy)</span>
+<span class="s0">#endif</span>
+                <span class="s0">&amp;&amp; !PyUnicode_Check(sipPy));</span>
+
+    <span class="s0">Py_ssize_t len = PySequence_Size(sipPy);</span>
+
+    <span class="s0">if (len != 2)</span>
+    <span class="s0">{</span>
+        <span class="s0">// A negative length should only be an internal error so let the</span>
+        <span class="s0">// original exception stand.</span>
+        <span class="s0">if (len &gt;= 0)</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;sequence has %zd elements but 2 elements are expected&quot;,</span>
+                    <span class="s0">len);</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *firstobj = PySequence_GetItem(sipPy, 0);</span>
+
+    <span class="s0">if (!firstobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyErr_Clear();</span>
+    <span class="s0">double first = PyFloat_AsDouble(firstobj);</span>
+
+    <span class="s0">if (PyErr_Occurred())</span>
+    <span class="s0">{</span>
+        <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                <span class="s0">&quot;the first element has type '%s' but 'float' is expected&quot;,</span>
+                <span class="s0">sipPyTypeName(Py_TYPE(firstobj)));</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *secondobj = PySequence_GetItem(sipPy, 1);</span>
+
+    <span class="s0">if (!secondobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyErr_Clear();</span>
+    <span class="s0">double second = PyFloat_AsDouble(secondobj);</span>
+
+    <span class="s0">if (PyErr_Occurred())</span>
+    <span class="s0">{</span>
+        <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                <span class="s0">&quot;the second element has type '%s' but 'float' is expected&quot;,</span>
+                <span class="s0">sipPyTypeName(Py_TYPE(secondobj)));</span>
+
+        <span class="s0">Py_DECREF(secondobj);</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">*sipCppPtr = new QPair&lt;float, float&gt;(first, second);;</span>
+
+    <span class="s0">Py_DECREF(secondobj);</span>
+    <span class="s0">Py_DECREF(firstobj);</span>
+ 
+    <span class="s0">return sipGetState(sipTransferObj);</span>
+<span class="s0">%End</span>
+<span class="s0">};</span>
+
+<span class="s0">%End</span>
+</pre>
+</body>
+</html>

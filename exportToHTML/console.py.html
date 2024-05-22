@@ -1,0 +1,92 @@
+<html>
+<head>
+<title>console.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #cf8e6d;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+console.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+    pygments.console 
+    ~~~~~~~~~~~~~~~~ 
+ 
+    Format colored console output. 
+ 
+    :copyright: Copyright 2006-2023 by the Pygments team, see AUTHORS. 
+    :license: BSD, see LICENSE for details. 
+&quot;&quot;&quot;</span>
+
+<span class="s1">esc </span><span class="s2">= </span><span class="s3">&quot;</span><span class="s4">\x1b</span><span class="s3">[&quot;</span>
+
+<span class="s1">codes </span><span class="s2">= {}</span>
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;&quot;</span><span class="s2">] = </span><span class="s3">&quot;&quot;</span>
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;reset&quot;</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;39;49;00m&quot;</span>
+
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;bold&quot;</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;01m&quot;</span>
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;faint&quot;</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;02m&quot;</span>
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;standout&quot;</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;03m&quot;</span>
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;underline&quot;</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;04m&quot;</span>
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;blink&quot;</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;05m&quot;</span>
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;overline&quot;</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;06m&quot;</span>
+
+<span class="s1">dark_colors </span><span class="s2">= [</span><span class="s3">&quot;black&quot;</span><span class="s2">, </span><span class="s3">&quot;red&quot;</span><span class="s2">, </span><span class="s3">&quot;green&quot;</span><span class="s2">, </span><span class="s3">&quot;yellow&quot;</span><span class="s2">, </span><span class="s3">&quot;blue&quot;</span><span class="s2">,</span>
+               <span class="s3">&quot;magenta&quot;</span><span class="s2">, </span><span class="s3">&quot;cyan&quot;</span><span class="s2">, </span><span class="s3">&quot;gray&quot;</span><span class="s2">]</span>
+<span class="s1">light_colors </span><span class="s2">= [</span><span class="s3">&quot;brightblack&quot;</span><span class="s2">, </span><span class="s3">&quot;brightred&quot;</span><span class="s2">, </span><span class="s3">&quot;brightgreen&quot;</span><span class="s2">, </span><span class="s3">&quot;brightyellow&quot;</span><span class="s2">, </span><span class="s3">&quot;brightblue&quot;</span><span class="s2">,</span>
+                <span class="s3">&quot;brightmagenta&quot;</span><span class="s2">, </span><span class="s3">&quot;brightcyan&quot;</span><span class="s2">, </span><span class="s3">&quot;white&quot;</span><span class="s2">]</span>
+
+<span class="s1">x </span><span class="s2">= </span><span class="s5">30</span>
+<span class="s4">for </span><span class="s1">d</span><span class="s2">, </span><span class="s1">l </span><span class="s4">in </span><span class="s1">zip</span><span class="s2">(</span><span class="s1">dark_colors</span><span class="s2">, </span><span class="s1">light_colors</span><span class="s2">):</span>
+    <span class="s1">codes</span><span class="s2">[</span><span class="s1">d</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;%im&quot; </span><span class="s2">% </span><span class="s1">x</span>
+    <span class="s1">codes</span><span class="s2">[</span><span class="s1">l</span><span class="s2">] = </span><span class="s1">esc </span><span class="s2">+ </span><span class="s3">&quot;%im&quot; </span><span class="s2">% (</span><span class="s5">60 </span><span class="s2">+ </span><span class="s1">x</span><span class="s2">)</span>
+    <span class="s1">x </span><span class="s2">+= </span><span class="s5">1</span>
+
+<span class="s4">del </span><span class="s1">d</span><span class="s2">, </span><span class="s1">l</span><span class="s2">, </span><span class="s1">x</span>
+
+<span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;white&quot;</span><span class="s2">] = </span><span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;bold&quot;</span><span class="s2">]</span>
+
+
+<span class="s4">def </span><span class="s1">reset_color</span><span class="s2">():</span>
+    <span class="s4">return </span><span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;reset&quot;</span><span class="s2">]</span>
+
+
+<span class="s4">def </span><span class="s1">colorize</span><span class="s2">(</span><span class="s1">color_key</span><span class="s2">, </span><span class="s1">text</span><span class="s2">):</span>
+    <span class="s4">return </span><span class="s1">codes</span><span class="s2">[</span><span class="s1">color_key</span><span class="s2">] + </span><span class="s1">text </span><span class="s2">+ </span><span class="s1">codes</span><span class="s2">[</span><span class="s3">&quot;reset&quot;</span><span class="s2">]</span>
+
+
+<span class="s4">def </span><span class="s1">ansiformat</span><span class="s2">(</span><span class="s1">attr</span><span class="s2">, </span><span class="s1">text</span><span class="s2">):</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Format ``text`` with a color and/or some attributes:: 
+ 
+        color       normal color 
+        *color*     bold color 
+        _color_     underlined color 
+        +color+     blinking color 
+    &quot;&quot;&quot;</span>
+    <span class="s1">result </span><span class="s2">= []</span>
+    <span class="s4">if </span><span class="s1">attr</span><span class="s2">[:</span><span class="s5">1</span><span class="s2">] == </span><span class="s1">attr</span><span class="s2">[-</span><span class="s5">1</span><span class="s2">:] == </span><span class="s3">'+'</span><span class="s2">:</span>
+        <span class="s1">result</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">codes</span><span class="s2">[</span><span class="s3">'blink'</span><span class="s2">])</span>
+        <span class="s1">attr </span><span class="s2">= </span><span class="s1">attr</span><span class="s2">[</span><span class="s5">1</span><span class="s2">:-</span><span class="s5">1</span><span class="s2">]</span>
+    <span class="s4">if </span><span class="s1">attr</span><span class="s2">[:</span><span class="s5">1</span><span class="s2">] == </span><span class="s1">attr</span><span class="s2">[-</span><span class="s5">1</span><span class="s2">:] == </span><span class="s3">'*'</span><span class="s2">:</span>
+        <span class="s1">result</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">codes</span><span class="s2">[</span><span class="s3">'bold'</span><span class="s2">])</span>
+        <span class="s1">attr </span><span class="s2">= </span><span class="s1">attr</span><span class="s2">[</span><span class="s5">1</span><span class="s2">:-</span><span class="s5">1</span><span class="s2">]</span>
+    <span class="s4">if </span><span class="s1">attr</span><span class="s2">[:</span><span class="s5">1</span><span class="s2">] == </span><span class="s1">attr</span><span class="s2">[-</span><span class="s5">1</span><span class="s2">:] == </span><span class="s3">'_'</span><span class="s2">:</span>
+        <span class="s1">result</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">codes</span><span class="s2">[</span><span class="s3">'underline'</span><span class="s2">])</span>
+        <span class="s1">attr </span><span class="s2">= </span><span class="s1">attr</span><span class="s2">[</span><span class="s5">1</span><span class="s2">:-</span><span class="s5">1</span><span class="s2">]</span>
+    <span class="s1">result</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">codes</span><span class="s2">[</span><span class="s1">attr</span><span class="s2">])</span>
+    <span class="s1">result</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">text</span><span class="s2">)</span>
+    <span class="s1">result</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">codes</span><span class="s2">[</span><span class="s3">'reset'</span><span class="s2">])</span>
+    <span class="s4">return </span><span class="s3">''</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">result</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

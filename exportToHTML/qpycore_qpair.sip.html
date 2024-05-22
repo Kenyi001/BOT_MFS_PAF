@@ -1,0 +1,354 @@
+<html>
+<head>
+<title>qpycore_qpair.sip</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qpycore_qpair.sip</font>
+</center></td></tr></table>
+<pre><span class="s0">// This is the SIP interface definition for the majority of the QPair based</span>
+<span class="s0">// mapped types.</span>
+<span class="s0">//</span>
+<span class="s0">// Copyright (c) 2023 Riverbank Computing Limited &lt;info@riverbankcomputing.com&gt;</span>
+<span class="s0">// </span>
+<span class="s0">// This file is part of PyQt5.</span>
+<span class="s0">// </span>
+<span class="s0">// This file may be used under the terms of the GNU General Public License</span>
+<span class="s0">// version 3.0 as published by the Free Software Foundation and appearing in</span>
+<span class="s0">// the file LICENSE included in the packaging of this file.  Please review the</span>
+<span class="s0">// following information to ensure the GNU General Public License version 3.0</span>
+<span class="s0">// requirements will be met: http://www.gnu.org/copyleft/gpl.html.</span>
+<span class="s0">// </span>
+<span class="s0">// If you do not wish to use this file under the terms of the GPL version 3.0</span>
+<span class="s0">// then you may purchase a commercial license.  For more information contact</span>
+<span class="s0">// info@riverbankcomputing.com.</span>
+<span class="s0">// </span>
+<span class="s0">// This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE</span>
+<span class="s0">// WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</span>
+
+
+<span class="s0">%If (Qt_5_10_0 -)</span>
+
+<span class="s0">template&lt;_TYPE1_, _TYPE2_&gt;</span>
+<span class="s0">%MappedType QPair&lt;_TYPE1_, _TYPE2_&gt; /TypeHint=&quot;Tuple[_TYPE1_, _TYPE2_]&quot;/</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;qpair.h&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertFromTypeCode</span>
+    <span class="s0">_TYPE1_ *first = new _TYPE1_(sipCpp-&gt;first);</span>
+    <span class="s0">_TYPE2_ *second = new _TYPE2_(sipCpp-&gt;second);</span>
+    <span class="s0">PyObject *t = sipBuildResult(NULL, &quot;(NN)&quot;, first, sipType__TYPE1_,</span>
+            <span class="s0">sipTransferObj, second, sipType__TYPE2_, sipTransferObj);</span>
+
+    <span class="s0">if (!t)</span>
+    <span class="s0">{</span>
+        <span class="s0">delete first;</span>
+        <span class="s0">delete second;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">return t;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertToTypeCode</span>
+    <span class="s0">if (!sipIsErr)</span>
+        <span class="s0">return (PySequence_Check(sipPy)</span>
+<span class="s0">#if PY_MAJOR_VERSION &lt; 3</span>
+                <span class="s0">&amp;&amp; !PyString_Check(sipPy)</span>
+<span class="s0">#endif</span>
+                <span class="s0">&amp;&amp; !PyUnicode_Check(sipPy));</span>
+
+    <span class="s0">Py_ssize_t len = PySequence_Size(sipPy);</span>
+
+    <span class="s0">if (len != 2)</span>
+    <span class="s0">{</span>
+        <span class="s0">// A negative length should only be an internal error so let the</span>
+        <span class="s0">// original exception stand.</span>
+        <span class="s0">if (len &gt;= 0)</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;sequence has %zd elements but 2 elements are expected&quot;,</span>
+                    <span class="s0">len);</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *firstobj = PySequence_GetItem(sipPy, 0);</span>
+
+    <span class="s0">if (!firstobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int firststate;</span>
+    <span class="s0">_TYPE1_ *first = reinterpret_cast&lt;_TYPE1_ *&gt;(</span>
+            <span class="s0">sipForceConvertToType(firstobj, sipType__TYPE1_, sipTransferObj,</span>
+                    <span class="s0">SIP_NOT_NONE, &amp;firststate, sipIsErr));</span>
+ 
+    <span class="s0">if (*sipIsErr)</span>
+    <span class="s0">{</span>
+        <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                <span class="s0">&quot;the first element has type '%s' but '_TYPE1_' is expected&quot;,</span>
+                <span class="s0">sipPyTypeName(Py_TYPE(firstobj)));</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *secondobj = PySequence_GetItem(sipPy, 1);</span>
+
+    <span class="s0">if (!secondobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">sipReleaseType(first, sipType__TYPE1_, firststate);</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int secondstate;</span>
+    <span class="s0">_TYPE2_ *second = reinterpret_cast&lt;_TYPE2_ *&gt;(</span>
+            <span class="s0">sipForceConvertToType(secondobj, sipType__TYPE2_, sipTransferObj,</span>
+                    <span class="s0">SIP_NOT_NONE, &amp;secondstate, sipIsErr));</span>
+ 
+    <span class="s0">if (*sipIsErr)</span>
+    <span class="s0">{</span>
+        <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                <span class="s0">&quot;the second element has type '%s' but '_TYPE2_' is expected&quot;,</span>
+                <span class="s0">sipPyTypeName(Py_TYPE(secondobj)));</span>
+
+        <span class="s0">Py_DECREF(secondobj);</span>
+        <span class="s0">sipReleaseType(first, sipType__TYPE1_, firststate);</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">*sipCppPtr = new QPair&lt;_TYPE1_, _TYPE2_&gt;(*first, *second);</span>
+
+    <span class="s0">sipReleaseType(second, sipType__TYPE2_, secondstate);</span>
+    <span class="s0">Py_DECREF(secondobj);</span>
+    <span class="s0">sipReleaseType(first, sipType__TYPE1_, firststate);</span>
+    <span class="s0">Py_DECREF(firstobj);</span>
+ 
+    <span class="s0">return sipGetState(sipTransferObj);</span>
+<span class="s0">%End</span>
+<span class="s0">};</span>
+
+<span class="s0">%End</span>
+
+
+<span class="s0">template&lt;_TYPE_&gt;</span>
+<span class="s0">%MappedType QPair&lt;_TYPE_, int&gt; /TypeHint=&quot;Tuple[_TYPE_, int]&quot;/</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;qpair.h&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertFromTypeCode</span>
+    <span class="s0">_TYPE_ *first = new _TYPE_(sipCpp-&gt;first);</span>
+    <span class="s0">PyObject *t = sipBuildResult(NULL, &quot;(Ni)&quot;, first, sipType__TYPE_,</span>
+            <span class="s0">sipTransferObj, sipCpp-&gt;second);</span>
+
+    <span class="s0">if (!t)</span>
+    <span class="s0">{</span>
+        <span class="s0">delete first;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">return t;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertToTypeCode</span>
+    <span class="s0">if (!sipIsErr)</span>
+        <span class="s0">return (PySequence_Check(sipPy)</span>
+<span class="s0">#if PY_MAJOR_VERSION &lt; 3</span>
+                <span class="s0">&amp;&amp; !PyString_Check(sipPy)</span>
+<span class="s0">#endif</span>
+                <span class="s0">&amp;&amp; !PyUnicode_Check(sipPy));</span>
+
+    <span class="s0">Py_ssize_t len = PySequence_Size(sipPy);</span>
+
+    <span class="s0">if (len != 2)</span>
+    <span class="s0">{</span>
+        <span class="s0">// A negative length should only be an internal error so let the</span>
+        <span class="s0">// original exception stand.</span>
+        <span class="s0">if (len &gt;= 0)</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;sequence has %zd elements but 2 elements are expected&quot;,</span>
+                    <span class="s0">len);</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *firstobj = PySequence_GetItem(sipPy, 0);</span>
+
+    <span class="s0">if (!firstobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int firststate;</span>
+    <span class="s0">_TYPE_ *first = reinterpret_cast&lt;_TYPE_ *&gt;(</span>
+            <span class="s0">sipForceConvertToType(firstobj, sipType__TYPE_, sipTransferObj,</span>
+                    <span class="s0">SIP_NOT_NONE, &amp;firststate, sipIsErr));</span>
+ 
+    <span class="s0">if (*sipIsErr)</span>
+    <span class="s0">{</span>
+        <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                <span class="s0">&quot;the first element has type '%s' but '_TYPE_' is expected&quot;,</span>
+                <span class="s0">sipPyTypeName(Py_TYPE(firstobj)));</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *secondobj = PySequence_GetItem(sipPy, 1);</span>
+
+    <span class="s0">if (!secondobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">sipReleaseType(first, sipType__TYPE_, firststate);</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int second = sipLong_AsInt(secondobj);</span>
+
+    <span class="s0">if (PyErr_Occurred())</span>
+    <span class="s0">{</span>
+        <span class="s0">if (PyErr_ExceptionMatches(PyExc_TypeError))</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;the second element has type '%s' but 'int' is expected&quot;,</span>
+                    <span class="s0">sipPyTypeName(Py_TYPE(secondobj)));</span>
+
+        <span class="s0">Py_DECREF(secondobj);</span>
+        <span class="s0">sipReleaseType(first, sipType__TYPE_, firststate);</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">*sipCppPtr = new QPair&lt;_TYPE_, int&gt;(*first, second);</span>
+
+    <span class="s0">Py_DECREF(secondobj);</span>
+    <span class="s0">sipReleaseType(first, sipType__TYPE_, firststate);</span>
+    <span class="s0">Py_DECREF(firstobj);</span>
+ 
+    <span class="s0">return sipGetState(sipTransferObj);</span>
+<span class="s0">%End</span>
+<span class="s0">};</span>
+
+
+<span class="s0">%MappedType QPair&lt;int, int&gt; /TypeHint=&quot;Tuple[int, int]&quot;/</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;qpair.h&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertFromTypeCode</span>
+    <span class="s0">return Py_BuildValue(&quot;(ii)&quot;, sipCpp-&gt;first, sipCpp-&gt;second);</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertToTypeCode</span>
+    <span class="s0">if (!sipIsErr)</span>
+        <span class="s0">return (PySequence_Check(sipPy)</span>
+<span class="s0">#if PY_MAJOR_VERSION &lt; 3</span>
+                <span class="s0">&amp;&amp; !PyString_Check(sipPy)</span>
+<span class="s0">#endif</span>
+                <span class="s0">&amp;&amp; !PyUnicode_Check(sipPy));</span>
+
+    <span class="s0">Py_ssize_t len = PySequence_Size(sipPy);</span>
+
+    <span class="s0">if (len != 2)</span>
+    <span class="s0">{</span>
+        <span class="s0">// A negative length should only be an internal error so let the</span>
+        <span class="s0">// original exception stand.</span>
+        <span class="s0">if (len &gt;= 0)</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;sequence has %zd elements but 2 elements are expected&quot;,</span>
+                    <span class="s0">len);</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *firstobj = PySequence_GetItem(sipPy, 0);</span>
+
+    <span class="s0">if (!firstobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int first = sipLong_AsInt(firstobj);</span>
+
+    <span class="s0">if (PyErr_Occurred())</span>
+    <span class="s0">{</span>
+        <span class="s0">if (PyErr_ExceptionMatches(PyExc_TypeError))</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;the first element has type '%s' but 'int' is expected&quot;,</span>
+                    <span class="s0">sipPyTypeName(Py_TYPE(firstobj)));</span>
+
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">PyObject *secondobj = PySequence_GetItem(sipPy, 1);</span>
+
+    <span class="s0">if (!secondobj)</span>
+    <span class="s0">{</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">int second = sipLong_AsInt(secondobj);</span>
+
+    <span class="s0">if (PyErr_Occurred())</span>
+    <span class="s0">{</span>
+        <span class="s0">if (PyErr_ExceptionMatches(PyExc_TypeError))</span>
+            <span class="s0">PyErr_Format(PyExc_TypeError,</span>
+                    <span class="s0">&quot;the second element has type '%s' but 'int' is expected&quot;,</span>
+                    <span class="s0">sipPyTypeName(Py_TYPE(secondobj)));</span>
+
+        <span class="s0">Py_DECREF(secondobj);</span>
+        <span class="s0">Py_DECREF(firstobj);</span>
+        <span class="s0">*sipIsErr = 1;</span>
+
+        <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">*sipCppPtr = new QPair&lt;int, int&gt;(first, second);</span>
+
+    <span class="s0">Py_DECREF(secondobj);</span>
+    <span class="s0">Py_DECREF(firstobj);</span>
+ 
+    <span class="s0">return sipGetState(sipTransferObj);</span>
+<span class="s0">%End</span>
+<span class="s0">};</span>
+</pre>
+</body>
+</html>

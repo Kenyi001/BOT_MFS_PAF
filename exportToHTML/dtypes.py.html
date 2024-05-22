@@ -1,0 +1,99 @@
+<html>
+<head>
+<title>dtypes.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #7a7e85;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+dtypes.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+DType classes and utility (:mod:`numpy.dtypes`) 
+=============================================== 
+ 
+This module is home to specific dtypes related functionality and their classes. 
+For more general information about dtypes, also see `numpy.dtype` and 
+:ref:`arrays.dtypes`. 
+ 
+Similar to the builtin ``types`` module, this submodule defines types (classes) 
+that are not widely used directly. 
+ 
+.. versionadded:: NumPy 1.25 
+ 
+    The dtypes module is new in NumPy 1.25.  Previously DType classes were 
+    only accessible indirectly. 
+ 
+ 
+DType classes 
+------------- 
+ 
+The following are the classes of the corresponding NumPy dtype instances and 
+NumPy scalar types.  The classes can be used in ``isinstance`` checks and can 
+also be instantiated or used directly.  Direct use of these classes is not 
+typical, since their scalar counterparts (e.g. ``np.float64``) or strings 
+like ``&quot;float64&quot;`` can be used. 
+ 
+.. list-table:: 
+    :header-rows: 1 
+ 
+    * - Group 
+      - DType class 
+ 
+    * - Boolean 
+      - ``BoolDType`` 
+ 
+    * - Bit-sized integers 
+      - ``Int8DType``, ``UInt8DType``, ``Int16DType``, ``UInt16DType``, 
+        ``Int32DType``, ``UInt32DType``, ``Int64DType``, ``UInt64DType`` 
+ 
+    * - C-named integers (may be aliases) 
+      - ``ByteDType``, ``UByteDType``, ``ShortDType``, ``UShortDType``, 
+        ``IntDType``, ``UIntDType``, ``LongDType``, ``ULongDType``, 
+        ``LongLongDType``, ``ULongLongDType`` 
+ 
+    * - Floating point 
+      - ``Float16DType``, ``Float32DType``, ``Float64DType``, 
+        ``LongDoubleDType`` 
+ 
+    * - Complex 
+      - ``Complex64DType``, ``Complex128DType``, ``CLongDoubleDType`` 
+ 
+    * - Strings 
+      - ``BytesDType``, ``BytesDType`` 
+ 
+    * - Times 
+      - ``DateTime64DType``, ``TimeDelta64DType`` 
+ 
+    * - Others 
+      - ``ObjectDType``, ``VoidDType`` 
+ 
+&quot;&quot;&quot;</span>
+
+<span class="s1">__all__ </span><span class="s2">= []</span>
+
+
+<span class="s3">def </span><span class="s1">_add_dtype_helper</span><span class="s2">(</span><span class="s1">DType</span><span class="s2">, </span><span class="s1">alias</span><span class="s2">):</span>
+    <span class="s4"># Function to add DTypes a bit more conveniently without channeling them</span>
+    <span class="s4"># through `numpy.core._multiarray_umath` namespace or similar.</span>
+    <span class="s3">from </span><span class="s1">numpy </span><span class="s3">import </span><span class="s1">dtypes</span>
+
+    <span class="s1">setattr</span><span class="s2">(</span><span class="s1">dtypes</span><span class="s2">, </span><span class="s1">DType</span><span class="s2">.</span><span class="s1">__name__</span><span class="s2">, </span><span class="s1">DType</span><span class="s2">)</span>
+    <span class="s1">__all__</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">DType</span><span class="s2">.</span><span class="s1">__name__</span><span class="s2">)</span>
+
+    <span class="s3">if </span><span class="s1">alias</span><span class="s2">:</span>
+        <span class="s1">alias </span><span class="s2">= </span><span class="s1">alias</span><span class="s2">.</span><span class="s1">removeprefix</span><span class="s2">(</span><span class="s5">&quot;numpy.dtypes.&quot;</span><span class="s2">)</span>
+        <span class="s1">setattr</span><span class="s2">(</span><span class="s1">dtypes</span><span class="s2">, </span><span class="s1">alias</span><span class="s2">, </span><span class="s1">DType</span><span class="s2">)</span>
+        <span class="s1">__all__</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">alias</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

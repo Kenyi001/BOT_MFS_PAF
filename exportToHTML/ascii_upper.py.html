@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>ascii_upper.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #a5c261;}
+.s4 { color: #cf8e6d;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ascii_upper.py</font>
+</center></td></tr></table>
+<pre><span class="s0">#############################################################################</span>
+<span class="s0">##</span>
+<span class="s0">## Copyright (c) 2023 Riverbank Computing Limited &lt;info@riverbankcomputing.com&gt;</span>
+<span class="s0">## </span>
+<span class="s0">## This file is part of PyQt5.</span>
+<span class="s0">## </span>
+<span class="s0">## This file may be used under the terms of the GNU General Public License</span>
+<span class="s0">## version 3.0 as published by the Free Software Foundation and appearing in</span>
+<span class="s0">## the file LICENSE included in the packaging of this file.  Please review the</span>
+<span class="s0">## following information to ensure the GNU General Public License version 3.0</span>
+<span class="s0">## requirements will be met: http://www.gnu.org/copyleft/gpl.html.</span>
+<span class="s0">## </span>
+<span class="s0">## If you do not wish to use this file under the terms of the GPL version 3.0</span>
+<span class="s0">## then you may purchase a commercial license.  For more information contact</span>
+<span class="s0">## info@riverbankcomputing.com.</span>
+<span class="s0">## </span>
+<span class="s0">## This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE</span>
+<span class="s0">## WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</span>
+<span class="s0">##</span>
+<span class="s0">#############################################################################</span>
+
+
+<span class="s0"># A translation table for converting ASCII lower case to upper case.</span>
+<span class="s1">_ascii_trans_table </span><span class="s2">= </span><span class="s1">bytes</span><span class="s2">.</span><span class="s1">maketrans</span><span class="s2">(</span><span class="s3">b'abcdefghijklmnopqrstuvwxyz'</span><span class="s2">,</span>
+        <span class="s3">b'ABCDEFGHIJKLMNOPQRSTUVWXYZ'</span><span class="s2">)</span>
+
+
+<span class="s0"># Convert a string to ASCII upper case irrespective of the current locale.</span>
+<span class="s4">def </span><span class="s1">ascii_upper</span><span class="s2">(</span><span class="s1">s</span><span class="s2">):</span>
+    <span class="s4">return </span><span class="s1">s</span><span class="s2">.</span><span class="s1">translate</span><span class="s2">(</span><span class="s1">_ascii_trans_table</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

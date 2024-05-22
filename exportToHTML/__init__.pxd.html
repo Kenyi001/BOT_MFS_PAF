@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>__init__.pxd</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+__init__.pxd</font>
+</center></td></tr></table>
+<pre><span class="s0">cimport </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">from </span><span class="s1">libc</span><span class="s2">.</span><span class="s1">stdint </span><span class="s0">cimport </span><span class="s1">uint32_t</span><span class="s2">, </span><span class="s1">uint64_t</span>
+
+<span class="s0">cdef </span><span class="s1">extern </span><span class="s0">from </span><span class="s3">&quot;numpy/random/bitgen.h&quot;</span><span class="s2">:</span>
+    <span class="s1">struct bitgen</span><span class="s2">:</span>
+        <span class="s1">void </span><span class="s2">*</span><span class="s1">state</span>
+        <span class="s1">uint64_t </span><span class="s2">(*</span><span class="s1">next_uint64</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+        <span class="s1">uint32_t </span><span class="s2">(*</span><span class="s1">next_uint32</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+        <span class="s1">double </span><span class="s2">(*</span><span class="s1">next_double</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+        <span class="s1">uint64_t </span><span class="s2">(*</span><span class="s1">next_raw</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+
+    <span class="s0">ctypedef </span><span class="s1">bitgen bitgen_t</span>
+
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">bit_generator </span><span class="s0">cimport </span><span class="s1">BitGenerator</span><span class="s2">, </span><span class="s1">SeedSequence</span>
+</pre>
+</body>
+</html>

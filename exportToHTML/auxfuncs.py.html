@@ -1,0 +1,962 @@
+<html>
+<head>
+<title>auxfuncs.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+auxfuncs.py</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env python3</span>
+<span class="s2">&quot;&quot;&quot; 
+ 
+Auxiliary functions for f2py2e. 
+ 
+Copyright 1999,2000 Pearu Peterson all rights reserved, 
+Pearu Peterson &lt;pearu@ioc.ee&gt; 
+Permission to use, modify, and distribute this software is given under the 
+terms of the NumPy (BSD style) LICENSE. 
+ 
+ 
+NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK. 
+$Date: 2005/07/24 19:01:55 $ 
+Pearu Peterson 
+ 
+&quot;&quot;&quot;</span>
+<span class="s3">import </span><span class="s1">pprint</span>
+<span class="s3">import </span><span class="s1">sys</span>
+<span class="s3">import </span><span class="s1">re</span>
+<span class="s3">import </span><span class="s1">types</span>
+<span class="s3">from </span><span class="s1">functools </span><span class="s3">import </span><span class="s1">reduce</span>
+<span class="s3">from </span><span class="s1">copy </span><span class="s3">import </span><span class="s1">deepcopy</span>
+
+<span class="s3">from </span><span class="s4">. </span><span class="s3">import </span><span class="s1">__version__</span>
+<span class="s3">from </span><span class="s4">. </span><span class="s3">import </span><span class="s1">cfuncs</span>
+
+<span class="s1">__all__ </span><span class="s4">= [</span>
+    <span class="s5">'applyrules'</span><span class="s4">, </span><span class="s5">'debugcapi'</span><span class="s4">, </span><span class="s5">'dictappend'</span><span class="s4">, </span><span class="s5">'errmess'</span><span class="s4">, </span><span class="s5">'gentitle'</span><span class="s4">,</span>
+    <span class="s5">'getargs2'</span><span class="s4">, </span><span class="s5">'getcallprotoargument'</span><span class="s4">, </span><span class="s5">'getcallstatement'</span><span class="s4">,</span>
+    <span class="s5">'getfortranname'</span><span class="s4">, </span><span class="s5">'getpymethoddef'</span><span class="s4">, </span><span class="s5">'getrestdoc'</span><span class="s4">, </span><span class="s5">'getusercode'</span><span class="s4">,</span>
+    <span class="s5">'getusercode1'</span><span class="s4">, </span><span class="s5">'getdimension'</span><span class="s4">, </span><span class="s5">'hasbody'</span><span class="s4">, </span><span class="s5">'hascallstatement'</span><span class="s4">, </span><span class="s5">'hascommon'</span><span class="s4">,</span>
+    <span class="s5">'hasexternals'</span><span class="s4">, </span><span class="s5">'hasinitvalue'</span><span class="s4">, </span><span class="s5">'hasnote'</span><span class="s4">, </span><span class="s5">'hasresultnote'</span><span class="s4">,</span>
+    <span class="s5">'isallocatable'</span><span class="s4">, </span><span class="s5">'isarray'</span><span class="s4">, </span><span class="s5">'isarrayofstrings'</span><span class="s4">,</span>
+    <span class="s5">'ischaracter'</span><span class="s4">, </span><span class="s5">'ischaracterarray'</span><span class="s4">, </span><span class="s5">'ischaracter_or_characterarray'</span><span class="s4">,</span>
+    <span class="s5">'iscomplex'</span><span class="s4">,</span>
+    <span class="s5">'iscomplexarray'</span><span class="s4">, </span><span class="s5">'iscomplexfunction'</span><span class="s4">, </span><span class="s5">'iscomplexfunction_warn'</span><span class="s4">,</span>
+    <span class="s5">'isdouble'</span><span class="s4">, </span><span class="s5">'isdummyroutine'</span><span class="s4">, </span><span class="s5">'isexternal'</span><span class="s4">, </span><span class="s5">'isfunction'</span><span class="s4">,</span>
+    <span class="s5">'isfunction_wrap'</span><span class="s4">, </span><span class="s5">'isint1'</span><span class="s4">, </span><span class="s5">'isint1array'</span><span class="s4">, </span><span class="s5">'isinteger'</span><span class="s4">, </span><span class="s5">'isintent_aux'</span><span class="s4">,</span>
+    <span class="s5">'isintent_c'</span><span class="s4">, </span><span class="s5">'isintent_callback'</span><span class="s4">, </span><span class="s5">'isintent_copy'</span><span class="s4">, </span><span class="s5">'isintent_dict'</span><span class="s4">,</span>
+    <span class="s5">'isintent_hide'</span><span class="s4">, </span><span class="s5">'isintent_in'</span><span class="s4">, </span><span class="s5">'isintent_inout'</span><span class="s4">, </span><span class="s5">'isintent_inplace'</span><span class="s4">,</span>
+    <span class="s5">'isintent_nothide'</span><span class="s4">, </span><span class="s5">'isintent_out'</span><span class="s4">, </span><span class="s5">'isintent_overwrite'</span><span class="s4">, </span><span class="s5">'islogical'</span><span class="s4">,</span>
+    <span class="s5">'islogicalfunction'</span><span class="s4">, </span><span class="s5">'islong_complex'</span><span class="s4">, </span><span class="s5">'islong_double'</span><span class="s4">,</span>
+    <span class="s5">'islong_doublefunction'</span><span class="s4">, </span><span class="s5">'islong_long'</span><span class="s4">, </span><span class="s5">'islong_longfunction'</span><span class="s4">,</span>
+    <span class="s5">'ismodule'</span><span class="s4">, </span><span class="s5">'ismoduleroutine'</span><span class="s4">, </span><span class="s5">'isoptional'</span><span class="s4">, </span><span class="s5">'isprivate'</span><span class="s4">, </span><span class="s5">'isrequired'</span><span class="s4">,</span>
+    <span class="s5">'isroutine'</span><span class="s4">, </span><span class="s5">'isscalar'</span><span class="s4">, </span><span class="s5">'issigned_long_longarray'</span><span class="s4">, </span><span class="s5">'isstring'</span><span class="s4">,</span>
+    <span class="s5">'isstringarray'</span><span class="s4">, </span><span class="s5">'isstring_or_stringarray'</span><span class="s4">, </span><span class="s5">'isstringfunction'</span><span class="s4">,</span>
+    <span class="s5">'issubroutine'</span><span class="s4">, </span><span class="s5">'get_f2py_modulename'</span><span class="s4">,</span>
+    <span class="s5">'issubroutine_wrap'</span><span class="s4">, </span><span class="s5">'isthreadsafe'</span><span class="s4">, </span><span class="s5">'isunsigned'</span><span class="s4">, </span><span class="s5">'isunsigned_char'</span><span class="s4">,</span>
+    <span class="s5">'isunsigned_chararray'</span><span class="s4">, </span><span class="s5">'isunsigned_long_long'</span><span class="s4">,</span>
+    <span class="s5">'isunsigned_long_longarray'</span><span class="s4">, </span><span class="s5">'isunsigned_short'</span><span class="s4">,</span>
+    <span class="s5">'isunsigned_shortarray'</span><span class="s4">, </span><span class="s5">'l_and'</span><span class="s4">, </span><span class="s5">'l_not'</span><span class="s4">, </span><span class="s5">'l_or'</span><span class="s4">, </span><span class="s5">'outmess'</span><span class="s4">,</span>
+    <span class="s5">'replace'</span><span class="s4">, </span><span class="s5">'show'</span><span class="s4">, </span><span class="s5">'stripcomma'</span><span class="s4">, </span><span class="s5">'throw_error'</span><span class="s4">, </span><span class="s5">'isattr_value'</span><span class="s4">,</span>
+    <span class="s5">'deep_merge'</span>
+<span class="s4">]</span>
+
+
+<span class="s1">f2py_version </span><span class="s4">= </span><span class="s1">__version__</span><span class="s4">.</span><span class="s1">version</span>
+
+
+<span class="s1">errmess </span><span class="s4">= </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">stderr</span><span class="s4">.</span><span class="s1">write</span>
+<span class="s1">show </span><span class="s4">= </span><span class="s1">pprint</span><span class="s4">.</span><span class="s1">pprint</span>
+
+<span class="s1">options </span><span class="s4">= {}</span>
+<span class="s1">debugoptions </span><span class="s4">= []</span>
+<span class="s1">wrapfuncs </span><span class="s4">= </span><span class="s6">1</span>
+
+
+<span class="s3">def </span><span class="s1">outmess</span><span class="s4">(</span><span class="s1">t</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">options</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'verbose'</span><span class="s4">, </span><span class="s6">1</span><span class="s4">):</span>
+        <span class="s1">sys</span><span class="s4">.</span><span class="s1">stdout</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s1">t</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">debugcapi</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'capi' </span><span class="s3">in </span><span class="s1">debugoptions</span>
+
+
+<span class="s3">def </span><span class="s1">_ischaracter</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'typespec' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'typespec'</span><span class="s4">] == </span><span class="s5">'character' </span><span class="s3">and </span><span class="s1">\</span>
+           <span class="s3">not </span><span class="s1">isexternal</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">_isstring</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'typespec' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'typespec'</span><span class="s4">] == </span><span class="s5">'character' </span><span class="s3">and </span><span class="s1">\</span>
+           <span class="s3">not </span><span class="s1">isexternal</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">ischaracter_or_characterarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">_ischaracter</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s5">'charselector' </span><span class="s3">not in </span><span class="s1">var</span>
+
+
+<span class="s3">def </span><span class="s1">ischaracter</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">ischaracter_or_characterarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and not </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">ischaracterarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">ischaracter_or_characterarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isstring_or_stringarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">_ischaracter</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s5">'charselector' </span><span class="s3">in </span><span class="s1">var</span>
+
+
+<span class="s3">def </span><span class="s1">isstring</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isstring_or_stringarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and not </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isstringarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isstring_or_stringarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isarrayofstrings</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):  </span><span class="s0"># obsolete?</span>
+    <span class="s0"># leaving out '*' for now so that `character*(*) a(m)` and `character</span>
+    <span class="s0"># a(m,*)` are treated differently. Luckily `character**` is illegal.</span>
+    <span class="s3">return </span><span class="s1">isstringarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'dimension'</span><span class="s4">][-</span><span class="s6">1</span><span class="s4">] == </span><span class="s5">'(*)'</span>
+
+
+<span class="s3">def </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'dimension' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and not </span><span class="s1">isexternal</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return not </span><span class="s4">(</span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">or </span><span class="s1">isstring</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">or </span><span class="s1">isexternal</span><span class="s4">(</span><span class="s1">var</span><span class="s4">))</span>
+
+
+<span class="s3">def </span><span class="s1">iscomplex</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">\</span>
+           <span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'complex'</span><span class="s4">, </span><span class="s5">'double complex'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">islogical</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) == </span><span class="s5">'logical'</span>
+
+
+<span class="s3">def </span><span class="s1">isinteger</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) == </span><span class="s5">'integer'</span>
+
+
+<span class="s3">def </span><span class="s1">isreal</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) == </span><span class="s5">'real'</span>
+
+
+<span class="s3">def </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">try</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'kindselector'</span><span class="s4">][</span><span class="s5">'*'</span><span class="s4">]</span>
+    <span class="s3">except </span><span class="s1">KeyError</span><span class="s4">:</span>
+        <span class="s3">try</span><span class="s4">:</span>
+            <span class="s3">return </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'kindselector'</span><span class="s4">][</span><span class="s5">'kind'</span><span class="s4">]</span>
+        <span class="s3">except </span><span class="s1">KeyError</span><span class="s4">:</span>
+            <span class="s3">pass</span>
+
+
+<span class="s3">def </span><span class="s1">isint1</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) == </span><span class="s5">'integer' </span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'1' </span><span class="s3">and not </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">islong_long</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">not in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'8'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsigned_char</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) != </span><span class="s5">'integer'</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-1'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsigned_short</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) != </span><span class="s5">'integer'</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-2'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsigned</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) != </span><span class="s5">'integer'</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-4'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsigned_long_long</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) != </span><span class="s5">'integer'</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-8'</span>
+
+
+<span class="s3">def </span><span class="s1">isdouble</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if not </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) == </span><span class="s5">'real'</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'8'</span>
+
+
+<span class="s3">def </span><span class="s1">islong_double</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isscalar</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if not </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) == </span><span class="s5">'real'</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'16'</span>
+
+
+<span class="s3">def </span><span class="s1">islong_complex</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">iscomplex</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'32'</span>
+
+
+<span class="s3">def </span><span class="s1">iscomplexarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">\</span>
+           <span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'complex'</span><span class="s4">, </span><span class="s5">'double complex'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">isint1array</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) == </span><span class="s5">'integer' </span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'1'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsigned_chararray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-1'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsigned_shortarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-2'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsignedarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-4'</span>
+
+
+<span class="s3">def </span><span class="s1">isunsigned_long_longarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'-8'</span>
+
+
+<span class="s3">def </span><span class="s1">issigned_chararray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'1'</span>
+
+
+<span class="s3">def </span><span class="s1">issigned_shortarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'2'</span>
+
+
+<span class="s3">def </span><span class="s1">issigned_array</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'4'</span>
+
+
+<span class="s3">def </span><span class="s1">issigned_long_longarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'typespec'</span><span class="s4">) </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'integer'</span><span class="s4">, </span><span class="s5">'logical'</span><span class="s4">]</span><span class="s1">\</span>
+        <span class="s3">and </span><span class="s1">get_kind</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) == </span><span class="s5">'8'</span>
+
+
+<span class="s3">def </span><span class="s1">isallocatable</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'attrspec' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s5">'allocatable' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'attrspec'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">ismutable</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return not </span><span class="s4">(</span><span class="s5">'dimension' </span><span class="s3">not in </span><span class="s1">var </span><span class="s3">or </span><span class="s1">isstring</span><span class="s4">(</span><span class="s1">var</span><span class="s4">))</span>
+
+
+<span class="s3">def </span><span class="s1">ismoduleroutine</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'modulename' </span><span class="s3">in </span><span class="s1">rout</span>
+
+
+<span class="s3">def </span><span class="s1">ismodule</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'block' </span><span class="s3">in </span><span class="s1">rout </span><span class="s3">and </span><span class="s5">'module' </span><span class="s4">== </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'block'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'block' </span><span class="s3">in </span><span class="s1">rout </span><span class="s3">and </span><span class="s5">'function' </span><span class="s4">== </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'block'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">isfunction_wrap</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">isintent_c</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">wrapfuncs </span><span class="s3">and </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">) </span><span class="s3">and </span><span class="s4">(</span><span class="s3">not </span><span class="s1">isexternal</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">))</span>
+
+
+<span class="s3">def </span><span class="s1">issubroutine</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'block' </span><span class="s3">in </span><span class="s1">rout </span><span class="s3">and </span><span class="s5">'subroutine' </span><span class="s4">== </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'block'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">issubroutine_wrap</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">isintent_c</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">issubroutine</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">) </span><span class="s3">and </span><span class="s1">hasassumedshape</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">)</span>
+
+<span class="s3">def </span><span class="s1">isattr_value</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'value' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'attrspec'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">hasassumedshape</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">rout</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'hasassumedshape'</span><span class="s4">):</span>
+        <span class="s3">return True</span>
+    <span class="s3">for </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'args'</span><span class="s4">]:</span>
+        <span class="s3">for </span><span class="s1">d </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">].</span><span class="s1">get</span><span class="s4">(</span><span class="s1">a</span><span class="s4">, {}).</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'dimension'</span><span class="s4">, []):</span>
+            <span class="s3">if </span><span class="s1">d </span><span class="s4">== </span><span class="s5">':'</span><span class="s4">:</span>
+                <span class="s1">rout</span><span class="s4">[</span><span class="s5">'hasassumedshape'</span><span class="s4">] = </span><span class="s3">True</span>
+                <span class="s3">return True</span>
+    <span class="s3">return False</span>
+
+
+<span class="s3">def </span><span class="s1">requiresf90wrapper</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">ismoduleroutine</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">) </span><span class="s3">or </span><span class="s1">hasassumedshape</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isroutine</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">) </span><span class="s3">or </span><span class="s1">issubroutine</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">islogicalfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'result' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'result'</span><span class="s4">]</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s1">islogical</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">a</span><span class="s4">])</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">islong_longfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'result' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'result'</span><span class="s4">]</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s1">islong_long</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">a</span><span class="s4">])</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">islong_doublefunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'result' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'result'</span><span class="s4">]</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s1">islong_double</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">a</span><span class="s4">])</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">iscomplexfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'result' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'result'</span><span class="s4">]</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s1">iscomplex</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">a</span><span class="s4">])</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">iscomplexfunction_warn</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">iscomplexfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s1">outmess</span><span class="s4">(</span><span class="s5">&quot;&quot;&quot;</span><span class="s3">\ 
+    </span><span class="s5">************************************************************** 
+        Warning: code with a function returning complex value 
+        may not work correctly with your Fortran compiler. 
+        When using GNU gcc/g77 compilers, codes should work 
+        correctly for callbacks with: 
+        f2py -c -DF2PY_CB_RETURNCOMPLEX 
+    **************************************************************</span><span class="s3">\n</span><span class="s5">&quot;&quot;&quot;</span><span class="s4">)</span>
+        <span class="s3">return </span><span class="s6">1</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">isstringfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'result' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'result'</span><span class="s4">]</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s1">isstring</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">a</span><span class="s4">])</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">hasexternals</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'externals' </span><span class="s3">in </span><span class="s1">rout </span><span class="s3">and </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'externals'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">isthreadsafe</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'f2pyenhancements' </span><span class="s3">in </span><span class="s1">rout </span><span class="s3">and </span><span class="s1">\</span>
+           <span class="s5">'threadsafe' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'f2pyenhancements'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">hasvariables</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'vars' </span><span class="s3">in </span><span class="s1">rout </span><span class="s3">and </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">isoptional</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s4">(</span><span class="s5">'attrspec' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s5">'optional' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'attrspec'</span><span class="s4">] </span><span class="s3">and</span>
+            <span class="s5">'required' </span><span class="s3">not in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'attrspec'</span><span class="s4">]) </span><span class="s3">and </span><span class="s1">isintent_nothide</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isexternal</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'attrspec' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s5">'external' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'attrspec'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">getdimension</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s1">dimpattern </span><span class="s4">= </span><span class="s5">r&quot;\((.*?)\)&quot;</span>
+    <span class="s3">if </span><span class="s5">'attrspec' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">keys</span><span class="s4">():</span>
+        <span class="s3">if </span><span class="s1">any</span><span class="s4">(</span><span class="s5">'dimension' </span><span class="s3">in </span><span class="s1">s </span><span class="s3">for </span><span class="s1">s </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'attrspec'</span><span class="s4">]):</span>
+            <span class="s3">return </span><span class="s4">[</span><span class="s1">re</span><span class="s4">.</span><span class="s1">findall</span><span class="s4">(</span><span class="s1">dimpattern</span><span class="s4">, </span><span class="s1">v</span><span class="s4">) </span><span class="s3">for </span><span class="s1">v </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'attrspec'</span><span class="s4">]][</span><span class="s6">0</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">isrequired</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return not </span><span class="s1">isoptional</span><span class="s4">(</span><span class="s1">var</span><span class="s4">) </span><span class="s3">and </span><span class="s1">isintent_nothide</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_in</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s5">'intent' </span><span class="s3">not in </span><span class="s1">var</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">1</span>
+    <span class="s3">if </span><span class="s5">'hide' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'inplace' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'in' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s6">1</span>
+    <span class="s3">if </span><span class="s5">'out' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'inout' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'outin' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s6">1</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_inout</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s4">(</span><span class="s5">'intent' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s4">(</span><span class="s5">'inout' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">] </span><span class="s3">or</span>
+            <span class="s5">'outin' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">]) </span><span class="s3">and </span><span class="s5">'in' </span><span class="s3">not in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">] </span><span class="s3">and</span>
+            <span class="s5">'hide' </span><span class="s3">not in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">] </span><span class="s3">and </span><span class="s5">'inplace' </span><span class="s3">not in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_out</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'out' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_hide</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s4">(</span><span class="s5">'intent' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s4">(</span><span class="s5">'hide' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">] </span><span class="s3">or</span>
+            <span class="s4">(</span><span class="s5">'out' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">] </span><span class="s3">and </span><span class="s5">'in' </span><span class="s3">not in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'intent'</span><span class="s4">] </span><span class="s3">and</span>
+                <span class="s4">(</span><span class="s3">not </span><span class="s1">l_or</span><span class="s4">(</span><span class="s1">isintent_inout</span><span class="s4">, </span><span class="s1">isintent_inplace</span><span class="s4">)(</span><span class="s1">var</span><span class="s4">)))))</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_nothide</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return not </span><span class="s1">isintent_hide</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_c</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'c' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_cache</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'cache' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_copy</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'copy' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_overwrite</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'overwrite' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_callback</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'callback' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_inplace</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'inplace' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_aux</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'aux' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_aligned4</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'aligned4' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_aligned8</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'aligned8' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s3">def </span><span class="s1">isintent_aligned16</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'aligned16' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'intent'</span><span class="s4">, [])</span>
+
+
+<span class="s1">isintent_dict </span><span class="s4">= {</span><span class="s1">isintent_in</span><span class="s4">: </span><span class="s5">'INTENT_IN'</span><span class="s4">, </span><span class="s1">isintent_inout</span><span class="s4">: </span><span class="s5">'INTENT_INOUT'</span><span class="s4">,</span>
+                 <span class="s1">isintent_out</span><span class="s4">: </span><span class="s5">'INTENT_OUT'</span><span class="s4">, </span><span class="s1">isintent_hide</span><span class="s4">: </span><span class="s5">'INTENT_HIDE'</span><span class="s4">,</span>
+                 <span class="s1">isintent_cache</span><span class="s4">: </span><span class="s5">'INTENT_CACHE'</span><span class="s4">,</span>
+                 <span class="s1">isintent_c</span><span class="s4">: </span><span class="s5">'INTENT_C'</span><span class="s4">, </span><span class="s1">isoptional</span><span class="s4">: </span><span class="s5">'OPTIONAL'</span><span class="s4">,</span>
+                 <span class="s1">isintent_inplace</span><span class="s4">: </span><span class="s5">'INTENT_INPLACE'</span><span class="s4">,</span>
+                 <span class="s1">isintent_aligned4</span><span class="s4">: </span><span class="s5">'INTENT_ALIGNED4'</span><span class="s4">,</span>
+                 <span class="s1">isintent_aligned8</span><span class="s4">: </span><span class="s5">'INTENT_ALIGNED8'</span><span class="s4">,</span>
+                 <span class="s1">isintent_aligned16</span><span class="s4">: </span><span class="s5">'INTENT_ALIGNED16'</span><span class="s4">,</span>
+                 <span class="s4">}</span>
+
+
+<span class="s3">def </span><span class="s1">isprivate</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'attrspec' </span><span class="s3">in </span><span class="s1">var </span><span class="s3">and </span><span class="s5">'private' </span><span class="s3">in </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'attrspec'</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">hasinitvalue</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'=' </span><span class="s3">in </span><span class="s1">var</span>
+
+
+<span class="s3">def </span><span class="s1">hasinitvalueasstring</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">hasinitvalue</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">return </span><span class="s1">var</span><span class="s4">[</span><span class="s5">'='</span><span class="s4">][</span><span class="s6">0</span><span class="s4">] </span><span class="s3">in </span><span class="s4">[</span><span class="s5">'&quot;'</span><span class="s4">, </span><span class="s5">&quot;'&quot;</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">hasnote</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'note' </span><span class="s3">in </span><span class="s1">var</span>
+
+
+<span class="s3">def </span><span class="s1">hasresultnote</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if not </span><span class="s1">isfunction</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">if </span><span class="s5">'result' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'result'</span><span class="s4">]</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s1">a </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">]:</span>
+        <span class="s3">return </span><span class="s1">hasnote</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">a</span><span class="s4">])</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">hascommon</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'common' </span><span class="s3">in </span><span class="s1">rout</span>
+
+
+<span class="s3">def </span><span class="s1">containscommon</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">hascommon</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">1</span>
+    <span class="s3">if </span><span class="s1">hasbody</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s3">for </span><span class="s1">b </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'body'</span><span class="s4">]:</span>
+            <span class="s3">if </span><span class="s1">containscommon</span><span class="s4">(</span><span class="s1">b</span><span class="s4">):</span>
+                <span class="s3">return </span><span class="s6">1</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">containsmodule</span><span class="s4">(</span><span class="s1">block</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">ismodule</span><span class="s4">(</span><span class="s1">block</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">1</span>
+    <span class="s3">if not </span><span class="s1">hasbody</span><span class="s4">(</span><span class="s1">block</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s6">0</span>
+    <span class="s3">for </span><span class="s1">b </span><span class="s3">in </span><span class="s1">block</span><span class="s4">[</span><span class="s5">'body'</span><span class="s4">]:</span>
+        <span class="s3">if </span><span class="s1">containsmodule</span><span class="s4">(</span><span class="s1">b</span><span class="s4">):</span>
+            <span class="s3">return </span><span class="s6">1</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">hasbody</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s5">'body' </span><span class="s3">in </span><span class="s1">rout</span>
+
+
+<span class="s3">def </span><span class="s1">hascallstatement</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">getcallstatement</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">) </span><span class="s3">is not None</span>
+
+
+<span class="s3">def </span><span class="s1">istrue</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s6">1</span>
+
+
+<span class="s3">def </span><span class="s1">isfalse</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">class </span><span class="s1">F2PYError</span><span class="s4">(</span><span class="s1">Exception</span><span class="s4">):</span>
+    <span class="s3">pass</span>
+
+
+<span class="s3">class </span><span class="s1">throw_error</span><span class="s4">:</span>
+
+    <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">mess</span><span class="s4">):</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">mess </span><span class="s4">= </span><span class="s1">mess</span>
+
+    <span class="s3">def </span><span class="s1">__call__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">var</span><span class="s4">):</span>
+        <span class="s1">mess </span><span class="s4">= </span><span class="s5">'</span><span class="s3">\n\n  </span><span class="s5">var = %s</span><span class="s3">\n  </span><span class="s5">Message: %s</span><span class="s3">\n</span><span class="s5">' </span><span class="s4">% (</span><span class="s1">var</span><span class="s4">, </span><span class="s1">self</span><span class="s4">.</span><span class="s1">mess</span><span class="s4">)</span>
+        <span class="s3">raise </span><span class="s1">F2PYError</span><span class="s4">(</span><span class="s1">mess</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">l_and</span><span class="s4">(*</span><span class="s1">f</span><span class="s4">):</span>
+    <span class="s1">l1</span><span class="s4">, </span><span class="s1">l2 </span><span class="s4">= </span><span class="s5">'lambda v'</span><span class="s4">, []</span>
+    <span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">range</span><span class="s4">(</span><span class="s1">len</span><span class="s4">(</span><span class="s1">f</span><span class="s4">)):</span>
+        <span class="s1">l1 </span><span class="s4">= </span><span class="s5">'%s,f%d=f[%d]' </span><span class="s4">% (</span><span class="s1">l1</span><span class="s4">, </span><span class="s1">i</span><span class="s4">, </span><span class="s1">i</span><span class="s4">)</span>
+        <span class="s1">l2</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s5">'f%d(v)' </span><span class="s4">% (</span><span class="s1">i</span><span class="s4">))</span>
+    <span class="s3">return </span><span class="s1">eval</span><span class="s4">(</span><span class="s5">'%s:%s' </span><span class="s4">% (</span><span class="s1">l1</span><span class="s4">, </span><span class="s5">' and '</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">l2</span><span class="s4">)))</span>
+
+
+<span class="s3">def </span><span class="s1">l_or</span><span class="s4">(*</span><span class="s1">f</span><span class="s4">):</span>
+    <span class="s1">l1</span><span class="s4">, </span><span class="s1">l2 </span><span class="s4">= </span><span class="s5">'lambda v'</span><span class="s4">, []</span>
+    <span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">range</span><span class="s4">(</span><span class="s1">len</span><span class="s4">(</span><span class="s1">f</span><span class="s4">)):</span>
+        <span class="s1">l1 </span><span class="s4">= </span><span class="s5">'%s,f%d=f[%d]' </span><span class="s4">% (</span><span class="s1">l1</span><span class="s4">, </span><span class="s1">i</span><span class="s4">, </span><span class="s1">i</span><span class="s4">)</span>
+        <span class="s1">l2</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s5">'f%d(v)' </span><span class="s4">% (</span><span class="s1">i</span><span class="s4">))</span>
+    <span class="s3">return </span><span class="s1">eval</span><span class="s4">(</span><span class="s5">'%s:%s' </span><span class="s4">% (</span><span class="s1">l1</span><span class="s4">, </span><span class="s5">' or '</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">l2</span><span class="s4">)))</span>
+
+
+<span class="s3">def </span><span class="s1">l_not</span><span class="s4">(</span><span class="s1">f</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">eval</span><span class="s4">(</span><span class="s5">'lambda v,f=f:not f(v)'</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">isdummyroutine</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">try</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'f2pyenhancements'</span><span class="s4">][</span><span class="s5">'fortranname'</span><span class="s4">] == </span><span class="s5">''</span>
+    <span class="s3">except </span><span class="s1">KeyError</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s6">0</span>
+
+
+<span class="s3">def </span><span class="s1">getfortranname</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">try</span><span class="s4">:</span>
+        <span class="s1">name </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'f2pyenhancements'</span><span class="s4">][</span><span class="s5">'fortranname'</span><span class="s4">]</span>
+        <span class="s3">if </span><span class="s1">name </span><span class="s4">== </span><span class="s5">''</span><span class="s4">:</span>
+            <span class="s3">raise </span><span class="s1">KeyError</span>
+        <span class="s3">if not </span><span class="s1">name</span><span class="s4">:</span>
+            <span class="s1">errmess</span><span class="s4">(</span><span class="s5">'Failed to use fortranname from %s</span><span class="s3">\n</span><span class="s5">' </span><span class="s4">%</span>
+                    <span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'f2pyenhancements'</span><span class="s4">]))</span>
+            <span class="s3">raise </span><span class="s1">KeyError</span>
+    <span class="s3">except </span><span class="s1">KeyError</span><span class="s4">:</span>
+        <span class="s1">name </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">return </span><span class="s1">name</span>
+
+
+<span class="s3">def </span><span class="s1">getmultilineblock</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">, </span><span class="s1">blockname</span><span class="s4">, </span><span class="s1">comment</span><span class="s4">=</span><span class="s6">1</span><span class="s4">, </span><span class="s1">counter</span><span class="s4">=</span><span class="s6">0</span><span class="s4">):</span>
+    <span class="s3">try</span><span class="s4">:</span>
+        <span class="s1">r </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'f2pyenhancements'</span><span class="s4">].</span><span class="s1">get</span><span class="s4">(</span><span class="s1">blockname</span><span class="s4">)</span>
+    <span class="s3">except </span><span class="s1">KeyError</span><span class="s4">:</span>
+        <span class="s3">return</span>
+    <span class="s3">if not </span><span class="s1">r</span><span class="s4">:</span>
+        <span class="s3">return</span>
+    <span class="s3">if </span><span class="s1">counter </span><span class="s4">&gt; </span><span class="s6">0 </span><span class="s3">and </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">r</span><span class="s4">, </span><span class="s1">str</span><span class="s4">):</span>
+        <span class="s3">return</span>
+    <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">r</span><span class="s4">, </span><span class="s1">list</span><span class="s4">):</span>
+        <span class="s3">if </span><span class="s1">counter </span><span class="s4">&gt;= </span><span class="s1">len</span><span class="s4">(</span><span class="s1">r</span><span class="s4">):</span>
+            <span class="s3">return</span>
+        <span class="s1">r </span><span class="s4">= </span><span class="s1">r</span><span class="s4">[</span><span class="s1">counter</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">r</span><span class="s4">[:</span><span class="s6">3</span><span class="s4">] == </span><span class="s5">&quot;'''&quot;</span><span class="s4">:</span>
+        <span class="s3">if </span><span class="s1">comment</span><span class="s4">:</span>
+            <span class="s1">r </span><span class="s4">= </span><span class="s5">'</span><span class="s3">\t</span><span class="s5">/* start ' </span><span class="s4">+ </span><span class="s1">blockname </span><span class="s4">+ </span><span class="s1">\</span>
+                <span class="s5">' multiline (' </span><span class="s4">+ </span><span class="s1">repr</span><span class="s4">(</span><span class="s1">counter</span><span class="s4">) + </span><span class="s5">') */</span><span class="s3">\n</span><span class="s5">' </span><span class="s4">+ </span><span class="s1">r</span><span class="s4">[</span><span class="s6">3</span><span class="s4">:]</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">r </span><span class="s4">= </span><span class="s1">r</span><span class="s4">[</span><span class="s6">3</span><span class="s4">:]</span>
+        <span class="s3">if </span><span class="s1">r</span><span class="s4">[-</span><span class="s6">3</span><span class="s4">:] == </span><span class="s5">&quot;'''&quot;</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">comment</span><span class="s4">:</span>
+                <span class="s1">r </span><span class="s4">= </span><span class="s1">r</span><span class="s4">[:-</span><span class="s6">3</span><span class="s4">] + </span><span class="s5">'</span><span class="s3">\n\t</span><span class="s5">/* end multiline (' </span><span class="s4">+ </span><span class="s1">repr</span><span class="s4">(</span><span class="s1">counter</span><span class="s4">) + </span><span class="s5">')*/'</span>
+            <span class="s3">else</span><span class="s4">:</span>
+                <span class="s1">r </span><span class="s4">= </span><span class="s1">r</span><span class="s4">[:-</span><span class="s6">3</span><span class="s4">]</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">errmess</span><span class="s4">(</span><span class="s5">&quot;%s multiline block should end with `'''`: %s</span><span class="s3">\n</span><span class="s5">&quot;</span>
+                    <span class="s4">% (</span><span class="s1">blockname</span><span class="s4">, </span><span class="s1">repr</span><span class="s4">(</span><span class="s1">r</span><span class="s4">)))</span>
+    <span class="s3">return </span><span class="s1">r</span>
+
+
+<span class="s3">def </span><span class="s1">getcallstatement</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">getmultilineblock</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">, </span><span class="s5">'callstatement'</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">getcallprotoargument</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">, </span><span class="s1">cb_map</span><span class="s4">={}):</span>
+    <span class="s1">r </span><span class="s4">= </span><span class="s1">getmultilineblock</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">, </span><span class="s5">'callprotoargument'</span><span class="s4">, </span><span class="s1">comment</span><span class="s4">=</span><span class="s6">0</span><span class="s4">)</span>
+    <span class="s3">if </span><span class="s1">r</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s1">r</span>
+    <span class="s3">if </span><span class="s1">hascallstatement</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s1">outmess</span><span class="s4">(</span>
+            <span class="s5">'warning: callstatement is defined without callprotoargument</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">)</span>
+        <span class="s3">return</span>
+    <span class="s3">from </span><span class="s4">.</span><span class="s1">capi_maps </span><span class="s3">import </span><span class="s1">getctype</span>
+    <span class="s1">arg_types</span><span class="s4">, </span><span class="s1">arg_types2 </span><span class="s4">= [], []</span>
+    <span class="s3">if </span><span class="s1">l_and</span><span class="s4">(</span><span class="s1">isstringfunction</span><span class="s4">, </span><span class="s1">l_not</span><span class="s4">(</span><span class="s1">isfunction_wrap</span><span class="s4">))(</span><span class="s1">rout</span><span class="s4">):</span>
+        <span class="s1">arg_types</span><span class="s4">.</span><span class="s1">extend</span><span class="s4">([</span><span class="s5">'char*'</span><span class="s4">, </span><span class="s5">'size_t'</span><span class="s4">])</span>
+    <span class="s3">for </span><span class="s1">n </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'args'</span><span class="s4">]:</span>
+        <span class="s1">var </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">n</span><span class="s4">]</span>
+        <span class="s3">if </span><span class="s1">isintent_callback</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+            <span class="s3">continue</span>
+        <span class="s3">if </span><span class="s1">n </span><span class="s3">in </span><span class="s1">cb_map</span><span class="s4">:</span>
+            <span class="s1">ctype </span><span class="s4">= </span><span class="s1">cb_map</span><span class="s4">[</span><span class="s1">n</span><span class="s4">] + </span><span class="s5">'_typedef'</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">ctype </span><span class="s4">= </span><span class="s1">getctype</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+            <span class="s3">if </span><span class="s1">l_and</span><span class="s4">(</span><span class="s1">isintent_c</span><span class="s4">, </span><span class="s1">l_or</span><span class="s4">(</span><span class="s1">isscalar</span><span class="s4">, </span><span class="s1">iscomplex</span><span class="s4">))(</span><span class="s1">var</span><span class="s4">):</span>
+                <span class="s3">pass</span>
+            <span class="s3">elif </span><span class="s1">isstring</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+                <span class="s3">pass</span>
+            <span class="s3">else</span><span class="s4">:</span>
+                <span class="s3">if not </span><span class="s1">isattr_value</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+                    <span class="s1">ctype </span><span class="s4">= </span><span class="s1">ctype </span><span class="s4">+ </span><span class="s5">'*'</span>
+            <span class="s3">if </span><span class="s4">((</span><span class="s1">isstring</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)</span>
+                 <span class="s3">or </span><span class="s1">isarrayofstrings</span><span class="s4">(</span><span class="s1">var</span><span class="s4">)  </span><span class="s0"># obsolete?</span>
+                 <span class="s3">or </span><span class="s1">isstringarray</span><span class="s4">(</span><span class="s1">var</span><span class="s4">))):</span>
+                <span class="s1">arg_types2</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s5">'size_t'</span><span class="s4">)</span>
+        <span class="s1">arg_types</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">ctype</span><span class="s4">)</span>
+
+    <span class="s1">proto_args </span><span class="s4">= </span><span class="s5">','</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">arg_types </span><span class="s4">+ </span><span class="s1">arg_types2</span><span class="s4">)</span>
+    <span class="s3">if not </span><span class="s1">proto_args</span><span class="s4">:</span>
+        <span class="s1">proto_args </span><span class="s4">= </span><span class="s5">'void'</span>
+    <span class="s3">return </span><span class="s1">proto_args</span>
+
+
+<span class="s3">def </span><span class="s1">getusercode</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">getmultilineblock</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">, </span><span class="s5">'usercode'</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">getusercode1</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">getmultilineblock</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">, </span><span class="s5">'usercode'</span><span class="s4">, </span><span class="s1">counter</span><span class="s4">=</span><span class="s6">1</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">getpymethoddef</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">return </span><span class="s1">getmultilineblock</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">, </span><span class="s5">'pymethoddef'</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">getargs</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s1">sortargs</span><span class="s4">, </span><span class="s1">args </span><span class="s4">= [], []</span>
+    <span class="s3">if </span><span class="s5">'args' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s1">args </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'args'</span><span class="s4">]</span>
+        <span class="s3">if </span><span class="s5">'sortvars' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+            <span class="s3">for </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'sortvars'</span><span class="s4">]:</span>
+                <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">args</span><span class="s4">:</span>
+                    <span class="s1">sortargs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">a</span><span class="s4">)</span>
+            <span class="s3">for </span><span class="s1">a </span><span class="s3">in </span><span class="s1">args</span><span class="s4">:</span>
+                <span class="s3">if </span><span class="s1">a </span><span class="s3">not in </span><span class="s1">sortargs</span><span class="s4">:</span>
+                    <span class="s1">sortargs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">a</span><span class="s4">)</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">sortargs </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'args'</span><span class="s4">]</span>
+    <span class="s3">return </span><span class="s1">args</span><span class="s4">, </span><span class="s1">sortargs</span>
+
+
+<span class="s3">def </span><span class="s1">getargs2</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s1">sortargs</span><span class="s4">, </span><span class="s1">args </span><span class="s4">= [], </span><span class="s1">rout</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'args'</span><span class="s4">, [])</span>
+    <span class="s1">auxvars </span><span class="s4">= [</span><span class="s1">a </span><span class="s3">for </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">].</span><span class="s1">keys</span><span class="s4">() </span><span class="s3">if </span><span class="s1">isintent_aux</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'vars'</span><span class="s4">][</span><span class="s1">a</span><span class="s4">])</span>
+               <span class="s3">and </span><span class="s1">a </span><span class="s3">not in </span><span class="s1">args</span><span class="s4">]</span>
+    <span class="s1">args </span><span class="s4">= </span><span class="s1">auxvars </span><span class="s4">+ </span><span class="s1">args</span>
+    <span class="s3">if </span><span class="s5">'sortvars' </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s3">for </span><span class="s1">a </span><span class="s3">in </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'sortvars'</span><span class="s4">]:</span>
+            <span class="s3">if </span><span class="s1">a </span><span class="s3">in </span><span class="s1">args</span><span class="s4">:</span>
+                <span class="s1">sortargs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">a</span><span class="s4">)</span>
+        <span class="s3">for </span><span class="s1">a </span><span class="s3">in </span><span class="s1">args</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">a </span><span class="s3">not in </span><span class="s1">sortargs</span><span class="s4">:</span>
+                <span class="s1">sortargs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">a</span><span class="s4">)</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s1">sortargs </span><span class="s4">= </span><span class="s1">auxvars </span><span class="s4">+ </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'args'</span><span class="s4">]</span>
+    <span class="s3">return </span><span class="s1">args</span><span class="s4">, </span><span class="s1">sortargs</span>
+
+
+<span class="s3">def </span><span class="s1">getrestdoc</span><span class="s4">(</span><span class="s1">rout</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s5">'f2pymultilines' </span><span class="s3">not in </span><span class="s1">rout</span><span class="s4">:</span>
+        <span class="s3">return None</span>
+    <span class="s1">k </span><span class="s4">= </span><span class="s3">None</span>
+    <span class="s3">if </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'block'</span><span class="s4">] == </span><span class="s5">'python module'</span><span class="s4">:</span>
+        <span class="s1">k </span><span class="s4">= </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'block'</span><span class="s4">], </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]</span>
+    <span class="s3">return </span><span class="s1">rout</span><span class="s4">[</span><span class="s5">'f2pymultilines'</span><span class="s4">].</span><span class="s1">get</span><span class="s4">(</span><span class="s1">k</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">gentitle</span><span class="s4">(</span><span class="s1">name</span><span class="s4">):</span>
+    <span class="s1">ln </span><span class="s4">= (</span><span class="s6">80 </span><span class="s4">- </span><span class="s1">len</span><span class="s4">(</span><span class="s1">name</span><span class="s4">) - </span><span class="s6">6</span><span class="s4">) // </span><span class="s6">2</span>
+    <span class="s3">return </span><span class="s5">'/*%s %s %s*/' </span><span class="s4">% (</span><span class="s1">ln </span><span class="s4">* </span><span class="s5">'*'</span><span class="s4">, </span><span class="s1">name</span><span class="s4">, </span><span class="s1">ln </span><span class="s4">* </span><span class="s5">'*'</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">flatlist</span><span class="s4">(</span><span class="s1">lst</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">lst</span><span class="s4">, </span><span class="s1">list</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s1">reduce</span><span class="s4">(</span><span class="s3">lambda </span><span class="s1">x</span><span class="s4">, </span><span class="s1">y</span><span class="s4">, </span><span class="s1">f</span><span class="s4">=</span><span class="s1">flatlist</span><span class="s4">: </span><span class="s1">x </span><span class="s4">+ </span><span class="s1">f</span><span class="s4">(</span><span class="s1">y</span><span class="s4">), </span><span class="s1">lst</span><span class="s4">, [])</span>
+    <span class="s3">return </span><span class="s4">[</span><span class="s1">lst</span><span class="s4">]</span>
+
+
+<span class="s3">def </span><span class="s1">stripcomma</span><span class="s4">(</span><span class="s1">s</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">s </span><span class="s3">and </span><span class="s1">s</span><span class="s4">[-</span><span class="s6">1</span><span class="s4">] == </span><span class="s5">','</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s1">s</span><span class="s4">[:-</span><span class="s6">1</span><span class="s4">]</span>
+    <span class="s3">return </span><span class="s1">s</span>
+
+
+<span class="s3">def </span><span class="s1">replace</span><span class="s4">(</span><span class="s1">str</span><span class="s4">, </span><span class="s1">d</span><span class="s4">, </span><span class="s1">defaultsep</span><span class="s4">=</span><span class="s5">''</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">d</span><span class="s4">, </span><span class="s1">list</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s4">[</span><span class="s1">replace</span><span class="s4">(</span><span class="s1">str</span><span class="s4">, </span><span class="s1">_m</span><span class="s4">, </span><span class="s1">defaultsep</span><span class="s4">) </span><span class="s3">for </span><span class="s1">_m </span><span class="s3">in </span><span class="s1">d</span><span class="s4">]</span>
+    <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">str</span><span class="s4">, </span><span class="s1">list</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s4">[</span><span class="s1">replace</span><span class="s4">(</span><span class="s1">_m</span><span class="s4">, </span><span class="s1">d</span><span class="s4">, </span><span class="s1">defaultsep</span><span class="s4">) </span><span class="s3">for </span><span class="s1">_m </span><span class="s3">in </span><span class="s1">str</span><span class="s4">]</span>
+    <span class="s3">for </span><span class="s1">k </span><span class="s3">in </span><span class="s6">2 </span><span class="s4">* </span><span class="s1">list</span><span class="s4">(</span><span class="s1">d</span><span class="s4">.</span><span class="s1">keys</span><span class="s4">()):</span>
+        <span class="s3">if </span><span class="s1">k </span><span class="s4">== </span><span class="s5">'separatorsfor'</span><span class="s4">:</span>
+            <span class="s3">continue</span>
+        <span class="s3">if </span><span class="s5">'separatorsfor' </span><span class="s3">in </span><span class="s1">d </span><span class="s3">and </span><span class="s1">k </span><span class="s3">in </span><span class="s1">d</span><span class="s4">[</span><span class="s5">'separatorsfor'</span><span class="s4">]:</span>
+            <span class="s1">sep </span><span class="s4">= </span><span class="s1">d</span><span class="s4">[</span><span class="s5">'separatorsfor'</span><span class="s4">][</span><span class="s1">k</span><span class="s4">]</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">sep </span><span class="s4">= </span><span class="s1">defaultsep</span>
+        <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">d</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">list</span><span class="s4">):</span>
+            <span class="s1">str </span><span class="s4">= </span><span class="s1">str</span><span class="s4">.</span><span class="s1">replace</span><span class="s4">(</span><span class="s5">'#%s#' </span><span class="s4">% (</span><span class="s1">k</span><span class="s4">), </span><span class="s1">sep</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">flatlist</span><span class="s4">(</span><span class="s1">d</span><span class="s4">[</span><span class="s1">k</span><span class="s4">])))</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">str </span><span class="s4">= </span><span class="s1">str</span><span class="s4">.</span><span class="s1">replace</span><span class="s4">(</span><span class="s5">'#%s#' </span><span class="s4">% (</span><span class="s1">k</span><span class="s4">), </span><span class="s1">d</span><span class="s4">[</span><span class="s1">k</span><span class="s4">])</span>
+    <span class="s3">return </span><span class="s1">str</span>
+
+
+<span class="s3">def </span><span class="s1">dictappend</span><span class="s4">(</span><span class="s1">rd</span><span class="s4">, </span><span class="s1">ar</span><span class="s4">):</span>
+    <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">ar</span><span class="s4">, </span><span class="s1">list</span><span class="s4">):</span>
+        <span class="s3">for </span><span class="s1">a </span><span class="s3">in </span><span class="s1">ar</span><span class="s4">:</span>
+            <span class="s1">rd </span><span class="s4">= </span><span class="s1">dictappend</span><span class="s4">(</span><span class="s1">rd</span><span class="s4">, </span><span class="s1">a</span><span class="s4">)</span>
+        <span class="s3">return </span><span class="s1">rd</span>
+    <span class="s3">for </span><span class="s1">k </span><span class="s3">in </span><span class="s1">ar</span><span class="s4">.</span><span class="s1">keys</span><span class="s4">():</span>
+        <span class="s3">if </span><span class="s1">k</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] == </span><span class="s5">'_'</span><span class="s4">:</span>
+            <span class="s3">continue</span>
+        <span class="s3">if </span><span class="s1">k </span><span class="s3">in </span><span class="s1">rd</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">str</span><span class="s4">):</span>
+                <span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = [</span><span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]]</span>
+            <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">list</span><span class="s4">):</span>
+                <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">list</span><span class="s4">):</span>
+                    <span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = </span><span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] + </span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]</span>
+                <span class="s3">else</span><span class="s4">:</span>
+                    <span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">].</span><span class="s1">append</span><span class="s4">(</span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">])</span>
+            <span class="s3">elif </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">dict</span><span class="s4">):</span>
+                <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">dict</span><span class="s4">):</span>
+                    <span class="s3">if </span><span class="s1">k </span><span class="s4">== </span><span class="s5">'separatorsfor'</span><span class="s4">:</span>
+                        <span class="s3">for </span><span class="s1">k1 </span><span class="s3">in </span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">].</span><span class="s1">keys</span><span class="s4">():</span>
+                            <span class="s3">if </span><span class="s1">k1 </span><span class="s3">not in </span><span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]:</span>
+                                <span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">][</span><span class="s1">k1</span><span class="s4">] = </span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">][</span><span class="s1">k1</span><span class="s4">]</span>
+                    <span class="s3">else</span><span class="s4">:</span>
+                        <span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = </span><span class="s1">dictappend</span><span class="s4">(</span><span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">])</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">rd</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = </span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]</span>
+    <span class="s3">return </span><span class="s1">rd</span>
+
+
+<span class="s3">def </span><span class="s1">applyrules</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">, </span><span class="s1">d</span><span class="s4">, </span><span class="s1">var</span><span class="s4">={}):</span>
+    <span class="s1">ret </span><span class="s4">= {}</span>
+    <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">, </span><span class="s1">list</span><span class="s4">):</span>
+        <span class="s3">for </span><span class="s1">r </span><span class="s3">in </span><span class="s1">rules</span><span class="s4">:</span>
+            <span class="s1">rr </span><span class="s4">= </span><span class="s1">applyrules</span><span class="s4">(</span><span class="s1">r</span><span class="s4">, </span><span class="s1">d</span><span class="s4">, </span><span class="s1">var</span><span class="s4">)</span>
+            <span class="s1">ret </span><span class="s4">= </span><span class="s1">dictappend</span><span class="s4">(</span><span class="s1">ret</span><span class="s4">, </span><span class="s1">rr</span><span class="s4">)</span>
+            <span class="s3">if </span><span class="s5">'_break' </span><span class="s3">in </span><span class="s1">rr</span><span class="s4">:</span>
+                <span class="s3">break</span>
+        <span class="s3">return </span><span class="s1">ret</span>
+    <span class="s3">if </span><span class="s5">'_check' </span><span class="s3">in </span><span class="s1">rules </span><span class="s3">and </span><span class="s4">(</span><span class="s3">not </span><span class="s1">rules</span><span class="s4">[</span><span class="s5">'_check'</span><span class="s4">](</span><span class="s1">var</span><span class="s4">)):</span>
+        <span class="s3">return </span><span class="s1">ret</span>
+    <span class="s3">if </span><span class="s5">'need' </span><span class="s3">in </span><span class="s1">rules</span><span class="s4">:</span>
+        <span class="s1">res </span><span class="s4">= </span><span class="s1">applyrules</span><span class="s4">({</span><span class="s5">'needs'</span><span class="s4">: </span><span class="s1">rules</span><span class="s4">[</span><span class="s5">'need'</span><span class="s4">]}, </span><span class="s1">d</span><span class="s4">, </span><span class="s1">var</span><span class="s4">)</span>
+        <span class="s3">if </span><span class="s5">'needs' </span><span class="s3">in </span><span class="s1">res</span><span class="s4">:</span>
+            <span class="s1">cfuncs</span><span class="s4">.</span><span class="s1">append_needs</span><span class="s4">(</span><span class="s1">res</span><span class="s4">[</span><span class="s5">'needs'</span><span class="s4">])</span>
+
+    <span class="s3">for </span><span class="s1">k </span><span class="s3">in </span><span class="s1">rules</span><span class="s4">.</span><span class="s1">keys</span><span class="s4">():</span>
+        <span class="s3">if </span><span class="s1">k </span><span class="s4">== </span><span class="s5">'separatorsfor'</span><span class="s4">:</span>
+            <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = </span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]</span>
+            <span class="s3">continue</span>
+        <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">str</span><span class="s4">):</span>
+            <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = </span><span class="s1">replace</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">d</span><span class="s4">)</span>
+        <span class="s3">elif </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">list</span><span class="s4">):</span>
+            <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = []</span>
+            <span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]:</span>
+                <span class="s1">ar </span><span class="s4">= </span><span class="s1">applyrules</span><span class="s4">({</span><span class="s1">k</span><span class="s4">: </span><span class="s1">i</span><span class="s4">}, </span><span class="s1">d</span><span class="s4">, </span><span class="s1">var</span><span class="s4">)</span>
+                <span class="s3">if </span><span class="s1">k </span><span class="s3">in </span><span class="s1">ar</span><span class="s4">:</span>
+                    <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">].</span><span class="s1">append</span><span class="s4">(</span><span class="s1">ar</span><span class="s4">[</span><span class="s1">k</span><span class="s4">])</span>
+        <span class="s3">elif </span><span class="s1">k</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] == </span><span class="s5">'_'</span><span class="s4">:</span>
+            <span class="s3">continue</span>
+        <span class="s3">elif </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">dict</span><span class="s4">):</span>
+            <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = []</span>
+            <span class="s3">for </span><span class="s1">k1 </span><span class="s3">in </span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">].</span><span class="s1">keys</span><span class="s4">():</span>
+                <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">k1</span><span class="s4">, </span><span class="s1">types</span><span class="s4">.</span><span class="s1">FunctionType</span><span class="s4">) </span><span class="s3">and </span><span class="s1">k1</span><span class="s4">(</span><span class="s1">var</span><span class="s4">):</span>
+                    <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">][</span><span class="s1">k1</span><span class="s4">], </span><span class="s1">list</span><span class="s4">):</span>
+                        <span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">][</span><span class="s1">k1</span><span class="s4">]:</span>
+                            <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">i</span><span class="s4">, </span><span class="s1">dict</span><span class="s4">):</span>
+                                <span class="s1">res </span><span class="s4">= </span><span class="s1">applyrules</span><span class="s4">({</span><span class="s5">'supertext'</span><span class="s4">: </span><span class="s1">i</span><span class="s4">}, </span><span class="s1">d</span><span class="s4">, </span><span class="s1">var</span><span class="s4">)</span>
+                                <span class="s3">if </span><span class="s5">'supertext' </span><span class="s3">in </span><span class="s1">res</span><span class="s4">:</span>
+                                    <span class="s1">i </span><span class="s4">= </span><span class="s1">res</span><span class="s4">[</span><span class="s5">'supertext'</span><span class="s4">]</span>
+                                <span class="s3">else</span><span class="s4">:</span>
+                                    <span class="s1">i </span><span class="s4">= </span><span class="s5">''</span>
+                            <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">].</span><span class="s1">append</span><span class="s4">(</span><span class="s1">replace</span><span class="s4">(</span><span class="s1">i</span><span class="s4">, </span><span class="s1">d</span><span class="s4">))</span>
+                    <span class="s3">else</span><span class="s4">:</span>
+                        <span class="s1">i </span><span class="s4">= </span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">][</span><span class="s1">k1</span><span class="s4">]</span>
+                        <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">i</span><span class="s4">, </span><span class="s1">dict</span><span class="s4">):</span>
+                            <span class="s1">res </span><span class="s4">= </span><span class="s1">applyrules</span><span class="s4">({</span><span class="s5">'supertext'</span><span class="s4">: </span><span class="s1">i</span><span class="s4">}, </span><span class="s1">d</span><span class="s4">)</span>
+                            <span class="s3">if </span><span class="s5">'supertext' </span><span class="s3">in </span><span class="s1">res</span><span class="s4">:</span>
+                                <span class="s1">i </span><span class="s4">= </span><span class="s1">res</span><span class="s4">[</span><span class="s5">'supertext'</span><span class="s4">]</span>
+                            <span class="s3">else</span><span class="s4">:</span>
+                                <span class="s1">i </span><span class="s4">= </span><span class="s5">''</span>
+                        <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">].</span><span class="s1">append</span><span class="s4">(</span><span class="s1">replace</span><span class="s4">(</span><span class="s1">i</span><span class="s4">, </span><span class="s1">d</span><span class="s4">))</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">errmess</span><span class="s4">(</span><span class="s5">'applyrules: ignoring rule %s.</span><span class="s3">\n</span><span class="s5">' </span><span class="s4">% </span><span class="s1">repr</span><span class="s4">(</span><span class="s1">rules</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]))</span>
+        <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">], </span><span class="s1">list</span><span class="s4">):</span>
+            <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]) == </span><span class="s6">1</span><span class="s4">:</span>
+                <span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = </span><span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">][</span><span class="s6">0</span><span class="s4">]</span>
+            <span class="s3">if </span><span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] == []:</span>
+                <span class="s3">del </span><span class="s1">ret</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]</span>
+    <span class="s3">return </span><span class="s1">ret</span>
+
+<span class="s3">def </span><span class="s1">deep_merge</span><span class="s4">(</span><span class="s1">dict1</span><span class="s4">, </span><span class="s1">dict2</span><span class="s4">):</span>
+    <span class="s2">&quot;&quot;&quot;Recursively merge two dictionaries into a new dictionary. 
+ 
+    Parameters: 
+    - dict1: The base dictionary. 
+    - dict2: The dictionary to merge into a copy of dict1. 
+             If a key exists in both, the dict2 value will take precedence. 
+ 
+    Returns: 
+    - A new merged dictionary. 
+    &quot;&quot;&quot;</span>
+    <span class="s1">merged_dict </span><span class="s4">= </span><span class="s1">deepcopy</span><span class="s4">(</span><span class="s1">dict1</span><span class="s4">)</span>
+    <span class="s3">for </span><span class="s1">key</span><span class="s4">, </span><span class="s1">value </span><span class="s3">in </span><span class="s1">dict2</span><span class="s4">.</span><span class="s1">items</span><span class="s4">():</span>
+        <span class="s3">if </span><span class="s1">key </span><span class="s3">in </span><span class="s1">merged_dict</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">merged_dict</span><span class="s4">[</span><span class="s1">key</span><span class="s4">], </span><span class="s1">dict</span><span class="s4">) </span><span class="s3">and </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">value</span><span class="s4">, </span><span class="s1">dict</span><span class="s4">):</span>
+                <span class="s1">merged_dict</span><span class="s4">[</span><span class="s1">key</span><span class="s4">] = </span><span class="s1">deep_merge</span><span class="s4">(</span><span class="s1">merged_dict</span><span class="s4">[</span><span class="s1">key</span><span class="s4">], </span><span class="s1">value</span><span class="s4">)</span>
+            <span class="s3">else</span><span class="s4">:</span>
+                <span class="s1">merged_dict</span><span class="s4">[</span><span class="s1">key</span><span class="s4">] = </span><span class="s1">value</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">merged_dict</span><span class="s4">[</span><span class="s1">key</span><span class="s4">] = </span><span class="s1">value</span>
+    <span class="s3">return </span><span class="s1">merged_dict</span>
+
+<span class="s1">_f2py_module_name_match </span><span class="s4">= </span><span class="s1">re</span><span class="s4">.</span><span class="s1">compile</span><span class="s4">(</span><span class="s5">r'\s*python\s*module\s*(?P&lt;name&gt;[\w_]+)'</span><span class="s4">,</span>
+                                     <span class="s1">re</span><span class="s4">.</span><span class="s1">I</span><span class="s4">).</span><span class="s1">match</span>
+<span class="s1">_f2py_user_module_name_match </span><span class="s4">= </span><span class="s1">re</span><span class="s4">.</span><span class="s1">compile</span><span class="s4">(</span><span class="s5">r'\s*python\s*module\s*(?P&lt;name&gt;[\w_]*?'</span>
+                                          <span class="s5">r'__user__[\w_]*)'</span><span class="s4">, </span><span class="s1">re</span><span class="s4">.</span><span class="s1">I</span><span class="s4">).</span><span class="s1">match</span>
+
+<span class="s3">def </span><span class="s1">get_f2py_modulename</span><span class="s4">(</span><span class="s1">source</span><span class="s4">):</span>
+    <span class="s1">name </span><span class="s4">= </span><span class="s3">None</span>
+    <span class="s3">with </span><span class="s1">open</span><span class="s4">(</span><span class="s1">source</span><span class="s4">) </span><span class="s3">as </span><span class="s1">f</span><span class="s4">:</span>
+        <span class="s3">for </span><span class="s1">line </span><span class="s3">in </span><span class="s1">f</span><span class="s4">:</span>
+            <span class="s1">m </span><span class="s4">= </span><span class="s1">_f2py_module_name_match</span><span class="s4">(</span><span class="s1">line</span><span class="s4">)</span>
+            <span class="s3">if </span><span class="s1">m</span><span class="s4">:</span>
+                <span class="s3">if </span><span class="s1">_f2py_user_module_name_match</span><span class="s4">(</span><span class="s1">line</span><span class="s4">): </span><span class="s0"># skip *__user__* names</span>
+                    <span class="s3">continue</span>
+                <span class="s1">name </span><span class="s4">= </span><span class="s1">m</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s5">'name'</span><span class="s4">)</span>
+                <span class="s3">break</span>
+    <span class="s3">return </span><span class="s1">name</span>
+</pre>
+</body>
+</html>

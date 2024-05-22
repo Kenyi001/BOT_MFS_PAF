@@ -1,0 +1,603 @@
+<html>
+<head>
+<title>tzinfo.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+tzinfo.py</font>
+</center></td></tr></table>
+<pre><span class="s0">'''Base classes and helpers for building zone specific tzinfo classes'''</span>
+
+<span class="s2">from </span><span class="s1">datetime </span><span class="s2">import </span><span class="s1">datetime</span><span class="s3">, </span><span class="s1">timedelta</span><span class="s3">, </span><span class="s1">tzinfo</span>
+<span class="s2">from </span><span class="s1">bisect </span><span class="s2">import </span><span class="s1">bisect_right</span>
+<span class="s2">try</span><span class="s3">:</span>
+    <span class="s1">set</span>
+<span class="s2">except </span><span class="s1">NameError</span><span class="s3">:</span>
+    <span class="s2">from </span><span class="s1">sets </span><span class="s2">import </span><span class="s1">Set </span><span class="s2">as </span><span class="s1">set</span>
+
+<span class="s2">import </span><span class="s1">pytz</span>
+<span class="s2">from </span><span class="s1">pytz</span><span class="s3">.</span><span class="s1">exceptions </span><span class="s2">import </span><span class="s1">AmbiguousTimeError</span><span class="s3">, </span><span class="s1">NonExistentTimeError</span>
+
+<span class="s1">__all__ </span><span class="s3">= []</span>
+
+<span class="s1">_timedelta_cache </span><span class="s3">= {}</span>
+
+
+<span class="s2">def </span><span class="s1">memorized_timedelta</span><span class="s3">(</span><span class="s1">seconds</span><span class="s3">):</span>
+    <span class="s0">'''Create only one instance of each distinct timedelta'''</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">_timedelta_cache</span><span class="s3">[</span><span class="s1">seconds</span><span class="s3">]</span>
+    <span class="s2">except </span><span class="s1">KeyError</span><span class="s3">:</span>
+        <span class="s1">delta </span><span class="s3">= </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">seconds</span><span class="s3">=</span><span class="s1">seconds</span><span class="s3">)</span>
+        <span class="s1">_timedelta_cache</span><span class="s3">[</span><span class="s1">seconds</span><span class="s3">] = </span><span class="s1">delta</span>
+        <span class="s2">return </span><span class="s1">delta</span>
+
+
+<span class="s1">_epoch </span><span class="s3">= </span><span class="s1">datetime</span><span class="s3">(</span><span class="s4">1970</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">) </span><span class="s5"># datetime.utcfromtimestamp(0)</span>
+<span class="s1">_datetime_cache </span><span class="s3">= {</span><span class="s4">0</span><span class="s3">: </span><span class="s1">_epoch</span><span class="s3">}</span>
+
+
+<span class="s2">def </span><span class="s1">memorized_datetime</span><span class="s3">(</span><span class="s1">seconds</span><span class="s3">):</span>
+    <span class="s0">'''Create only one instance of each distinct datetime'''</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">_datetime_cache</span><span class="s3">[</span><span class="s1">seconds</span><span class="s3">]</span>
+    <span class="s2">except </span><span class="s1">KeyError</span><span class="s3">:</span>
+        <span class="s5"># NB. We can't just do datetime.fromtimestamp(seconds, tz=timezone.utc).replace(tzinfo=None)</span>
+        <span class="s5"># as this fails with negative values under Windows (Bug #90096)</span>
+        <span class="s1">dt </span><span class="s3">= </span><span class="s1">_epoch </span><span class="s3">+ </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">seconds</span><span class="s3">=</span><span class="s1">seconds</span><span class="s3">)</span>
+        <span class="s1">_datetime_cache</span><span class="s3">[</span><span class="s1">seconds</span><span class="s3">] = </span><span class="s1">dt</span>
+        <span class="s2">return </span><span class="s1">dt</span>
+
+
+<span class="s1">_ttinfo_cache </span><span class="s3">= {}</span>
+
+
+<span class="s2">def </span><span class="s1">memorized_ttinfo</span><span class="s3">(*</span><span class="s1">args</span><span class="s3">):</span>
+    <span class="s0">'''Create only one instance of each distinct tuple'''</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">_ttinfo_cache</span><span class="s3">[</span><span class="s1">args</span><span class="s3">]</span>
+    <span class="s2">except </span><span class="s1">KeyError</span><span class="s3">:</span>
+        <span class="s1">ttinfo </span><span class="s3">= (</span>
+            <span class="s1">memorized_timedelta</span><span class="s3">(</span><span class="s1">args</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]),</span>
+            <span class="s1">memorized_timedelta</span><span class="s3">(</span><span class="s1">args</span><span class="s3">[</span><span class="s4">1</span><span class="s3">]),</span>
+            <span class="s1">args</span><span class="s3">[</span><span class="s4">2</span><span class="s3">]</span>
+        <span class="s3">)</span>
+        <span class="s1">_ttinfo_cache</span><span class="s3">[</span><span class="s1">args</span><span class="s3">] = </span><span class="s1">ttinfo</span>
+        <span class="s2">return </span><span class="s1">ttinfo</span>
+
+
+<span class="s1">_notime </span><span class="s3">= </span><span class="s1">memorized_timedelta</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)</span>
+
+
+<span class="s2">def </span><span class="s1">_to_seconds</span><span class="s3">(</span><span class="s1">td</span><span class="s3">):</span>
+    <span class="s0">'''Convert a timedelta to seconds'''</span>
+    <span class="s2">return </span><span class="s1">td</span><span class="s3">.</span><span class="s1">seconds </span><span class="s3">+ </span><span class="s1">td</span><span class="s3">.</span><span class="s1">days </span><span class="s3">* </span><span class="s4">24 </span><span class="s3">* </span><span class="s4">60 </span><span class="s3">* </span><span class="s4">60</span>
+
+
+<span class="s2">class </span><span class="s1">BaseTzInfo</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">):</span>
+    <span class="s5"># Overridden in subclass</span>
+    <span class="s1">_utcoffset </span><span class="s3">= </span><span class="s2">None</span>
+    <span class="s1">_tzname </span><span class="s3">= </span><span class="s2">None</span>
+    <span class="s1">zone </span><span class="s3">= </span><span class="s2">None</span>
+
+    <span class="s2">def </span><span class="s1">__str__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">zone</span>
+
+
+<span class="s2">class </span><span class="s1">StaticTzInfo</span><span class="s3">(</span><span class="s1">BaseTzInfo</span><span class="s3">):</span>
+    <span class="s0">'''A timezone that has a constant offset from UTC 
+ 
+    These timezones are rare, as most locations have changed their 
+    offset at some point in their history 
+    '''</span>
+    <span class="s2">def </span><span class="s1">fromutc</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.fromutc'''</span>
+        <span class="s2">if </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not None and </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not </span><span class="s1">self</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s6">'fromutc: dt.tzinfo is not self'</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s3">(</span><span class="s1">dt </span><span class="s3">+ </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span><span class="s3">).</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">utcoffset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.utcoffset 
+ 
+        is_dst is ignored for StaticTzInfo, and exists only to 
+        retain compatibility with DstTzInfo. 
+        '''</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span>
+
+    <span class="s2">def </span><span class="s1">dst</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.dst 
+ 
+        is_dst is ignored for StaticTzInfo, and exists only to 
+        retain compatibility with DstTzInfo. 
+        '''</span>
+        <span class="s2">return </span><span class="s1">_notime</span>
+
+    <span class="s2">def </span><span class="s1">tzname</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.tzname 
+ 
+        is_dst is ignored for StaticTzInfo, and exists only to 
+        retain compatibility with DstTzInfo. 
+        '''</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzname</span>
+
+    <span class="s2">def </span><span class="s1">localize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">False</span><span class="s3">):</span>
+        <span class="s0">'''Convert naive time to local time'''</span>
+        <span class="s2">if </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not None</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s6">'Not naive datetime (tzinfo is already set)'</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">normalize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">False</span><span class="s3">):</span>
+        <span class="s0">'''Correct the timezone information on the given datetime. 
+ 
+        This is normally a no-op, as StaticTzInfo timezones never have 
+        ambiguous cases to correct: 
+ 
+        &gt;&gt;&gt; from pytz import timezone 
+        &gt;&gt;&gt; gmt = timezone('GMT') 
+        &gt;&gt;&gt; isinstance(gmt, StaticTzInfo) 
+        True 
+        &gt;&gt;&gt; dt = datetime(2011, 5, 8, 1, 2, 3, tzinfo=gmt) 
+        &gt;&gt;&gt; gmt.normalize(dt) is dt 
+        True 
+ 
+        The supported method of converting between timezones is to use 
+        datetime.astimezone(). Currently normalize() also works: 
+ 
+        &gt;&gt;&gt; la = timezone('America/Los_Angeles') 
+        &gt;&gt;&gt; dt = la.localize(datetime(2011, 5, 7, 1, 2, 3)) 
+        &gt;&gt;&gt; fmt = '%Y-%m-%d %H:%M:%S %Z (%z)' 
+        &gt;&gt;&gt; gmt.normalize(dt).strftime(fmt) 
+        '2011-05-07 08:02:03 GMT (+0000)' 
+        '''</span>
+        <span class="s2">if </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is </span><span class="s1">self</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">dt</span>
+        <span class="s2">if </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s6">'Naive time - no tzinfo set'</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">astimezone</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">__repr__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s6">'&lt;StaticTzInfo %r&gt;' </span><span class="s3">% (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">zone</span><span class="s3">,)</span>
+
+    <span class="s2">def </span><span class="s1">__reduce__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5"># Special pickle to zone remains a singleton and to cope with</span>
+        <span class="s5"># database changes.</span>
+        <span class="s2">return </span><span class="s1">pytz</span><span class="s3">.</span><span class="s1">_p</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">zone</span><span class="s3">,)</span>
+
+
+<span class="s2">class </span><span class="s1">DstTzInfo</span><span class="s3">(</span><span class="s1">BaseTzInfo</span><span class="s3">):</span>
+    <span class="s0">'''A timezone that has a variable offset from UTC 
+ 
+    The offset might change if daylight saving time comes into effect, 
+    or at a point in history when the region decides to change their 
+    timezone definition. 
+    '''</span>
+    <span class="s5"># Overridden in subclass</span>
+
+    <span class="s5"># Sorted list of DST transition times, UTC</span>
+    <span class="s1">_utc_transition_times </span><span class="s3">= </span><span class="s2">None</span>
+
+    <span class="s5"># [(utcoffset, dstoffset, tzname)] corresponding to</span>
+    <span class="s5"># _utc_transition_times entries</span>
+    <span class="s1">_transition_info </span><span class="s3">= </span><span class="s2">None</span>
+
+    <span class="s1">zone </span><span class="s3">= </span><span class="s2">None</span>
+
+    <span class="s5"># Set in __init__</span>
+
+    <span class="s1">_tzinfos </span><span class="s3">= </span><span class="s2">None</span>
+    <span class="s1">_dst </span><span class="s3">= </span><span class="s2">None  </span><span class="s5"># DST offset</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">_inf</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">_tzinfos</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">_inf</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_tzinfos </span><span class="s3">= </span><span class="s1">_tzinfos</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_dst</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzname </span><span class="s3">= </span><span class="s1">_inf</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">_tzinfos </span><span class="s3">= {}</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_tzinfos </span><span class="s3">= </span><span class="s1">_tzinfos</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_dst</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzname </span><span class="s3">= (</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">_transition_info</span><span class="s3">[</span><span class="s4">0</span><span class="s3">])</span>
+            <span class="s1">_tzinfos</span><span class="s3">[</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_transition_info</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]] = </span><span class="s1">self</span>
+            <span class="s2">for </span><span class="s1">inf </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_transition_info</span><span class="s3">[</span><span class="s4">1</span><span class="s3">:]:</span>
+                <span class="s2">if </span><span class="s1">inf </span><span class="s2">not in </span><span class="s1">_tzinfos</span><span class="s3">:</span>
+                    <span class="s1">_tzinfos</span><span class="s3">[</span><span class="s1">inf</span><span class="s3">] = </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">(</span><span class="s1">inf</span><span class="s3">, </span><span class="s1">_tzinfos</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">fromutc</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.fromutc'''</span>
+        <span class="s2">if </span><span class="s3">(</span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not None and</span>
+                <span class="s1">getattr</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo</span><span class="s3">, </span><span class="s6">'_tzinfos'</span><span class="s3">, </span><span class="s2">None</span><span class="s3">) </span><span class="s2">is not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">):</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s6">'fromutc: dt.tzinfo is not self'</span><span class="s3">)</span>
+        <span class="s1">dt </span><span class="s3">= </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s2">None</span><span class="s3">)</span>
+        <span class="s1">idx </span><span class="s3">= </span><span class="s1">max</span><span class="s3">(</span><span class="s4">0</span><span class="s3">, </span><span class="s1">bisect_right</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utc_transition_times</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">) - </span><span class="s4">1</span><span class="s3">)</span>
+        <span class="s1">inf </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_transition_info</span><span class="s3">[</span><span class="s1">idx</span><span class="s3">]</span>
+        <span class="s2">return </span><span class="s3">(</span><span class="s1">dt </span><span class="s3">+ </span><span class="s1">inf</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]).</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">[</span><span class="s1">inf</span><span class="s3">])</span>
+
+    <span class="s2">def </span><span class="s1">normalize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">):</span>
+        <span class="s0">'''Correct the timezone information on the given datetime 
+ 
+        If date arithmetic crosses DST boundaries, the tzinfo 
+        is not magically adjusted. This method normalizes the 
+        tzinfo to the correct one. 
+ 
+        To test, first we need to do some setup 
+ 
+        &gt;&gt;&gt; from pytz import timezone 
+        &gt;&gt;&gt; utc = timezone('UTC') 
+        &gt;&gt;&gt; eastern = timezone('US/Eastern') 
+        &gt;&gt;&gt; fmt = '%Y-%m-%d %H:%M:%S %Z (%z)' 
+ 
+        We next create a datetime right on an end-of-DST transition point, 
+        the instant when the wallclocks are wound back one hour. 
+ 
+        &gt;&gt;&gt; utc_dt = datetime(2002, 10, 27, 6, 0, 0, tzinfo=utc) 
+        &gt;&gt;&gt; loc_dt = utc_dt.astimezone(eastern) 
+        &gt;&gt;&gt; loc_dt.strftime(fmt) 
+        '2002-10-27 01:00:00 EST (-0500)' 
+ 
+        Now, if we subtract a few minutes from it, note that the timezone 
+        information has not changed. 
+ 
+        &gt;&gt;&gt; before = loc_dt - timedelta(minutes=10) 
+        &gt;&gt;&gt; before.strftime(fmt) 
+        '2002-10-27 00:50:00 EST (-0500)' 
+ 
+        But we can fix that by calling the normalize method 
+ 
+        &gt;&gt;&gt; before = eastern.normalize(before) 
+        &gt;&gt;&gt; before.strftime(fmt) 
+        '2002-10-27 01:50:00 EDT (-0400)' 
+ 
+        The supported method of converting between timezones is to use 
+        datetime.astimezone(). Currently, normalize() also works: 
+ 
+        &gt;&gt;&gt; th = timezone('Asia/Bangkok') 
+        &gt;&gt;&gt; am = timezone('Europe/Amsterdam') 
+        &gt;&gt;&gt; dt = th.localize(datetime(2011, 5, 7, 1, 2, 3)) 
+        &gt;&gt;&gt; fmt = '%Y-%m-%d %H:%M:%S %Z (%z)' 
+        &gt;&gt;&gt; am.normalize(dt).strftime(fmt) 
+        '2011-05-06 20:02:03 CEST (+0200)' 
+        '''</span>
+        <span class="s2">if </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s6">'Naive time - no tzinfo set'</span><span class="s3">)</span>
+
+        <span class="s5"># Convert dt in localtime to UTC</span>
+        <span class="s1">offset </span><span class="s3">= </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo</span><span class="s3">.</span><span class="s1">_utcoffset</span>
+        <span class="s1">dt </span><span class="s3">= </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s2">None</span><span class="s3">)</span>
+        <span class="s1">dt </span><span class="s3">= </span><span class="s1">dt </span><span class="s3">- </span><span class="s1">offset</span>
+        <span class="s5"># convert it back, and return it</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">fromutc</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">localize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">False</span><span class="s3">):</span>
+        <span class="s0">'''Convert naive time to local time. 
+ 
+        This method should be used to construct localtimes, rather 
+        than passing a tzinfo argument to a datetime constructor. 
+ 
+        is_dst is used to determine the correct timezone in the ambigous 
+        period at the end of daylight saving time. 
+ 
+        &gt;&gt;&gt; from pytz import timezone 
+        &gt;&gt;&gt; fmt = '%Y-%m-%d %H:%M:%S %Z (%z)' 
+        &gt;&gt;&gt; amdam = timezone('Europe/Amsterdam') 
+        &gt;&gt;&gt; dt  = datetime(2004, 10, 31, 2, 0, 0) 
+        &gt;&gt;&gt; loc_dt1 = amdam.localize(dt, is_dst=True) 
+        &gt;&gt;&gt; loc_dt2 = amdam.localize(dt, is_dst=False) 
+        &gt;&gt;&gt; loc_dt1.strftime(fmt) 
+        '2004-10-31 02:00:00 CEST (+0200)' 
+        &gt;&gt;&gt; loc_dt2.strftime(fmt) 
+        '2004-10-31 02:00:00 CET (+0100)' 
+        &gt;&gt;&gt; str(loc_dt2 - loc_dt1) 
+        '1:00:00' 
+ 
+        Use is_dst=None to raise an AmbiguousTimeError for ambiguous 
+        times at the end of daylight saving time 
+ 
+        &gt;&gt;&gt; try: 
+        ...     loc_dt1 = amdam.localize(dt, is_dst=None) 
+        ... except AmbiguousTimeError: 
+        ...     print('Ambiguous') 
+        Ambiguous 
+ 
+        is_dst defaults to False 
+ 
+        &gt;&gt;&gt; amdam.localize(dt) == amdam.localize(dt, False) 
+        True 
+ 
+        is_dst is also used to determine the correct timezone in the 
+        wallclock times jumped over at the start of daylight saving time. 
+ 
+        &gt;&gt;&gt; pacific = timezone('US/Pacific') 
+        &gt;&gt;&gt; dt = datetime(2008, 3, 9, 2, 0, 0) 
+        &gt;&gt;&gt; ploc_dt1 = pacific.localize(dt, is_dst=True) 
+        &gt;&gt;&gt; ploc_dt2 = pacific.localize(dt, is_dst=False) 
+        &gt;&gt;&gt; ploc_dt1.strftime(fmt) 
+        '2008-03-09 02:00:00 PDT (-0700)' 
+        &gt;&gt;&gt; ploc_dt2.strftime(fmt) 
+        '2008-03-09 02:00:00 PST (-0800)' 
+        &gt;&gt;&gt; str(ploc_dt2 - ploc_dt1) 
+        '1:00:00' 
+ 
+        Use is_dst=None to raise a NonExistentTimeError for these skipped 
+        times. 
+ 
+        &gt;&gt;&gt; try: 
+        ...     loc_dt1 = pacific.localize(dt, is_dst=None) 
+        ... except NonExistentTimeError: 
+        ...     print('Non-existent') 
+        Non-existent 
+        '''</span>
+        <span class="s2">if </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not None</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s6">'Not naive datetime (tzinfo is already set)'</span><span class="s3">)</span>
+
+        <span class="s5"># Find the two best possibilities.</span>
+        <span class="s1">possible_loc_dt </span><span class="s3">= </span><span class="s1">set</span><span class="s3">()</span>
+        <span class="s2">for </span><span class="s1">delta </span><span class="s2">in </span><span class="s3">[</span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">days</span><span class="s3">=-</span><span class="s4">1</span><span class="s3">), </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">days</span><span class="s3">=</span><span class="s4">1</span><span class="s3">)]:</span>
+            <span class="s1">loc_dt </span><span class="s3">= </span><span class="s1">dt </span><span class="s3">+ </span><span class="s1">delta</span>
+            <span class="s1">idx </span><span class="s3">= </span><span class="s1">max</span><span class="s3">(</span><span class="s4">0</span><span class="s3">, </span><span class="s1">bisect_right</span><span class="s3">(</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">_utc_transition_times</span><span class="s3">, </span><span class="s1">loc_dt</span><span class="s3">) - </span><span class="s4">1</span><span class="s3">)</span>
+            <span class="s1">inf </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_transition_info</span><span class="s3">[</span><span class="s1">idx</span><span class="s3">]</span>
+            <span class="s1">tzinfo </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">[</span><span class="s1">inf</span><span class="s3">]</span>
+            <span class="s1">loc_dt </span><span class="s3">= </span><span class="s1">tzinfo</span><span class="s3">.</span><span class="s1">normalize</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s1">tzinfo</span><span class="s3">))</span>
+            <span class="s2">if </span><span class="s1">loc_dt</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s2">None</span><span class="s3">) == </span><span class="s1">dt</span><span class="s3">:</span>
+                <span class="s1">possible_loc_dt</span><span class="s3">.</span><span class="s1">add</span><span class="s3">(</span><span class="s1">loc_dt</span><span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">possible_loc_dt</span><span class="s3">) == </span><span class="s4">1</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">possible_loc_dt</span><span class="s3">.</span><span class="s1">pop</span><span class="s3">()</span>
+
+        <span class="s5"># If there are no possibly correct timezones, we are attempting</span>
+        <span class="s5"># to convert a time that never happened - the time period jumped</span>
+        <span class="s5"># during the start-of-DST transition period.</span>
+        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">possible_loc_dt</span><span class="s3">) == </span><span class="s4">0</span><span class="s3">:</span>
+            <span class="s5"># If we refuse to guess, raise an exception.</span>
+            <span class="s2">if </span><span class="s1">is_dst </span><span class="s2">is None</span><span class="s3">:</span>
+                <span class="s2">raise </span><span class="s1">NonExistentTimeError</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">)</span>
+
+            <span class="s5"># If we are forcing the pre-DST side of the DST transition, we</span>
+            <span class="s5"># obtain the correct timezone by winding the clock forward a few</span>
+            <span class="s5"># hours.</span>
+            <span class="s2">elif </span><span class="s1">is_dst</span><span class="s3">:</span>
+                <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">localize</span><span class="s3">(</span>
+                    <span class="s1">dt </span><span class="s3">+ </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">hours</span><span class="s3">=</span><span class="s4">6</span><span class="s3">), </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">True</span><span class="s3">) - </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">hours</span><span class="s3">=</span><span class="s4">6</span><span class="s3">)</span>
+
+            <span class="s5"># If we are forcing the post-DST side of the DST transition, we</span>
+            <span class="s5"># obtain the correct timezone by winding the clock back.</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">localize</span><span class="s3">(</span>
+                    <span class="s1">dt </span><span class="s3">- </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">hours</span><span class="s3">=</span><span class="s4">6</span><span class="s3">),</span>
+                    <span class="s1">is_dst</span><span class="s3">=</span><span class="s2">False</span><span class="s3">) + </span><span class="s1">timedelta</span><span class="s3">(</span><span class="s1">hours</span><span class="s3">=</span><span class="s4">6</span><span class="s3">)</span>
+
+        <span class="s5"># If we get this far, we have multiple possible timezones - this</span>
+        <span class="s5"># is an ambiguous case occurring during the end-of-DST transition.</span>
+
+        <span class="s5"># If told to be strict, raise an exception since we have an</span>
+        <span class="s5"># ambiguous case</span>
+        <span class="s2">if </span><span class="s1">is_dst </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">AmbiguousTimeError</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">)</span>
+
+        <span class="s5"># Filter out the possiblilities that don't match the requested</span>
+        <span class="s5"># is_dst</span>
+        <span class="s1">filtered_possible_loc_dt </span><span class="s3">= [</span>
+            <span class="s1">p </span><span class="s2">for </span><span class="s1">p </span><span class="s2">in </span><span class="s1">possible_loc_dt </span><span class="s2">if </span><span class="s1">bool</span><span class="s3">(</span><span class="s1">p</span><span class="s3">.</span><span class="s1">tzinfo</span><span class="s3">.</span><span class="s1">_dst</span><span class="s3">) == </span><span class="s1">is_dst</span>
+        <span class="s3">]</span>
+
+        <span class="s5"># Hopefully we only have one possibility left. Return it.</span>
+        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">filtered_possible_loc_dt</span><span class="s3">) == </span><span class="s4">1</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">filtered_possible_loc_dt</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]</span>
+
+        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">filtered_possible_loc_dt</span><span class="s3">) == </span><span class="s4">0</span><span class="s3">:</span>
+            <span class="s1">filtered_possible_loc_dt </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">possible_loc_dt</span><span class="s3">)</span>
+
+        <span class="s5"># If we get this far, we have in a wierd timezone transition</span>
+        <span class="s5"># where the clocks have been wound back but is_dst is the same</span>
+        <span class="s5"># in both (eg. Europe/Warsaw 1915 when they switched to CET).</span>
+        <span class="s5"># At this point, we just have to guess unless we allow more</span>
+        <span class="s5"># hints to be passed in (such as the UTC offset or abbreviation),</span>
+        <span class="s5"># but that is just getting silly.</span>
+        <span class="s5">#</span>
+        <span class="s5"># Choose the earliest (by UTC) applicable timezone if is_dst=True</span>
+        <span class="s5"># Choose the latest (by UTC) applicable timezone if is_dst=False</span>
+        <span class="s5"># i.e., behave like end-of-DST transition</span>
+        <span class="s1">dates </span><span class="s3">= {}  </span><span class="s5"># utc -&gt; local</span>
+        <span class="s2">for </span><span class="s1">local_dt </span><span class="s2">in </span><span class="s1">filtered_possible_loc_dt</span><span class="s3">:</span>
+            <span class="s1">utc_time </span><span class="s3">= (</span>
+                <span class="s1">local_dt</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s1">tzinfo</span><span class="s3">=</span><span class="s2">None</span><span class="s3">) - </span><span class="s1">local_dt</span><span class="s3">.</span><span class="s1">tzinfo</span><span class="s3">.</span><span class="s1">_utcoffset</span><span class="s3">)</span>
+            <span class="s2">assert </span><span class="s1">utc_time </span><span class="s2">not in </span><span class="s1">dates</span>
+            <span class="s1">dates</span><span class="s3">[</span><span class="s1">utc_time</span><span class="s3">] = </span><span class="s1">local_dt</span>
+        <span class="s2">return </span><span class="s1">dates</span><span class="s3">[[</span><span class="s1">min</span><span class="s3">, </span><span class="s1">max</span><span class="s3">][</span><span class="s2">not </span><span class="s1">is_dst</span><span class="s3">](</span><span class="s1">dates</span><span class="s3">)]</span>
+
+    <span class="s2">def </span><span class="s1">utcoffset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.utcoffset 
+ 
+        The is_dst parameter may be used to remove ambiguity during DST 
+        transitions. 
+ 
+        &gt;&gt;&gt; from pytz import timezone 
+        &gt;&gt;&gt; tz = timezone('America/St_Johns') 
+        &gt;&gt;&gt; ambiguous = datetime(2009, 10, 31, 23, 30) 
+ 
+        &gt;&gt;&gt; str(tz.utcoffset(ambiguous, is_dst=False)) 
+        '-1 day, 20:30:00' 
+ 
+        &gt;&gt;&gt; str(tz.utcoffset(ambiguous, is_dst=True)) 
+        '-1 day, 21:30:00' 
+ 
+        &gt;&gt;&gt; try: 
+        ...     tz.utcoffset(ambiguous) 
+        ... except AmbiguousTimeError: 
+        ...     print('Ambiguous') 
+        Ambiguous 
+ 
+        '''</span>
+        <span class="s2">if </span><span class="s1">dt </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">return None</span>
+        <span class="s2">elif </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not </span><span class="s1">self</span><span class="s3">:</span>
+            <span class="s1">dt </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">localize</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">)</span>
+            <span class="s2">return </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo</span><span class="s3">.</span><span class="s1">_utcoffset</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span>
+
+    <span class="s2">def </span><span class="s1">dst</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.dst 
+ 
+        The is_dst parameter may be used to remove ambiguity during DST 
+        transitions. 
+ 
+        &gt;&gt;&gt; from pytz import timezone 
+        &gt;&gt;&gt; tz = timezone('America/St_Johns') 
+ 
+        &gt;&gt;&gt; normal = datetime(2009, 9, 1) 
+ 
+        &gt;&gt;&gt; str(tz.dst(normal)) 
+        '1:00:00' 
+        &gt;&gt;&gt; str(tz.dst(normal, is_dst=False)) 
+        '1:00:00' 
+        &gt;&gt;&gt; str(tz.dst(normal, is_dst=True)) 
+        '1:00:00' 
+ 
+        &gt;&gt;&gt; ambiguous = datetime(2009, 10, 31, 23, 30) 
+ 
+        &gt;&gt;&gt; str(tz.dst(ambiguous, is_dst=False)) 
+        '0:00:00' 
+        &gt;&gt;&gt; str(tz.dst(ambiguous, is_dst=True)) 
+        '1:00:00' 
+        &gt;&gt;&gt; try: 
+        ...     tz.dst(ambiguous) 
+        ... except AmbiguousTimeError: 
+        ...     print('Ambiguous') 
+        Ambiguous 
+ 
+        '''</span>
+        <span class="s2">if </span><span class="s1">dt </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">return None</span>
+        <span class="s2">elif </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not </span><span class="s1">self</span><span class="s3">:</span>
+            <span class="s1">dt </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">localize</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">)</span>
+            <span class="s2">return </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo</span><span class="s3">.</span><span class="s1">_dst</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_dst</span>
+
+    <span class="s2">def </span><span class="s1">tzname</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s0">'''See datetime.tzinfo.tzname 
+ 
+        The is_dst parameter may be used to remove ambiguity during DST 
+        transitions. 
+ 
+        &gt;&gt;&gt; from pytz import timezone 
+        &gt;&gt;&gt; tz = timezone('America/St_Johns') 
+ 
+        &gt;&gt;&gt; normal = datetime(2009, 9, 1) 
+ 
+        &gt;&gt;&gt; tz.tzname(normal) 
+        'NDT' 
+        &gt;&gt;&gt; tz.tzname(normal, is_dst=False) 
+        'NDT' 
+        &gt;&gt;&gt; tz.tzname(normal, is_dst=True) 
+        'NDT' 
+ 
+        &gt;&gt;&gt; ambiguous = datetime(2009, 10, 31, 23, 30) 
+ 
+        &gt;&gt;&gt; tz.tzname(ambiguous, is_dst=False) 
+        'NST' 
+        &gt;&gt;&gt; tz.tzname(ambiguous, is_dst=True) 
+        'NDT' 
+        &gt;&gt;&gt; try: 
+        ...     tz.tzname(ambiguous) 
+        ... except AmbiguousTimeError: 
+        ...     print('Ambiguous') 
+        Ambiguous 
+        '''</span>
+        <span class="s2">if </span><span class="s1">dt </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">zone</span>
+        <span class="s2">elif </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo </span><span class="s2">is not </span><span class="s1">self</span><span class="s3">:</span>
+            <span class="s1">dt </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">localize</span><span class="s3">(</span><span class="s1">dt</span><span class="s3">, </span><span class="s1">is_dst</span><span class="s3">)</span>
+            <span class="s2">return </span><span class="s1">dt</span><span class="s3">.</span><span class="s1">tzinfo</span><span class="s3">.</span><span class="s1">_tzname</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzname</span>
+
+    <span class="s2">def </span><span class="s1">__repr__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_dst</span><span class="s3">:</span>
+            <span class="s1">dst </span><span class="s3">= </span><span class="s6">'DST'</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">dst </span><span class="s3">= </span><span class="s6">'STD'</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset </span><span class="s3">&gt; </span><span class="s1">_notime</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s6">'&lt;DstTzInfo %r %s+%s %s&gt;' </span><span class="s3">% (</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">zone</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzname</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span><span class="s3">, </span><span class="s1">dst</span>
+            <span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s6">'&lt;DstTzInfo %r %s%s %s&gt;' </span><span class="s3">% (</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">zone</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tzname</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span><span class="s3">, </span><span class="s1">dst</span>
+            <span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">__reduce__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5"># Special pickle to zone remains a singleton and to cope with</span>
+        <span class="s5"># database changes.</span>
+        <span class="s2">return </span><span class="s1">pytz</span><span class="s3">.</span><span class="s1">_p</span><span class="s3">, (</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">zone</span><span class="s3">,</span>
+            <span class="s1">_to_seconds</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_utcoffset</span><span class="s3">),</span>
+            <span class="s1">_to_seconds</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_dst</span><span class="s3">),</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_tzname</span>
+        <span class="s3">)</span>
+
+
+<span class="s2">def </span><span class="s1">unpickler</span><span class="s3">(</span><span class="s1">zone</span><span class="s3">, </span><span class="s1">utcoffset</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">dstoffset</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">tzname</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot;Factory function for unpickling pytz tzinfo instances. 
+ 
+    This is shared for both StaticTzInfo and DstTzInfo instances, because 
+    database changes could cause a zones implementation to switch between 
+    these two base classes and we can't break pickles on a pytz version 
+    upgrade. 
+    &quot;&quot;&quot;</span>
+    <span class="s5"># Raises a KeyError if zone no longer exists, which should never happen</span>
+    <span class="s5"># and would be a bug.</span>
+    <span class="s1">tz </span><span class="s3">= </span><span class="s1">pytz</span><span class="s3">.</span><span class="s1">timezone</span><span class="s3">(</span><span class="s1">zone</span><span class="s3">)</span>
+
+    <span class="s5"># A StaticTzInfo - just return it</span>
+    <span class="s2">if </span><span class="s1">utcoffset </span><span class="s2">is None</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">tz</span>
+
+    <span class="s5"># This pickle was created from a DstTzInfo. We need to</span>
+    <span class="s5"># determine which of the list of tzinfo instances for this zone</span>
+    <span class="s5"># to use in order to restore the state of any datetime instances using</span>
+    <span class="s5"># it correctly.</span>
+    <span class="s1">utcoffset </span><span class="s3">= </span><span class="s1">memorized_timedelta</span><span class="s3">(</span><span class="s1">utcoffset</span><span class="s3">)</span>
+    <span class="s1">dstoffset </span><span class="s3">= </span><span class="s1">memorized_timedelta</span><span class="s3">(</span><span class="s1">dstoffset</span><span class="s3">)</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">tz</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">[(</span><span class="s1">utcoffset</span><span class="s3">, </span><span class="s1">dstoffset</span><span class="s3">, </span><span class="s1">tzname</span><span class="s3">)]</span>
+    <span class="s2">except </span><span class="s1">KeyError</span><span class="s3">:</span>
+        <span class="s5"># The particular state requested in this timezone no longer exists.</span>
+        <span class="s5"># This indicates a corrupt pickle, or the timezone database has been</span>
+        <span class="s5"># corrected violently enough to make this particular</span>
+        <span class="s5"># (utcoffset,dstoffset) no longer exist in the zone, or the</span>
+        <span class="s5"># abbreviation has been changed.</span>
+        <span class="s2">pass</span>
+
+    <span class="s5"># See if we can find an entry differing only by tzname. Abbreviations</span>
+    <span class="s5"># get changed from the initial guess by the database maintainers to</span>
+    <span class="s5"># match reality when this information is discovered.</span>
+    <span class="s2">for </span><span class="s1">localized_tz </span><span class="s2">in </span><span class="s1">tz</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">.</span><span class="s1">values</span><span class="s3">():</span>
+        <span class="s2">if </span><span class="s3">(</span><span class="s1">localized_tz</span><span class="s3">.</span><span class="s1">_utcoffset </span><span class="s3">== </span><span class="s1">utcoffset </span><span class="s2">and</span>
+                <span class="s1">localized_tz</span><span class="s3">.</span><span class="s1">_dst </span><span class="s3">== </span><span class="s1">dstoffset</span><span class="s3">):</span>
+            <span class="s2">return </span><span class="s1">localized_tz</span>
+
+    <span class="s5"># This (utcoffset, dstoffset) information has been removed from the</span>
+    <span class="s5"># zone. Add it back. This might occur when the database maintainers have</span>
+    <span class="s5"># corrected incorrect information. datetime instances using this</span>
+    <span class="s5"># incorrect information will continue to do so, exactly as they were</span>
+    <span class="s5"># before being pickled. This is purely an overly paranoid safety net - I</span>
+    <span class="s5"># doubt this will ever been needed in real life.</span>
+    <span class="s1">inf </span><span class="s3">= (</span><span class="s1">utcoffset</span><span class="s3">, </span><span class="s1">dstoffset</span><span class="s3">, </span><span class="s1">tzname</span><span class="s3">)</span>
+    <span class="s1">tz</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">[</span><span class="s1">inf</span><span class="s3">] = </span><span class="s1">tz</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">(</span><span class="s1">inf</span><span class="s3">, </span><span class="s1">tz</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">)</span>
+    <span class="s2">return </span><span class="s1">tz</span><span class="s3">.</span><span class="s1">_tzinfos</span><span class="s3">[</span><span class="s1">inf</span><span class="s3">]</span>
+</pre>
+</body>
+</html>

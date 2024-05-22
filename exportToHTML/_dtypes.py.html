@@ -1,0 +1,201 @@
+<html>
+<head>
+<title>_dtypes.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_dtypes.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s2"># Note: we use dtype objects instead of dtype classes. The spec does not</span>
+<span class="s2"># require any behavior on dtypes other than equality.</span>
+<span class="s1">int8 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;int8&quot;</span><span class="s3">)</span>
+<span class="s1">int16 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;int16&quot;</span><span class="s3">)</span>
+<span class="s1">int32 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;int32&quot;</span><span class="s3">)</span>
+<span class="s1">int64 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;int64&quot;</span><span class="s3">)</span>
+<span class="s1">uint8 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;uint8&quot;</span><span class="s3">)</span>
+<span class="s1">uint16 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;uint16&quot;</span><span class="s3">)</span>
+<span class="s1">uint32 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;uint32&quot;</span><span class="s3">)</span>
+<span class="s1">uint64 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;uint64&quot;</span><span class="s3">)</span>
+<span class="s1">float32 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;float32&quot;</span><span class="s3">)</span>
+<span class="s1">float64 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;float64&quot;</span><span class="s3">)</span>
+<span class="s1">complex64 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;complex64&quot;</span><span class="s3">)</span>
+<span class="s1">complex128 </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;complex128&quot;</span><span class="s3">)</span>
+<span class="s2"># Note: This name is changed</span>
+<span class="s1">bool </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s4">&quot;bool&quot;</span><span class="s3">)</span>
+
+<span class="s1">_all_dtypes </span><span class="s3">= (</span>
+    <span class="s1">int8</span><span class="s3">,</span>
+    <span class="s1">int16</span><span class="s3">,</span>
+    <span class="s1">int32</span><span class="s3">,</span>
+    <span class="s1">int64</span><span class="s3">,</span>
+    <span class="s1">uint8</span><span class="s3">,</span>
+    <span class="s1">uint16</span><span class="s3">,</span>
+    <span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s1">float32</span><span class="s3">,</span>
+    <span class="s1">float64</span><span class="s3">,</span>
+    <span class="s1">complex64</span><span class="s3">,</span>
+    <span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s1">bool</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s1">_boolean_dtypes </span><span class="s3">= (</span><span class="s1">bool</span><span class="s3">,)</span>
+<span class="s1">_real_floating_dtypes </span><span class="s3">= (</span><span class="s1">float32</span><span class="s3">, </span><span class="s1">float64</span><span class="s3">)</span>
+<span class="s1">_floating_dtypes </span><span class="s3">= (</span><span class="s1">float32</span><span class="s3">, </span><span class="s1">float64</span><span class="s3">, </span><span class="s1">complex64</span><span class="s3">, </span><span class="s1">complex128</span><span class="s3">)</span>
+<span class="s1">_complex_floating_dtypes </span><span class="s3">= (</span><span class="s1">complex64</span><span class="s3">, </span><span class="s1">complex128</span><span class="s3">)</span>
+<span class="s1">_integer_dtypes </span><span class="s3">= (</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">uint64</span><span class="s3">)</span>
+<span class="s1">_signed_integer_dtypes </span><span class="s3">= (</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">)</span>
+<span class="s1">_unsigned_integer_dtypes </span><span class="s3">= (</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">uint64</span><span class="s3">)</span>
+<span class="s1">_integer_or_boolean_dtypes </span><span class="s3">= (</span>
+    <span class="s1">bool</span><span class="s3">,</span>
+    <span class="s1">int8</span><span class="s3">,</span>
+    <span class="s1">int16</span><span class="s3">,</span>
+    <span class="s1">int32</span><span class="s3">,</span>
+    <span class="s1">int64</span><span class="s3">,</span>
+    <span class="s1">uint8</span><span class="s3">,</span>
+    <span class="s1">uint16</span><span class="s3">,</span>
+    <span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s1">uint64</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s1">_real_numeric_dtypes </span><span class="s3">= (</span>
+    <span class="s1">float32</span><span class="s3">,</span>
+    <span class="s1">float64</span><span class="s3">,</span>
+    <span class="s1">int8</span><span class="s3">,</span>
+    <span class="s1">int16</span><span class="s3">,</span>
+    <span class="s1">int32</span><span class="s3">,</span>
+    <span class="s1">int64</span><span class="s3">,</span>
+    <span class="s1">uint8</span><span class="s3">,</span>
+    <span class="s1">uint16</span><span class="s3">,</span>
+    <span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s1">uint64</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s1">_numeric_dtypes </span><span class="s3">= (</span>
+    <span class="s1">float32</span><span class="s3">,</span>
+    <span class="s1">float64</span><span class="s3">,</span>
+    <span class="s1">complex64</span><span class="s3">,</span>
+    <span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s1">int8</span><span class="s3">,</span>
+    <span class="s1">int16</span><span class="s3">,</span>
+    <span class="s1">int32</span><span class="s3">,</span>
+    <span class="s1">int64</span><span class="s3">,</span>
+    <span class="s1">uint8</span><span class="s3">,</span>
+    <span class="s1">uint16</span><span class="s3">,</span>
+    <span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s1">uint64</span><span class="s3">,</span>
+<span class="s3">)</span>
+
+<span class="s1">_dtype_categories </span><span class="s3">= {</span>
+    <span class="s4">&quot;all&quot;</span><span class="s3">: </span><span class="s1">_all_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;real numeric&quot;</span><span class="s3">: </span><span class="s1">_real_numeric_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;numeric&quot;</span><span class="s3">: </span><span class="s1">_numeric_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;integer&quot;</span><span class="s3">: </span><span class="s1">_integer_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;integer or boolean&quot;</span><span class="s3">: </span><span class="s1">_integer_or_boolean_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;boolean&quot;</span><span class="s3">: </span><span class="s1">_boolean_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;real floating-point&quot;</span><span class="s3">: </span><span class="s1">_floating_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;complex floating-point&quot;</span><span class="s3">: </span><span class="s1">_complex_floating_dtypes</span><span class="s3">,</span>
+    <span class="s4">&quot;floating-point&quot;</span><span class="s3">: </span><span class="s1">_floating_dtypes</span><span class="s3">,</span>
+<span class="s3">}</span>
+
+
+<span class="s2"># Note: the spec defines a restricted type promotion table compared to NumPy.</span>
+<span class="s2"># In particular, cross-kind promotions like integer + float or boolean +</span>
+<span class="s2"># integer are not allowed, even for functions that accept both kinds.</span>
+<span class="s2"># Additionally, NumPy promotes signed integer + uint64 to float64, but this</span>
+<span class="s2"># promotion is not allowed here. To be clear, Python scalar int objects are</span>
+<span class="s2"># allowed to promote to floating-point dtypes, but only in array operators</span>
+<span class="s2"># (see Array._promote_scalar) method in _array_object.py.</span>
+<span class="s1">_promotion_table </span><span class="s3">= {</span>
+    <span class="s3">(</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">int8</span><span class="s3">): </span><span class="s1">int8</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">): </span><span class="s1">int16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int16</span><span class="s3">, </span><span class="s1">int8</span><span class="s3">): </span><span class="s1">int16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int16</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">): </span><span class="s1">int16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int16</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int16</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int32</span><span class="s3">, </span><span class="s1">int8</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int32</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int32</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int32</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int64</span><span class="s3">, </span><span class="s1">int8</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int64</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int64</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int64</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">uint8</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">uint16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">uint64</span><span class="s3">): </span><span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">uint16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">uint16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">uint64</span><span class="s3">): </span><span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">uint32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">uint64</span><span class="s3">): </span><span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint64</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint64</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint64</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint64</span><span class="s3">, </span><span class="s1">uint64</span><span class="s3">): </span><span class="s1">uint64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">int16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int8</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int16</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">int16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int16</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int16</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int32</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int32</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int32</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int64</span><span class="s3">, </span><span class="s1">uint8</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int64</span><span class="s3">, </span><span class="s1">uint16</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">int64</span><span class="s3">, </span><span class="s1">uint32</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">int8</span><span class="s3">): </span><span class="s1">int16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">int8</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">int8</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">): </span><span class="s1">int16</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">int16</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">): </span><span class="s1">int32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">int32</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint8</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint16</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">uint32</span><span class="s3">, </span><span class="s1">int64</span><span class="s3">): </span><span class="s1">int64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float32</span><span class="s3">, </span><span class="s1">float32</span><span class="s3">): </span><span class="s1">float32</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float32</span><span class="s3">, </span><span class="s1">float64</span><span class="s3">): </span><span class="s1">float64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float64</span><span class="s3">, </span><span class="s1">float32</span><span class="s3">): </span><span class="s1">float64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float64</span><span class="s3">, </span><span class="s1">float64</span><span class="s3">): </span><span class="s1">float64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex64</span><span class="s3">, </span><span class="s1">complex64</span><span class="s3">): </span><span class="s1">complex64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex64</span><span class="s3">, </span><span class="s1">complex128</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex128</span><span class="s3">, </span><span class="s1">complex64</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex128</span><span class="s3">, </span><span class="s1">complex128</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float32</span><span class="s3">, </span><span class="s1">complex64</span><span class="s3">): </span><span class="s1">complex64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float32</span><span class="s3">, </span><span class="s1">complex128</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float64</span><span class="s3">, </span><span class="s1">complex64</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">float64</span><span class="s3">, </span><span class="s1">complex128</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex64</span><span class="s3">, </span><span class="s1">float32</span><span class="s3">): </span><span class="s1">complex64</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex64</span><span class="s3">, </span><span class="s1">float64</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex128</span><span class="s3">, </span><span class="s1">float32</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">complex128</span><span class="s3">, </span><span class="s1">float64</span><span class="s3">): </span><span class="s1">complex128</span><span class="s3">,</span>
+    <span class="s3">(</span><span class="s1">bool</span><span class="s3">, </span><span class="s1">bool</span><span class="s3">): </span><span class="s1">bool</span><span class="s3">,</span>
+<span class="s3">}</span>
+
+
+<span class="s0">def </span><span class="s1">_result_type</span><span class="s3">(</span><span class="s1">type1</span><span class="s3">, </span><span class="s1">type2</span><span class="s3">):</span>
+    <span class="s0">if </span><span class="s3">(</span><span class="s1">type1</span><span class="s3">, </span><span class="s1">type2</span><span class="s3">) </span><span class="s0">in </span><span class="s1">_promotion_table</span><span class="s3">:</span>
+        <span class="s0">return </span><span class="s1">_promotion_table</span><span class="s3">[</span><span class="s1">type1</span><span class="s3">, </span><span class="s1">type2</span><span class="s3">]</span>
+    <span class="s0">raise </span><span class="s1">TypeError</span><span class="s3">(</span><span class="s4">f&quot;</span><span class="s0">{</span><span class="s1">type1</span><span class="s0">} </span><span class="s4">and </span><span class="s0">{</span><span class="s1">type2</span><span class="s0">} </span><span class="s4">cannot be type promoted together&quot;</span><span class="s3">)</span>
+</pre>
+</body>
+</html>

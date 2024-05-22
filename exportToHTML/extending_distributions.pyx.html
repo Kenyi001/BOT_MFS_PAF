@@ -1,0 +1,140 @@
+<html>
+<head>
+<title>extending_distributions.pyx</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+extending_distributions.pyx</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env python3</span>
+<span class="s0">#cython: language_level=3</span>
+<span class="s2">&quot;&quot;&quot; 
+This file shows how the to use a BitGenerator to create a distribution. 
+&quot;&quot;&quot;</span>
+<span class="s3">import </span><span class="s1">numpy </span><span class="s3">as </span><span class="s1">np</span>
+<span class="s3">cimport </span><span class="s1">numpy </span><span class="s3">as </span><span class="s1">np</span>
+<span class="s3">cimport </span><span class="s1">cython</span>
+<span class="s3">from </span><span class="s1">cpython</span><span class="s4">.</span><span class="s1">pycapsule </span><span class="s3">cimport </span><span class="s1">PyCapsule_IsValid</span><span class="s4">, </span><span class="s1">PyCapsule_GetPointer</span>
+<span class="s3">from </span><span class="s1">libc</span><span class="s4">.</span><span class="s1">stdint </span><span class="s3">cimport </span><span class="s1">uint16_t</span><span class="s4">, </span><span class="s1">uint64_t</span>
+<span class="s3">from </span><span class="s1">numpy</span><span class="s4">.</span><span class="s1">random </span><span class="s3">cimport </span><span class="s1">bitgen_t</span>
+<span class="s3">from </span><span class="s1">numpy</span><span class="s4">.</span><span class="s1">random </span><span class="s3">import </span><span class="s1">PCG64</span>
+<span class="s3">from </span><span class="s1">numpy</span><span class="s4">.</span><span class="s1">random</span><span class="s4">.</span><span class="s1">c_distributions </span><span class="s3">cimport </span><span class="s4">(</span>
+      <span class="s1">random_standard_uniform_fill</span><span class="s4">, </span><span class="s1">random_standard_uniform_fill_f</span><span class="s4">)</span>
+
+
+<span class="s4">@</span><span class="s1">cython</span><span class="s4">.</span><span class="s1">boundscheck</span><span class="s4">(</span><span class="s3">False</span><span class="s4">)</span>
+<span class="s4">@</span><span class="s1">cython</span><span class="s4">.</span><span class="s1">wraparound</span><span class="s4">(</span><span class="s3">False</span><span class="s4">)</span>
+<span class="s3">def </span><span class="s1">uniforms</span><span class="s4">(</span><span class="s1">Py_ssize_t n</span><span class="s4">):</span>
+    <span class="s2">&quot;&quot;&quot; 
+    Create an array of `n` uniformly distributed doubles. 
+    A 'real' distribution would want to process the values into 
+    some non-uniform distribution 
+    &quot;&quot;&quot;</span>
+    <span class="s3">cdef </span><span class="s1">Py_ssize_t i</span>
+    <span class="s3">cdef </span><span class="s1">bitgen_t </span><span class="s4">*</span><span class="s1">rng</span>
+    <span class="s3">cdef </span><span class="s1">const char </span><span class="s4">*</span><span class="s1">capsule_name </span><span class="s4">= </span><span class="s5">&quot;BitGenerator&quot;</span>
+    <span class="s3">cdef </span><span class="s1">double</span><span class="s4">[::</span><span class="s6">1</span><span class="s4">] </span><span class="s1">random_values</span>
+
+    <span class="s1">x </span><span class="s4">= </span><span class="s1">PCG64</span><span class="s4">()</span>
+    <span class="s1">capsule </span><span class="s4">= </span><span class="s1">x</span><span class="s4">.</span><span class="s1">capsule</span>
+    <span class="s0"># Optional check that the capsule if from a BitGenerator</span>
+    <span class="s3">if not </span><span class="s1">PyCapsule_IsValid</span><span class="s4">(</span><span class="s1">capsule</span><span class="s4">, </span><span class="s1">capsule_name</span><span class="s4">):</span>
+        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;Invalid pointer to anon_func_state&quot;</span><span class="s4">)</span>
+    <span class="s0"># Cast the pointer</span>
+    <span class="s1">rng </span><span class="s4">= &lt;</span><span class="s1">bitgen_t </span><span class="s4">*&gt; </span><span class="s1">PyCapsule_GetPointer</span><span class="s4">(</span><span class="s1">capsule</span><span class="s4">, </span><span class="s1">capsule_name</span><span class="s4">)</span>
+    <span class="s1">random_values </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">empty</span><span class="s4">(</span><span class="s1">n</span><span class="s4">, </span><span class="s1">dtype</span><span class="s4">=</span><span class="s5">'float64'</span><span class="s4">)</span>
+    <span class="s3">with </span><span class="s1">x</span><span class="s4">.</span><span class="s1">lock</span><span class="s4">, </span><span class="s1">nogil</span><span class="s4">:</span>
+        <span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">range</span><span class="s4">(</span><span class="s1">n</span><span class="s4">):</span>
+            <span class="s0"># Call the function</span>
+            <span class="s1">random_values</span><span class="s4">[</span><span class="s1">i</span><span class="s4">] = </span><span class="s1">rng</span><span class="s4">.</span><span class="s1">next_double</span><span class="s4">(</span><span class="s1">rng</span><span class="s4">.</span><span class="s1">state</span><span class="s4">)</span>
+    <span class="s1">randoms </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">asarray</span><span class="s4">(</span><span class="s1">random_values</span><span class="s4">)</span>
+
+    <span class="s3">return </span><span class="s1">randoms</span>
+
+<span class="s0"># cython example 2</span>
+<span class="s4">@</span><span class="s1">cython</span><span class="s4">.</span><span class="s1">boundscheck</span><span class="s4">(</span><span class="s3">False</span><span class="s4">)</span>
+<span class="s4">@</span><span class="s1">cython</span><span class="s4">.</span><span class="s1">wraparound</span><span class="s4">(</span><span class="s3">False</span><span class="s4">)</span>
+<span class="s3">def </span><span class="s1">uint10_uniforms</span><span class="s4">(</span><span class="s1">Py_ssize_t n</span><span class="s4">):</span>
+    <span class="s2">&quot;&quot;&quot;Uniform 10 bit integers stored as 16-bit unsigned integers&quot;&quot;&quot;</span>
+    <span class="s3">cdef </span><span class="s1">Py_ssize_t i</span>
+    <span class="s3">cdef </span><span class="s1">bitgen_t </span><span class="s4">*</span><span class="s1">rng</span>
+    <span class="s3">cdef </span><span class="s1">const char </span><span class="s4">*</span><span class="s1">capsule_name </span><span class="s4">= </span><span class="s5">&quot;BitGenerator&quot;</span>
+    <span class="s3">cdef </span><span class="s1">uint16_t</span><span class="s4">[::</span><span class="s6">1</span><span class="s4">] </span><span class="s1">random_values</span>
+    <span class="s3">cdef </span><span class="s1">int bits_remaining</span>
+    <span class="s3">cdef </span><span class="s1">int width </span><span class="s4">= </span><span class="s6">10</span>
+    <span class="s3">cdef </span><span class="s1">uint64_t buff</span><span class="s4">, </span><span class="s1">mask </span><span class="s4">= </span><span class="s6">0x3FF</span>
+
+    <span class="s1">x </span><span class="s4">= </span><span class="s1">PCG64</span><span class="s4">()</span>
+    <span class="s1">capsule </span><span class="s4">= </span><span class="s1">x</span><span class="s4">.</span><span class="s1">capsule</span>
+    <span class="s3">if not </span><span class="s1">PyCapsule_IsValid</span><span class="s4">(</span><span class="s1">capsule</span><span class="s4">, </span><span class="s1">capsule_name</span><span class="s4">):</span>
+        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;Invalid pointer to anon_func_state&quot;</span><span class="s4">)</span>
+    <span class="s1">rng </span><span class="s4">= &lt;</span><span class="s1">bitgen_t </span><span class="s4">*&gt; </span><span class="s1">PyCapsule_GetPointer</span><span class="s4">(</span><span class="s1">capsule</span><span class="s4">, </span><span class="s1">capsule_name</span><span class="s4">)</span>
+    <span class="s1">random_values </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">empty</span><span class="s4">(</span><span class="s1">n</span><span class="s4">, </span><span class="s1">dtype</span><span class="s4">=</span><span class="s5">'uint16'</span><span class="s4">)</span>
+    <span class="s0"># Best practice is to release GIL and acquire the lock</span>
+    <span class="s1">bits_remaining </span><span class="s4">= </span><span class="s6">0</span>
+    <span class="s3">with </span><span class="s1">x</span><span class="s4">.</span><span class="s1">lock</span><span class="s4">, </span><span class="s1">nogil</span><span class="s4">:</span>
+        <span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">range</span><span class="s4">(</span><span class="s1">n</span><span class="s4">):</span>
+            <span class="s3">if </span><span class="s1">bits_remaining </span><span class="s4">&lt; </span><span class="s1">width</span><span class="s4">:</span>
+                <span class="s1">buff </span><span class="s4">= </span><span class="s1">rng</span><span class="s4">.</span><span class="s1">next_uint64</span><span class="s4">(</span><span class="s1">rng</span><span class="s4">.</span><span class="s1">state</span><span class="s4">)</span>
+            <span class="s1">random_values</span><span class="s4">[</span><span class="s1">i</span><span class="s4">] = </span><span class="s1">buff </span><span class="s4">&amp; </span><span class="s1">mask</span>
+            <span class="s1">buff </span><span class="s4">&gt;&gt;= </span><span class="s1">width</span>
+
+    <span class="s1">randoms </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">asarray</span><span class="s4">(</span><span class="s1">random_values</span><span class="s4">)</span>
+    <span class="s3">return </span><span class="s1">randoms</span>
+
+<span class="s0"># cython example 3</span>
+<span class="s3">def </span><span class="s1">uniforms_ex</span><span class="s4">(</span><span class="s1">bit_generator</span><span class="s4">, </span><span class="s1">Py_ssize_t n</span><span class="s4">, </span><span class="s1">dtype</span><span class="s4">=</span><span class="s1">np</span><span class="s4">.</span><span class="s1">float64</span><span class="s4">):</span>
+    <span class="s2">&quot;&quot;&quot; 
+    Create an array of `n` uniformly distributed doubles via a &quot;fill&quot; function. 
+ 
+    A 'real' distribution would want to process the values into 
+    some non-uniform distribution 
+ 
+    Parameters 
+    ---------- 
+    bit_generator: BitGenerator instance 
+    n: int 
+        Output vector length 
+    dtype: {str, dtype}, optional 
+        Desired dtype, either 'd' (or 'float64') or 'f' (or 'float32'). The 
+        default dtype value is 'd' 
+    &quot;&quot;&quot;</span>
+    <span class="s3">cdef </span><span class="s1">Py_ssize_t i</span>
+    <span class="s3">cdef </span><span class="s1">bitgen_t </span><span class="s4">*</span><span class="s1">rng</span>
+    <span class="s3">cdef </span><span class="s1">const char </span><span class="s4">*</span><span class="s1">capsule_name </span><span class="s4">= </span><span class="s5">&quot;BitGenerator&quot;</span>
+    <span class="s3">cdef </span><span class="s1">np</span><span class="s4">.</span><span class="s1">ndarray randoms</span>
+
+    <span class="s1">capsule </span><span class="s4">= </span><span class="s1">bit_generator</span><span class="s4">.</span><span class="s1">capsule</span>
+    <span class="s0"># Optional check that the capsule if from a BitGenerator</span>
+    <span class="s3">if not </span><span class="s1">PyCapsule_IsValid</span><span class="s4">(</span><span class="s1">capsule</span><span class="s4">, </span><span class="s1">capsule_name</span><span class="s4">):</span>
+        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;Invalid pointer to anon_func_state&quot;</span><span class="s4">)</span>
+    <span class="s0"># Cast the pointer</span>
+    <span class="s1">rng </span><span class="s4">= &lt;</span><span class="s1">bitgen_t </span><span class="s4">*&gt; </span><span class="s1">PyCapsule_GetPointer</span><span class="s4">(</span><span class="s1">capsule</span><span class="s4">, </span><span class="s1">capsule_name</span><span class="s4">)</span>
+
+    <span class="s1">_dtype </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">dtype</span><span class="s4">(</span><span class="s1">dtype</span><span class="s4">)</span>
+    <span class="s1">randoms </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">empty</span><span class="s4">(</span><span class="s1">n</span><span class="s4">, </span><span class="s1">dtype</span><span class="s4">=</span><span class="s1">_dtype</span><span class="s4">)</span>
+    <span class="s3">if </span><span class="s1">_dtype </span><span class="s4">== </span><span class="s1">np</span><span class="s4">.</span><span class="s1">float32</span><span class="s4">:</span>
+        <span class="s3">with </span><span class="s1">bit_generator</span><span class="s4">.</span><span class="s1">lock</span><span class="s4">:</span>
+            <span class="s1">random_standard_uniform_fill_f</span><span class="s4">(</span><span class="s1">rng</span><span class="s4">, </span><span class="s1">n</span><span class="s4">, &lt;</span><span class="s1">float</span><span class="s4">*&gt;</span><span class="s1">np</span><span class="s4">.</span><span class="s1">PyArray_DATA</span><span class="s4">(</span><span class="s1">randoms</span><span class="s4">))</span>
+    <span class="s3">elif </span><span class="s1">_dtype </span><span class="s4">== </span><span class="s1">np</span><span class="s4">.</span><span class="s1">float64</span><span class="s4">:</span>
+        <span class="s3">with </span><span class="s1">bit_generator</span><span class="s4">.</span><span class="s1">lock</span><span class="s4">:</span>
+            <span class="s1">random_standard_uniform_fill</span><span class="s4">(</span><span class="s1">rng</span><span class="s4">, </span><span class="s1">n</span><span class="s4">, &lt;</span><span class="s1">double</span><span class="s4">*&gt;</span><span class="s1">np</span><span class="s4">.</span><span class="s1">PyArray_DATA</span><span class="s4">(</span><span class="s1">randoms</span><span class="s4">))</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s3">raise </span><span class="s1">TypeError</span><span class="s4">(</span><span class="s5">'Unsupported dtype %r for random' </span><span class="s4">% </span><span class="s1">_dtype</span><span class="s4">)</span>
+    <span class="s3">return </span><span class="s1">randoms</span>
+
+</pre>
+</body>
+</html>

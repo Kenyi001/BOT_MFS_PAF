@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>cpu_asimd.c</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #2aacb8;}
+.s3 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+cpu_asimd.c</font>
+</center></td></tr></table>
+<pre><span class="s0">#ifdef </span><span class="s1">_MSC_VER</span>
+    <span class="s0">#include </span><span class="s1">&lt;Intrin.h&gt;</span>
+<span class="s0">#endif</span>
+<span class="s0">#include </span><span class="s1">&lt;arm_neon.h&gt;</span>
+
+<span class="s0">int </span><span class="s1">main(</span><span class="s0">int </span><span class="s1">argc, </span><span class="s0">char </span><span class="s1">**argv)</span>
+<span class="s1">{</span>
+    <span class="s0">float </span><span class="s1">*src = (</span><span class="s0">float</span><span class="s1">*)argv[argc-1];</span>
+    <span class="s1">float32x4_t v1 = vdupq_n_f32(src[</span><span class="s2">0</span><span class="s1">]), v2 = vdupq_n_f32(src[</span><span class="s2">1</span><span class="s1">]);</span>
+    <span class="s3">/* MAXMIN */</span>
+    <span class="s0">int </span><span class="s1">ret  = (</span><span class="s0">int</span><span class="s1">)vgetq_lane_f32(vmaxnmq_f32(v1, v2), </span><span class="s2">0</span><span class="s1">);</span>
+        <span class="s1">ret += (</span><span class="s0">int</span><span class="s1">)vgetq_lane_f32(vminnmq_f32(v1, v2), </span><span class="s2">0</span><span class="s1">);</span>
+    <span class="s3">/* ROUNDING */</span>
+    <span class="s1">ret += (</span><span class="s0">int</span><span class="s1">)vgetq_lane_f32(vrndq_f32(v1), </span><span class="s2">0</span><span class="s1">);</span>
+<span class="s0">#ifdef </span><span class="s1">__aarch64__</span>
+    <span class="s1">{</span>
+        <span class="s0">double </span><span class="s1">*src2 = (</span><span class="s0">double</span><span class="s1">*)argv[argc-1];</span>
+        <span class="s1">float64x2_t vd1 = vdupq_n_f64(src2[</span><span class="s2">0</span><span class="s1">]), vd2 = vdupq_n_f64(src2[</span><span class="s2">1</span><span class="s1">]);</span>
+        <span class="s3">/* MAXMIN */</span>
+        <span class="s1">ret += (</span><span class="s0">int</span><span class="s1">)vgetq_lane_f64(vmaxnmq_f64(vd1, vd2), </span><span class="s2">0</span><span class="s1">);</span>
+        <span class="s1">ret += (</span><span class="s0">int</span><span class="s1">)vgetq_lane_f64(vminnmq_f64(vd1, vd2), </span><span class="s2">0</span><span class="s1">);</span>
+        <span class="s3">/* ROUNDING */</span>
+        <span class="s1">ret += (</span><span class="s0">int</span><span class="s1">)vgetq_lane_f64(vrndq_f64(vd1), </span><span class="s2">0</span><span class="s1">);</span>
+    <span class="s1">}</span>
+<span class="s0">#endif</span>
+    <span class="s0">return </span><span class="s1">ret;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

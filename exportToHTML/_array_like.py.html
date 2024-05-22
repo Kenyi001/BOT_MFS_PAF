@@ -1,0 +1,190 @@
+<html>
+<head>
+<title>_array_like.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_array_like.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">from </span><span class="s1">collections</span><span class="s2">.</span><span class="s1">abc </span><span class="s0">import </span><span class="s1">Collection</span><span class="s2">, </span><span class="s1">Callable</span><span class="s2">, </span><span class="s1">Sequence</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span><span class="s2">, </span><span class="s1">Protocol</span><span class="s2">, </span><span class="s1">Union</span><span class="s2">, </span><span class="s1">TypeVar</span><span class="s2">, </span><span class="s1">runtime_checkable</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">ndarray</span><span class="s2">,</span>
+    <span class="s1">dtype</span><span class="s2">,</span>
+    <span class="s1">generic</span><span class="s2">,</span>
+    <span class="s1">bool_</span><span class="s2">,</span>
+    <span class="s1">unsignedinteger</span><span class="s2">,</span>
+    <span class="s1">integer</span><span class="s2">,</span>
+    <span class="s1">floating</span><span class="s2">,</span>
+    <span class="s1">complexfloating</span><span class="s2">,</span>
+    <span class="s1">number</span><span class="s2">,</span>
+    <span class="s1">timedelta64</span><span class="s2">,</span>
+    <span class="s1">datetime64</span><span class="s2">,</span>
+    <span class="s1">object_</span><span class="s2">,</span>
+    <span class="s1">void</span><span class="s2">,</span>
+    <span class="s1">str_</span><span class="s2">,</span>
+    <span class="s1">bytes_</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_nested_sequence </span><span class="s0">import </span><span class="s1">_NestedSequence</span>
+
+<span class="s1">_T </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_T&quot;</span><span class="s2">)</span>
+<span class="s1">_ScalarType </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_ScalarType&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">generic</span><span class="s2">)</span>
+<span class="s1">_ScalarType_co </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_ScalarType_co&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">generic</span><span class="s2">, </span><span class="s1">covariant</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<span class="s1">_DType </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_DType&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+<span class="s1">_DType_co </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_DType_co&quot;</span><span class="s2">, </span><span class="s1">covariant</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+
+<span class="s1">NDArray </span><span class="s2">= </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">_ScalarType_co</span><span class="s2">]]</span>
+
+<span class="s4"># The `_SupportsArray` protocol only cares about the default dtype</span>
+<span class="s4"># (i.e. `dtype=None` or no `dtype` parameter at all) of the to-be returned</span>
+<span class="s4"># array.</span>
+<span class="s4"># Concrete implementations of the protocol are responsible for adding</span>
+<span class="s4"># any and all remaining overloads</span>
+<span class="s2">@</span><span class="s1">runtime_checkable</span>
+<span class="s0">class </span><span class="s1">_SupportsArray</span><span class="s2">(</span><span class="s1">Protocol</span><span class="s2">[</span><span class="s1">_DType_co</span><span class="s2">]):</span>
+    <span class="s0">def </span><span class="s1">__array__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">_DType_co</span><span class="s2">]: ...</span>
+
+
+<span class="s2">@</span><span class="s1">runtime_checkable</span>
+<span class="s0">class </span><span class="s1">_SupportsArrayFunc</span><span class="s2">(</span><span class="s1">Protocol</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot;A protocol class representing `~class.__array_function__`.&quot;&quot;&quot;</span>
+    <span class="s0">def </span><span class="s1">__array_function__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">func</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[..., </span><span class="s1">Any</span><span class="s2">],</span>
+        <span class="s1">types</span><span class="s2">: </span><span class="s1">Collection</span><span class="s2">[</span><span class="s1">type</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]],</span>
+        <span class="s1">args</span><span class="s2">: </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, ...],</span>
+        <span class="s1">kwargs</span><span class="s2">: </span><span class="s1">dict</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">],</span>
+    <span class="s2">) </span><span class="s1">-&gt; object</span><span class="s2">: ...</span>
+
+
+<span class="s4"># TODO: Wait until mypy supports recursive objects in combination with typevars</span>
+<span class="s1">_FiniteNestedSequence </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">_T</span><span class="s2">,</span>
+    <span class="s1">Sequence</span><span class="s2">[</span><span class="s1">_T</span><span class="s2">],</span>
+    <span class="s1">Sequence</span><span class="s2">[</span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">_T</span><span class="s2">]],</span>
+    <span class="s1">Sequence</span><span class="s2">[</span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">_T</span><span class="s2">]]],</span>
+    <span class="s1">Sequence</span><span class="s2">[</span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">_T</span><span class="s2">]]]],</span>
+<span class="s2">]</span>
+
+<span class="s4"># A subset of `npt.ArrayLike` that can be parametrized w.r.t. `np.generic`</span>
+<span class="s1">_ArrayLike </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">_ScalarType</span><span class="s2">]],</span>
+    <span class="s1">_NestedSequence</span><span class="s2">[</span><span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">_ScalarType</span><span class="s2">]]],</span>
+<span class="s2">]</span>
+
+<span class="s4"># A union representing array-like objects; consists of two typevars:</span>
+<span class="s4"># One representing types that can be parametrized w.r.t. `np.dtype`</span>
+<span class="s4"># and another one for the rest</span>
+<span class="s1">_DualArrayLike </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">_DType</span><span class="s2">],</span>
+    <span class="s1">_NestedSequence</span><span class="s2">[</span><span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">_DType</span><span class="s2">]],</span>
+    <span class="s1">_T</span><span class="s2">,</span>
+    <span class="s1">_NestedSequence</span><span class="s2">[</span><span class="s1">_T</span><span class="s2">],</span>
+<span class="s2">]</span>
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&gt;= (</span><span class="s6">3</span><span class="s2">, </span><span class="s6">12</span><span class="s2">):</span>
+    <span class="s0">from </span><span class="s1">collections</span><span class="s2">.</span><span class="s1">abc </span><span class="s0">import </span><span class="s1">Buffer</span>
+
+    <span class="s1">ArrayLike </span><span class="s2">= </span><span class="s1">Buffer </span><span class="s2">| </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+        <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">],</span>
+        <span class="s1">Union</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">float</span><span class="s2">, </span><span class="s1">complex</span><span class="s2">, </span><span class="s1">str</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">],</span>
+    <span class="s2">]</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s1">ArrayLike </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+        <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">],</span>
+        <span class="s1">Union</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">float</span><span class="s2">, </span><span class="s1">complex</span><span class="s2">, </span><span class="s1">str</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">],</span>
+    <span class="s2">]</span>
+
+<span class="s4"># `ArrayLike&lt;X&gt;_co`: array-like objects that can be coerced into `X`</span>
+<span class="s4"># given the casting rules `same_kind`</span>
+<span class="s1">_ArrayLikeBool_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">bool_</span><span class="s2">],</span>
+    <span class="s1">bool</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeUInt_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">bool_</span><span class="s2">, </span><span class="s1">unsignedinteger</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]]],</span>
+    <span class="s1">bool</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeInt_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">bool_</span><span class="s2">, </span><span class="s1">integer</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]]],</span>
+    <span class="s1">Union</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">int</span><span class="s2">],</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeFloat_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">bool_</span><span class="s2">, </span><span class="s1">integer</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">], </span><span class="s1">floating</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]]],</span>
+    <span class="s1">Union</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">float</span><span class="s2">],</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeComplex_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span>
+        <span class="s1">bool_</span><span class="s2">,</span>
+        <span class="s1">integer</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">],</span>
+        <span class="s1">floating</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">],</span>
+        <span class="s1">complexfloating</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">],</span>
+    <span class="s2">]],</span>
+    <span class="s1">Union</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">float</span><span class="s2">, </span><span class="s1">complex</span><span class="s2">],</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeNumber_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">bool_</span><span class="s2">, </span><span class="s1">number</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]]],</span>
+    <span class="s1">Union</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">float</span><span class="s2">, </span><span class="s1">complex</span><span class="s2">],</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeTD64_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">bool_</span><span class="s2">, </span><span class="s1">integer</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">], </span><span class="s1">timedelta64</span><span class="s2">]],</span>
+    <span class="s1">Union</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">int</span><span class="s2">],</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeDT64_co </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">datetime64</span><span class="s2">]],</span>
+    <span class="s1">_NestedSequence</span><span class="s2">[</span><span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">datetime64</span><span class="s2">]]],</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeObject_co </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">object_</span><span class="s2">]],</span>
+    <span class="s1">_NestedSequence</span><span class="s2">[</span><span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">object_</span><span class="s2">]]],</span>
+<span class="s2">]</span>
+
+<span class="s1">_ArrayLikeVoid_co </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">void</span><span class="s2">]],</span>
+    <span class="s1">_NestedSequence</span><span class="s2">[</span><span class="s1">_SupportsArray</span><span class="s2">[</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">void</span><span class="s2">]]],</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeStr_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">str_</span><span class="s2">],</span>
+    <span class="s1">str</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_ArrayLikeBytes_co </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">bytes_</span><span class="s2">],</span>
+    <span class="s1">bytes</span><span class="s2">,</span>
+<span class="s2">]</span>
+
+<span class="s1">_ArrayLikeInt </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">integer</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]],</span>
+    <span class="s1">int</span><span class="s2">,</span>
+<span class="s2">]</span>
+
+<span class="s4"># Extra ArrayLike type so that pyright can deal with NDArray[Any]</span>
+<span class="s4"># Used as the first overload, should only match NDArray[Any],</span>
+<span class="s4"># not any actual types.</span>
+<span class="s4"># https://github.com/numpy/numpy/pull/22193</span>
+<span class="s0">class </span><span class="s1">_UnknownType</span><span class="s2">:</span>
+    <span class="s2">...</span>
+
+
+<span class="s1">_ArrayLikeUnknown </span><span class="s2">= </span><span class="s1">_DualArrayLike</span><span class="s2">[</span>
+    <span class="s1">dtype</span><span class="s2">[</span><span class="s1">_UnknownType</span><span class="s2">],</span>
+    <span class="s1">_UnknownType</span><span class="s2">,</span>
+<span class="s2">]</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<html>
+<head>
+<title>METADATA</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+METADATA</font>
+</center></td></tr></table>
+<pre><span class="s0">Metadata-Version: 2.1</span>
+<span class="s0">Name: sortedcontainers</span>
+<span class="s0">Version: 2.4.0</span>
+<span class="s0">Summary: Sorted Containers -- Sorted List, Sorted Dict, Sorted Set</span>
+<span class="s0">Home-page: http://www.grantjenks.com/docs/sortedcontainers/</span>
+<span class="s0">Author: Grant Jenks</span>
+<span class="s0">Author-email: contact@grantjenks.com</span>
+<span class="s0">License: Apache 2.0</span>
+<span class="s0">Platform: UNKNOWN</span>
+<span class="s0">Classifier: Development Status :: 5 - Production/Stable</span>
+<span class="s0">Classifier: Intended Audience :: Developers</span>
+<span class="s0">Classifier: License :: OSI Approved :: Apache Software License</span>
+<span class="s0">Classifier: Natural Language :: English</span>
+<span class="s0">Classifier: Programming Language :: Python</span>
+<span class="s0">Classifier: Programming Language :: Python :: 2</span>
+<span class="s0">Classifier: Programming Language :: Python :: 2.7</span>
+<span class="s0">Classifier: Programming Language :: Python :: 3</span>
+<span class="s0">Classifier: Programming Language :: Python :: 3.2</span>
+<span class="s0">Classifier: Programming Language :: Python :: 3.3</span>
+<span class="s0">Classifier: Programming Language :: Python :: 3.4</span>
+<span class="s0">Classifier: Programming Language :: Python :: 3.5</span>
+<span class="s0">Classifier: Programming Language :: Python :: 3.6</span>
+<span class="s0">Classifier: Programming Language :: Python :: 3.7</span>
+<span class="s0">Classifier: Programming Language :: Python :: Implementation :: CPython</span>
+<span class="s0">Classifier: Programming Language :: Python :: Implementation :: PyPy</span>
+
+<span class="s0">Python Sorted Containers</span>
+<span class="s0">========================</span>
+
+<span class="s0">`Sorted Containers`_ is an Apache2 licensed `sorted collections library`_,</span>
+<span class="s0">written in pure-Python, and fast as C-extensions.</span>
+
+<span class="s0">Python's standard library is great until you need a sorted collections</span>
+<span class="s0">type. Many will attest that you can get really far without one, but the moment</span>
+<span class="s0">you **really need** a sorted list, sorted dict, or sorted set, you're faced</span>
+<span class="s0">with a dozen different implementations, most using C-extensions without great</span>
+<span class="s0">documentation and benchmarking.</span>
+
+<span class="s0">In Python, we can do better. And we can do it in pure-Python!</span>
+
+<span class="s0">.. code-block:: python</span>
+
+    <span class="s0">&gt;&gt;&gt; from sortedcontainers import SortedList</span>
+    <span class="s0">&gt;&gt;&gt; sl = SortedList(['e', 'a', 'c', 'd', 'b'])</span>
+    <span class="s0">&gt;&gt;&gt; sl</span>
+    <span class="s0">SortedList(['a', 'b', 'c', 'd', 'e'])</span>
+    <span class="s0">&gt;&gt;&gt; sl *= 10_000_000</span>
+    <span class="s0">&gt;&gt;&gt; sl.count('c')</span>
+    <span class="s0">10000000</span>
+    <span class="s0">&gt;&gt;&gt; sl[-3:]</span>
+    <span class="s0">['e', 'e', 'e']</span>
+    <span class="s0">&gt;&gt;&gt; from sortedcontainers import SortedDict</span>
+    <span class="s0">&gt;&gt;&gt; sd = SortedDict({'c': 3, 'a': 1, 'b': 2})</span>
+    <span class="s0">&gt;&gt;&gt; sd</span>
+    <span class="s0">SortedDict({'a': 1, 'b': 2, 'c': 3})</span>
+    <span class="s0">&gt;&gt;&gt; sd.popitem(index=-1)</span>
+    <span class="s0">('c', 3)</span>
+    <span class="s0">&gt;&gt;&gt; from sortedcontainers import SortedSet</span>
+    <span class="s0">&gt;&gt;&gt; ss = SortedSet('abracadabra')</span>
+    <span class="s0">&gt;&gt;&gt; ss</span>
+    <span class="s0">SortedSet(['a', 'b', 'c', 'd', 'r'])</span>
+    <span class="s0">&gt;&gt;&gt; ss.bisect_left('c')</span>
+    <span class="s0">2</span>
+
+<span class="s0">All of the operations shown above run in faster than linear time. The above</span>
+<span class="s0">demo also takes nearly a gigabyte of memory to run. When the sorted list is</span>
+<span class="s0">multiplied by ten million, it stores ten million references to each of &quot;a&quot;</span>
+<span class="s0">through &quot;e&quot;. Each reference requires eight bytes in the sorted</span>
+<span class="s0">container. That's pretty hard to beat as it's the cost of a pointer to each</span>
+<span class="s0">object. It's also 66% less overhead than a typical binary tree implementation</span>
+<span class="s0">(e.g. Red-Black Tree, AVL-Tree, AA-Tree, Splay-Tree, Treap, etc.) for which</span>
+<span class="s0">every node must also store two pointers to children nodes.</span>
+
+<span class="s0">`Sorted Containers`_ takes all of the work out of Python sorted collections -</span>
+<span class="s0">making your deployment and use of Python easy. There's no need to install a C</span>
+<span class="s0">compiler or pre-build and distribute custom extensions. Performance is a</span>
+<span class="s0">feature and testing has 100% coverage with unit tests and hours of stress.</span>
+
+<span class="s0">.. _`Sorted Containers`: http://www.grantjenks.com/docs/sortedcontainers/</span>
+<span class="s0">.. _`sorted collections library`: http://www.grantjenks.com/docs/sortedcontainers/</span>
+
+<span class="s0">Testimonials</span>
+<span class="s0">------------</span>
+
+<span class="s0">**Alex Martelli**, `Fellow of the Python Software Foundation`_</span>
+
+<span class="s0">&quot;Good stuff! ... I like the `simple, effective implementation`_ idea of</span>
+<span class="s0">splitting the sorted containers into smaller &quot;fragments&quot; to avoid the O(N)</span>
+<span class="s0">insertion costs.&quot;</span>
+
+<span class="s0">**Jeff Knupp**, `author of Writing Idiomatic Python and Python Trainer`_</span>
+
+<span class="s0">&quot;That last part, &quot;fast as C-extensions,&quot; was difficult to believe. I would need</span>
+<span class="s0">some sort of `Performance Comparison`_ to be convinced this is true. The author</span>
+<span class="s0">includes this in the docs. It is.&quot;</span>
+
+<span class="s0">**Kevin Samuel**, `Python and Django Trainer`_</span>
+
+<span class="s0">I'm quite amazed, not just by the code quality (it's incredibly readable and</span>
+<span class="s0">has more comment than code, wow), but the actual amount of work you put at</span>
+<span class="s0">stuff that is *not* code: documentation, benchmarking, implementation</span>
+<span class="s0">explanations. Even the git log is clean and the unit tests run out of the box</span>
+<span class="s0">on Python 2 and 3.</span>
+
+<span class="s0">**Mark Summerfield**, a short plea for `Python Sorted Collections`_</span>
+
+<span class="s0">Python's &quot;batteries included&quot; standard library seems to have a battery</span>
+<span class="s0">missing. And the argument that &quot;we never had it before&quot; has worn thin. It is</span>
+<span class="s0">time that Python offered a full range of collection classes out of the box,</span>
+<span class="s0">including sorted ones.</span>
+
+<span class="s0">`Sorted Containers`_ is used in popular open source projects such as:</span>
+<span class="s0">`Zipline`_, an algorithmic trading library from Quantopian; `Angr`_, a binary</span>
+<span class="s0">analysis platform from UC Santa Barbara; `Trio`_, an async I/O library; and</span>
+<span class="s0">`Dask Distributed`_, a distributed computation library supported by Continuum</span>
+<span class="s0">Analytics.</span>
+
+<span class="s0">.. _`Fellow of the Python Software Foundation`: https://en.wikipedia.org/wiki/Alex_Martelli</span>
+<span class="s0">.. _`simple, effective implementation`: http://www.grantjenks.com/docs/sortedcontainers/implementation.html</span>
+<span class="s0">.. _`author of Writing Idiomatic Python and Python Trainer`: https://jeffknupp.com/</span>
+<span class="s0">.. _`Python and Django Trainer`: https://www.elephorm.com/formateur/kevin-samuel</span>
+<span class="s0">.. _`Python Sorted Collections`: http://www.qtrac.eu/pysorted.html</span>
+<span class="s0">.. _`Zipline`: https://github.com/quantopian/zipline</span>
+<span class="s0">.. _`Angr`: https://github.com/angr/angr</span>
+<span class="s0">.. _`Trio`: https://github.com/python-trio/trio</span>
+<span class="s0">.. _`Dask Distributed`: https://github.com/dask/distributed</span>
+
+<span class="s0">Features</span>
+<span class="s0">--------</span>
+
+<span class="s0">- Pure-Python</span>
+<span class="s0">- Fully documented</span>
+<span class="s0">- Benchmark comparison (alternatives, runtimes, load-factors)</span>
+<span class="s0">- 100% test coverage</span>
+<span class="s0">- Hours of stress testing</span>
+<span class="s0">- Performance matters (often faster than C implementations)</span>
+<span class="s0">- Compatible API (nearly identical to older blist and bintrees modules)</span>
+<span class="s0">- Feature-rich (e.g. get the five largest keys in a sorted dict: d.keys()[-5:])</span>
+<span class="s0">- Pragmatic design (e.g. SortedSet is a Python set with a SortedList index)</span>
+<span class="s0">- Developed on Python 3.7</span>
+<span class="s0">- Tested on CPython 2.7, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7 and PyPy, PyPy3</span>
+
+<span class="s0">.. image:: https://api.travis-ci.org/grantjenks/python-sortedcontainers.svg?branch=master</span>
+   <span class="s0">:target: http://www.grantjenks.com/docs/sortedcontainers/</span>
+
+<span class="s0">.. image:: https://ci.appveyor.com/api/projects/status/github/grantjenks/python-sortedcontainers?branch=master&amp;svg=true</span>
+   <span class="s0">:target: http://www.grantjenks.com/docs/sortedcontainers/</span>
+
+<span class="s0">Quickstart</span>
+<span class="s0">----------</span>
+
+<span class="s0">Installing `Sorted Containers`_ is simple with `pip</span>
+<span class="s0">&lt;https://pypi.org/project/pip/&gt;`_::</span>
+
+    <span class="s0">$ pip install sortedcontainers</span>
+
+<span class="s0">You can access documentation in the interpreter with Python's built-in `help`</span>
+<span class="s0">function. The `help` works on modules, classes and methods in `Sorted</span>
+<span class="s0">Containers`_.</span>
+
+<span class="s0">.. code-block:: python</span>
+
+    <span class="s0">&gt;&gt;&gt; import sortedcontainers</span>
+    <span class="s0">&gt;&gt;&gt; help(sortedcontainers)</span>
+    <span class="s0">&gt;&gt;&gt; from sortedcontainers import SortedDict</span>
+    <span class="s0">&gt;&gt;&gt; help(SortedDict)</span>
+    <span class="s0">&gt;&gt;&gt; help(SortedDict.popitem)</span>
+
+<span class="s0">Documentation</span>
+<span class="s0">-------------</span>
+
+<span class="s0">Complete documentation for `Sorted Containers`_ is available at</span>
+<span class="s0">http://www.grantjenks.com/docs/sortedcontainers/</span>
+
+<span class="s0">User Guide</span>
+<span class="s0">..........</span>
+
+<span class="s0">The user guide provides an introduction to `Sorted Containers`_ and extensive</span>
+<span class="s0">performance comparisons and analysis.</span>
+
+<span class="s0">- `Introduction`_</span>
+<span class="s0">- `Performance Comparison`_</span>
+<span class="s0">- `Load Factor Performance Comparison`_</span>
+<span class="s0">- `Runtime Performance Comparison`_</span>
+<span class="s0">- `Simulated Workload Performance Comparison`_</span>
+<span class="s0">- `Performance at Scale`_</span>
+
+<span class="s0">.. _`Introduction`: http://www.grantjenks.com/docs/sortedcontainers/introduction.html</span>
+<span class="s0">.. _`Performance Comparison`: http://www.grantjenks.com/docs/sortedcontainers/performance.html</span>
+<span class="s0">.. _`Load Factor Performance Comparison`: http://www.grantjenks.com/docs/sortedcontainers/performance-load.html</span>
+<span class="s0">.. _`Runtime Performance Comparison`: http://www.grantjenks.com/docs/sortedcontainers/performance-runtime.html</span>
+<span class="s0">.. _`Simulated Workload Performance Comparison`: http://www.grantjenks.com/docs/sortedcontainers/performance-workload.html</span>
+<span class="s0">.. _`Performance at Scale`: http://www.grantjenks.com/docs/sortedcontainers/performance-scale.html</span>
+
+<span class="s0">Community Guide</span>
+<span class="s0">...............</span>
+
+<span class="s0">The community guide provides information on the development of `Sorted</span>
+<span class="s0">Containers`_ along with support, implementation, and history details.</span>
+
+<span class="s0">- `Development and Support`_</span>
+<span class="s0">- `Implementation Details`_</span>
+<span class="s0">- `Release History`_</span>
+
+<span class="s0">.. _`Development and Support`: http://www.grantjenks.com/docs/sortedcontainers/development.html</span>
+<span class="s0">.. _`Implementation Details`: http://www.grantjenks.com/docs/sortedcontainers/implementation.html</span>
+<span class="s0">.. _`Release History`: http://www.grantjenks.com/docs/sortedcontainers/history.html</span>
+
+<span class="s0">API Documentation</span>
+<span class="s0">.................</span>
+
+<span class="s0">The API documentation provides information on specific functions, classes, and</span>
+<span class="s0">modules in the `Sorted Containers`_ package.</span>
+
+<span class="s0">- `Sorted List`_</span>
+<span class="s0">- `Sorted Dict`_</span>
+<span class="s0">- `Sorted Set`_</span>
+
+<span class="s0">.. _`Sorted List`: http://www.grantjenks.com/docs/sortedcontainers/sortedlist.html</span>
+<span class="s0">.. _`Sorted Dict`: http://www.grantjenks.com/docs/sortedcontainers/sorteddict.html</span>
+<span class="s0">.. _`Sorted Set`: http://www.grantjenks.com/docs/sortedcontainers/sortedset.html</span>
+
+<span class="s0">Talks</span>
+<span class="s0">-----</span>
+
+<span class="s0">- `Python Sorted Collections | PyCon 2016 Talk`_</span>
+<span class="s0">- `SF Python Holiday Party 2015 Lightning Talk`_</span>
+<span class="s0">- `DjangoCon 2015 Lightning Talk`_</span>
+
+<span class="s0">.. _`Python Sorted Collections | PyCon 2016 Talk`: http://www.grantjenks.com/docs/sortedcontainers/pycon-2016-talk.html</span>
+<span class="s0">.. _`SF Python Holiday Party 2015 Lightning Talk`: http://www.grantjenks.com/docs/sortedcontainers/sf-python-2015-lightning-talk.html</span>
+<span class="s0">.. _`DjangoCon 2015 Lightning Talk`: http://www.grantjenks.com/docs/sortedcontainers/djangocon-2015-lightning-talk.html</span>
+
+<span class="s0">Resources</span>
+<span class="s0">---------</span>
+
+<span class="s0">- `Sorted Containers Documentation`_</span>
+<span class="s0">- `Sorted Containers at PyPI`_</span>
+<span class="s0">- `Sorted Containers at Github`_</span>
+<span class="s0">- `Sorted Containers Issue Tracker`_</span>
+
+<span class="s0">.. _`Sorted Containers Documentation`: http://www.grantjenks.com/docs/sortedcontainers/</span>
+<span class="s0">.. _`Sorted Containers at PyPI`: https://pypi.org/project/sortedcontainers/</span>
+<span class="s0">.. _`Sorted Containers at Github`: https://github.com/grantjenks/python-sortedcontainers</span>
+<span class="s0">.. _`Sorted Containers Issue Tracker`: https://github.com/grantjenks/python-sortedcontainers/issues</span>
+
+<span class="s0">Sorted Containers License</span>
+<span class="s0">-------------------------</span>
+
+<span class="s0">Copyright 2014-2019 Grant Jenks</span>
+
+<span class="s0">Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="s0">you may not use this file except in compliance with the License.</span>
+<span class="s0">You may obtain a copy of the License at</span>
+
+    <span class="s0">http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="s0">Unless required by applicable law or agreed to in writing, software</span>
+<span class="s0">distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="s0">WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="s0">See the License for the specific language governing permissions and</span>
+<span class="s0">limitations under the License.</span>
+
+
+</pre>
+</body>
+</html>

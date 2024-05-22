@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>cpu_vxe2.c</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #2aacb8;}
+.s3 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+cpu_vxe2.c</font>
+</center></td></tr></table>
+<pre><span class="s0">#if </span><span class="s1">(__VEC__ &lt; </span><span class="s2">10303</span><span class="s1">) || (__ARCH__ &lt; </span><span class="s2">13</span><span class="s1">)</span>
+    <span class="s0">#error </span><span class="s1">VXE2 not supported</span>
+<span class="s0">#endif</span>
+
+<span class="s0">#include </span><span class="s1">&lt;vecintrin.h&gt;</span>
+
+<span class="s0">int </span><span class="s1">main(</span><span class="s0">int </span><span class="s1">argc, </span><span class="s0">char </span><span class="s1">**argv)</span>
+<span class="s1">{</span>
+    <span class="s0">int </span><span class="s1">val;</span>
+    <span class="s1">__vector </span><span class="s0">signed short </span><span class="s1">large = { </span><span class="s3">'a'</span><span class="s1">, </span><span class="s3">'b'</span><span class="s1">, </span><span class="s3">'c'</span><span class="s1">, </span><span class="s3">'a'</span><span class="s1">, </span><span class="s3">'g'</span><span class="s1">, </span><span class="s3">'h'</span><span class="s1">, </span><span class="s3">'g'</span><span class="s1">, </span><span class="s3">'o' </span><span class="s1">};</span>
+    <span class="s1">__vector </span><span class="s0">signed short </span><span class="s1">search = { </span><span class="s3">'g'</span><span class="s1">, </span><span class="s3">'h'</span><span class="s1">, </span><span class="s3">'g'</span><span class="s1">, </span><span class="s3">'o' </span><span class="s1">};</span>
+    <span class="s1">__vector </span><span class="s0">unsigned char </span><span class="s1">len = { </span><span class="s2">0 </span><span class="s1">};</span>
+    <span class="s1">__vector </span><span class="s0">unsigned char </span><span class="s1">res = vec_search_string_cc(large, search, len, &amp;val);</span>
+    <span class="s1">__vector </span><span class="s0">float </span><span class="s1">x = vec_xl(argc, (</span><span class="s0">float</span><span class="s1">*)argv);</span>
+    <span class="s1">__vector </span><span class="s0">int </span><span class="s1">i = vec_signed(x);</span>
+
+    <span class="s1">i = vec_srdb(vec_sldb(i, i, </span><span class="s2">2</span><span class="s1">), i, </span><span class="s2">3</span><span class="s1">);</span>
+    <span class="s1">val += (</span><span class="s0">int</span><span class="s1">)vec_extract(res, </span><span class="s2">1</span><span class="s1">);</span>
+    <span class="s1">val += vec_extract(i, </span><span class="s2">0</span><span class="s1">);</span>
+    <span class="s0">return </span><span class="s1">val;</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<html>
+<head>
+<title>xmlfile.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #6aab73;}
+.s4 { color: #bcbec4;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+xmlfile.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">absolute_import</span>
+<span class="s2"># Copyright (c) 2010-2015 openpyxl</span>
+
+<span class="s3">&quot;&quot;&quot;Implements the lxml.etree.xmlfile API using the standard library xml.etree&quot;&quot;&quot;</span>
+
+
+<span class="s0">from </span><span class="s1">contextlib </span><span class="s0">import </span><span class="s1">contextmanager</span>
+
+<span class="s0">from </span><span class="s1">xml</span><span class="s4">.</span><span class="s1">etree</span><span class="s4">.</span><span class="s1">ElementTree </span><span class="s0">import </span><span class="s1">Element</span><span class="s4">, </span><span class="s1">tostring</span>
+
+
+<span class="s0">class </span><span class="s1">LxmlSyntaxError</span><span class="s4">(</span><span class="s1">Exception</span><span class="s4">):</span>
+    <span class="s0">pass</span>
+
+
+<span class="s0">class </span><span class="s1">_FakeIncrementalFileWriter</span><span class="s4">(</span><span class="s1">object</span><span class="s4">):</span>
+    <span class="s5">&quot;&quot;&quot;Replacement for _IncrementalFileWriter of lxml. 
+       Uses ElementTree to build xml in memory.&quot;&quot;&quot;</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">output_file</span><span class="s4">):</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_element_stack </span><span class="s4">= []</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element </span><span class="s4">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_file </span><span class="s4">= </span><span class="s1">output_file</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_have_root </span><span class="s4">= </span><span class="s0">False</span>
+
+    <span class="s4">@</span><span class="s1">contextmanager</span>
+    <span class="s0">def </span><span class="s1">element</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">tag</span><span class="s4">, </span><span class="s1">attrib</span><span class="s4">=</span><span class="s0">None</span><span class="s4">, </span><span class="s1">nsmap</span><span class="s4">=</span><span class="s0">None</span><span class="s4">, **</span><span class="s1">_extra</span><span class="s4">):</span>
+        <span class="s5">&quot;&quot;&quot;Create a new xml element using a context manager. 
+        The elements are written when the top level context is left. 
+ 
+        This is for code compatibility only as it is quite slow. 
+        &quot;&quot;&quot;</span>
+
+        <span class="s2"># __enter__ part</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_have_root </span><span class="s4">= </span><span class="s0">True</span>
+        <span class="s0">if </span><span class="s1">attrib </span><span class="s0">is None</span><span class="s4">:</span>
+            <span class="s1">attrib </span><span class="s4">= {}</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element </span><span class="s4">= </span><span class="s1">Element</span><span class="s4">(</span><span class="s1">tag</span><span class="s4">, </span><span class="s1">attrib</span><span class="s4">=</span><span class="s1">attrib</span><span class="s4">, **</span><span class="s1">_extra</span><span class="s4">)</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">.</span><span class="s1">text </span><span class="s4">= </span><span class="s3">''</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">.</span><span class="s1">tail </span><span class="s4">= </span><span class="s3">''</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_element_stack</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">)</span>
+        <span class="s0">yield</span>
+
+        <span class="s2"># __exit__ part</span>
+        <span class="s1">el </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_element_stack</span><span class="s4">.</span><span class="s1">pop</span><span class="s4">()</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_element_stack</span><span class="s4">:</span>
+            <span class="s1">parent </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_element_stack</span><span class="s4">[-</span><span class="s6">1</span><span class="s4">]</span>
+            <span class="s1">parent</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">)</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element </span><span class="s4">= </span><span class="s1">parent</span>
+        <span class="s0">else</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_write_element</span><span class="s4">(</span><span class="s1">el</span><span class="s4">)</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element </span><span class="s4">= </span><span class="s0">None</span>
+
+    <span class="s0">def </span><span class="s1">write</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">arg</span><span class="s4">):</span>
+        <span class="s5">&quot;&quot;&quot;Write a string or subelement.&quot;&quot;&quot;</span>
+
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">arg</span><span class="s4">, </span><span class="s1">str</span><span class="s4">):</span>
+            <span class="s2"># it is not allowed to write a string outside of an element</span>
+            <span class="s0">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element </span><span class="s0">is None</span><span class="s4">:</span>
+                <span class="s0">raise </span><span class="s1">LxmlSyntaxError</span><span class="s4">()</span>
+
+            <span class="s0">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">) == </span><span class="s6">0</span><span class="s4">:</span>
+                <span class="s2"># element has no children: add string to text</span>
+                <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">.</span><span class="s1">text </span><span class="s4">+= </span><span class="s1">arg</span>
+            <span class="s0">else</span><span class="s4">:</span>
+                <span class="s2"># element has children: add string to tail of last child</span>
+                <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">[-</span><span class="s6">1</span><span class="s4">].</span><span class="s1">tail </span><span class="s4">+= </span><span class="s1">arg</span>
+
+        <span class="s0">else</span><span class="s4">:</span>
+            <span class="s0">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element </span><span class="s0">is not None</span><span class="s4">:</span>
+                <span class="s1">self</span><span class="s4">.</span><span class="s1">_top_element</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">arg</span><span class="s4">)</span>
+            <span class="s0">elif not </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_have_root</span><span class="s4">:</span>
+                <span class="s1">self</span><span class="s4">.</span><span class="s1">_write_element</span><span class="s4">(</span><span class="s1">arg</span><span class="s4">)</span>
+            <span class="s0">else</span><span class="s4">:</span>
+                <span class="s0">raise </span><span class="s1">LxmlSyntaxError</span><span class="s4">()</span>
+
+    <span class="s0">def </span><span class="s1">_write_element</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">element</span><span class="s4">):</span>
+        <span class="s1">xml </span><span class="s4">= </span><span class="s1">tostring</span><span class="s4">(</span><span class="s1">element</span><span class="s4">)</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_file</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s1">xml</span><span class="s4">)</span>
+
+    <span class="s0">def </span><span class="s1">__enter__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s0">pass</span>
+
+    <span class="s0">def </span><span class="s1">__exit__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">type</span><span class="s4">, </span><span class="s1">value</span><span class="s4">, </span><span class="s1">traceback</span><span class="s4">):</span>
+        <span class="s2"># without root the xml document is incomplete</span>
+        <span class="s0">if not </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_have_root</span><span class="s4">:</span>
+            <span class="s0">raise </span><span class="s1">LxmlSyntaxError</span><span class="s4">()</span>
+
+
+<span class="s0">class </span><span class="s1">xmlfile</span><span class="s4">(</span><span class="s1">object</span><span class="s4">):</span>
+    <span class="s5">&quot;&quot;&quot;Context manager that can replace lxml.etree.xmlfile.&quot;&quot;&quot;</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">output_file</span><span class="s4">, </span><span class="s1">buffered</span><span class="s4">=</span><span class="s0">False</span><span class="s4">, </span><span class="s1">encoding</span><span class="s4">=</span><span class="s0">None</span><span class="s4">, </span><span class="s1">close</span><span class="s4">=</span><span class="s0">False</span><span class="s4">):</span>
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">output_file</span><span class="s4">, </span><span class="s1">str</span><span class="s4">):</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_file </span><span class="s4">= </span><span class="s1">open</span><span class="s4">(</span><span class="s1">output_file</span><span class="s4">, </span><span class="s3">'wb'</span><span class="s4">)</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_close </span><span class="s4">= </span><span class="s0">True</span>
+        <span class="s0">else</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_file </span><span class="s4">= </span><span class="s1">output_file</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_close </span><span class="s4">= </span><span class="s1">close</span>
+
+    <span class="s0">def </span><span class="s1">__enter__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s0">return </span><span class="s1">_FakeIncrementalFileWriter</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_file</span><span class="s4">)</span>
+
+    <span class="s0">def </span><span class="s1">__exit__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">type</span><span class="s4">, </span><span class="s1">value</span><span class="s4">, </span><span class="s1">traceback</span><span class="s4">):</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_close </span><span class="s4">== </span><span class="s0">True</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">_file</span><span class="s4">.</span><span class="s1">close</span><span class="s4">()</span>
+</pre>
+</body>
+</html>

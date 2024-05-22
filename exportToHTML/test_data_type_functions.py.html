@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>test_data_type_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_data_type_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">assert_raises</span>
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">array_api </span><span class="s0">as </span><span class="s1">xp</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span>
+    <span class="s3">&quot;from_, to, expected&quot;</span><span class="s2">,</span>
+    <span class="s2">[</span>
+        <span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">int8</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">int16</span><span class="s2">, </span><span class="s0">True</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">int16</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">int8</span><span class="s2">, </span><span class="s0">False</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">bool</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">int8</span><span class="s2">, </span><span class="s0">False</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s4">0</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">uint8</span><span class="s2">), </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">int8</span><span class="s2">, </span><span class="s0">False</span><span class="s2">),</span>
+    <span class="s2">],</span>
+<span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_can_cast</span><span class="s2">(</span><span class="s1">from_</span><span class="s2">, </span><span class="s1">to</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    can_cast() returns correct result 
+    &quot;&quot;&quot;</span>
+    <span class="s0">assert </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">can_cast</span><span class="s2">(</span><span class="s1">from_</span><span class="s2">, </span><span class="s1">to</span><span class="s2">) == </span><span class="s1">expected</span>
+
+<span class="s0">def </span><span class="s1">test_isdtype_strictness</span><span class="s2">():</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s4">64</span><span class="s2">))</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s3">'f8'</span><span class="s2">))</span>
+
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, ((</span><span class="s3">'integral'</span><span class="s2">,),)))</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">object_</span><span class="s2">))</span>
+
+    <span class="s6"># TODO: These will require https://github.com/numpy/numpy/issues/23883</span>
+    <span class="s6"># assert_raises(TypeError, lambda: xp.isdtype(xp.float64, None))</span>
+    <span class="s6"># assert_raises(TypeError, lambda: xp.isdtype(xp.float64, np.float64))</span>
+</pre>
+</body>
+</html>

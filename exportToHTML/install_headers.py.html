@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>install_headers.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+install_headers.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">os</span>
+<span class="s0">from </span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">command</span><span class="s2">.</span><span class="s1">install_headers </span><span class="s0">import </span><span class="s1">install_headers </span><span class="s0">as </span><span class="s1">old_install_headers</span>
+
+<span class="s0">class </span><span class="s1">install_headers </span><span class="s2">(</span><span class="s1">old_install_headers</span><span class="s2">):</span>
+
+    <span class="s0">def </span><span class="s1">run </span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">headers </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">distribution</span><span class="s2">.</span><span class="s1">headers</span>
+        <span class="s0">if not </span><span class="s1">headers</span><span class="s2">:</span>
+            <span class="s0">return</span>
+
+        <span class="s1">prefix </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">install_dir</span><span class="s2">)</span>
+        <span class="s0">for </span><span class="s1">header </span><span class="s0">in </span><span class="s1">headers</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">header</span><span class="s2">, </span><span class="s1">tuple</span><span class="s2">):</span>
+                <span class="s3"># Kind of a hack, but I don't know where else to change this...</span>
+                <span class="s0">if </span><span class="s1">header</span><span class="s2">[</span><span class="s4">0</span><span class="s2">] == </span><span class="s5">'numpy.core'</span><span class="s2">:</span>
+                    <span class="s1">header </span><span class="s2">= (</span><span class="s5">'numpy'</span><span class="s2">, </span><span class="s1">header</span><span class="s2">[</span><span class="s4">1</span><span class="s2">])</span>
+                    <span class="s0">if </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">splitext</span><span class="s2">(</span><span class="s1">header</span><span class="s2">[</span><span class="s4">1</span><span class="s2">])[</span><span class="s4">1</span><span class="s2">] == </span><span class="s5">'.inc'</span><span class="s2">:</span>
+                        <span class="s0">continue</span>
+                <span class="s1">d </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(*([</span><span class="s1">prefix</span><span class="s2">]+</span><span class="s1">header</span><span class="s2">[</span><span class="s4">0</span><span class="s2">].</span><span class="s1">split</span><span class="s2">(</span><span class="s5">'.'</span><span class="s2">)))</span>
+                <span class="s1">header </span><span class="s2">= </span><span class="s1">header</span><span class="s2">[</span><span class="s4">1</span><span class="s2">]</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s1">d </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">install_dir</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">mkpath</span><span class="s2">(</span><span class="s1">d</span><span class="s2">)</span>
+            <span class="s2">(</span><span class="s1">out</span><span class="s2">, </span><span class="s1">_</span><span class="s2">) = </span><span class="s1">self</span><span class="s2">.</span><span class="s1">copy_file</span><span class="s2">(</span><span class="s1">header</span><span class="s2">, </span><span class="s1">d</span><span class="s2">)</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">outfiles</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">out</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

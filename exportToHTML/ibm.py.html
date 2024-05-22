@@ -1,0 +1,119 @@
+<html>
+<head>
+<title>ibm.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ibm.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">re</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">subprocess</span>
+
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">fcompiler </span><span class="s0">import </span><span class="s1">FCompiler</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">exec_command </span><span class="s0">import </span><span class="s1">find_executable</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">misc_util </span><span class="s0">import </span><span class="s1">make_temp_file</span>
+<span class="s0">from </span><span class="s1">distutils </span><span class="s0">import </span><span class="s1">log</span>
+
+<span class="s1">compilers </span><span class="s2">= [</span><span class="s3">'IBMFCompiler'</span><span class="s2">]</span>
+
+<span class="s0">class </span><span class="s1">IBMFCompiler</span><span class="s2">(</span><span class="s1">FCompiler</span><span class="s2">):</span>
+    <span class="s1">compiler_type </span><span class="s2">= </span><span class="s3">'ibm'</span>
+    <span class="s1">description </span><span class="s2">= </span><span class="s3">'IBM XL Fortran Compiler'</span>
+    <span class="s1">version_pattern </span><span class="s2">=  </span><span class="s3">r'(xlf\(1\)\s*|)IBM XL Fortran ((Advanced Edition |)Version |Enterprise Edition V|for AIX, V)(?P&lt;version&gt;[^\s*]*)'</span>
+    <span class="s4">#IBM XL Fortran Enterprise Edition V10.1 for AIX \nVersion: 10.01.0000.0004</span>
+
+    <span class="s1">executables </span><span class="s2">= {</span>
+        <span class="s3">'version_cmd'  </span><span class="s2">: [</span><span class="s3">&quot;&lt;F77&gt;&quot;</span><span class="s2">, </span><span class="s3">&quot;-qversion&quot;</span><span class="s2">],</span>
+        <span class="s3">'compiler_f77' </span><span class="s2">: [</span><span class="s3">&quot;xlf&quot;</span><span class="s2">],</span>
+        <span class="s3">'compiler_fix' </span><span class="s2">: [</span><span class="s3">&quot;xlf90&quot;</span><span class="s2">, </span><span class="s3">&quot;-qfixed&quot;</span><span class="s2">],</span>
+        <span class="s3">'compiler_f90' </span><span class="s2">: [</span><span class="s3">&quot;xlf90&quot;</span><span class="s2">],</span>
+        <span class="s3">'linker_so'    </span><span class="s2">: [</span><span class="s3">&quot;xlf95&quot;</span><span class="s2">],</span>
+        <span class="s3">'archiver'     </span><span class="s2">: [</span><span class="s3">&quot;ar&quot;</span><span class="s2">, </span><span class="s3">&quot;-cr&quot;</span><span class="s2">],</span>
+        <span class="s3">'ranlib'       </span><span class="s2">: [</span><span class="s3">&quot;ranlib&quot;</span><span class="s2">]</span>
+        <span class="s2">}</span>
+
+    <span class="s0">def </span><span class="s1">get_version</span><span class="s2">(</span><span class="s1">self</span><span class="s2">,*</span><span class="s1">args</span><span class="s2">,**</span><span class="s1">kwds</span><span class="s2">):</span>
+        <span class="s1">version </span><span class="s2">= </span><span class="s1">FCompiler</span><span class="s2">.</span><span class="s1">get_version</span><span class="s2">(</span><span class="s1">self</span><span class="s2">,*</span><span class="s1">args</span><span class="s2">,**</span><span class="s1">kwds</span><span class="s2">)</span>
+
+        <span class="s0">if </span><span class="s1">version </span><span class="s0">is None and </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform</span><span class="s2">.</span><span class="s1">startswith</span><span class="s2">(</span><span class="s3">'aix'</span><span class="s2">):</span>
+            <span class="s4"># use lslpp to find out xlf version</span>
+            <span class="s1">lslpp </span><span class="s2">= </span><span class="s1">find_executable</span><span class="s2">(</span><span class="s3">'lslpp'</span><span class="s2">)</span>
+            <span class="s1">xlf </span><span class="s2">= </span><span class="s1">find_executable</span><span class="s2">(</span><span class="s3">'xlf'</span><span class="s2">)</span>
+            <span class="s0">if </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">exists</span><span class="s2">(</span><span class="s1">xlf</span><span class="s2">) </span><span class="s0">and </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">exists</span><span class="s2">(</span><span class="s1">lslpp</span><span class="s2">):</span>
+                <span class="s0">try</span><span class="s2">:</span>
+                    <span class="s1">o </span><span class="s2">= </span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">check_output</span><span class="s2">([</span><span class="s1">lslpp</span><span class="s2">, </span><span class="s3">'-Lc'</span><span class="s2">, </span><span class="s3">'xlfcmp'</span><span class="s2">])</span>
+                <span class="s0">except </span><span class="s2">(</span><span class="s1">OSError</span><span class="s2">, </span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">CalledProcessError</span><span class="s2">):</span>
+                    <span class="s0">pass</span>
+                <span class="s0">else</span><span class="s2">:</span>
+                    <span class="s1">m </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">search</span><span class="s2">(</span><span class="s3">r'xlfcmp:(?P&lt;version&gt;\d+([.]\d+)+)'</span><span class="s2">, </span><span class="s1">o</span><span class="s2">)</span>
+                    <span class="s0">if </span><span class="s1">m</span><span class="s2">: </span><span class="s1">version </span><span class="s2">= </span><span class="s1">m</span><span class="s2">.</span><span class="s1">group</span><span class="s2">(</span><span class="s3">'version'</span><span class="s2">)</span>
+
+        <span class="s1">xlf_dir </span><span class="s2">= </span><span class="s3">'/etc/opt/ibmcmp/xlf'</span>
+        <span class="s0">if </span><span class="s1">version </span><span class="s0">is None and </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">isdir</span><span class="s2">(</span><span class="s1">xlf_dir</span><span class="s2">):</span>
+            <span class="s4"># linux:</span>
+            <span class="s4"># If the output of xlf does not contain version info</span>
+            <span class="s4"># (that's the case with xlf 8.1, for instance) then</span>
+            <span class="s4"># let's try another method:</span>
+            <span class="s1">l </span><span class="s2">= </span><span class="s1">sorted</span><span class="s2">(</span><span class="s1">os</span><span class="s2">.</span><span class="s1">listdir</span><span class="s2">(</span><span class="s1">xlf_dir</span><span class="s2">))</span>
+            <span class="s1">l</span><span class="s2">.</span><span class="s1">reverse</span><span class="s2">()</span>
+            <span class="s1">l </span><span class="s2">= [</span><span class="s1">d </span><span class="s0">for </span><span class="s1">d </span><span class="s0">in </span><span class="s1">l </span><span class="s0">if </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">isfile</span><span class="s2">(</span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">xlf_dir</span><span class="s2">, </span><span class="s1">d</span><span class="s2">, </span><span class="s3">'xlf.cfg'</span><span class="s2">))]</span>
+            <span class="s0">if </span><span class="s1">l</span><span class="s2">:</span>
+                <span class="s0">from </span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">version </span><span class="s0">import </span><span class="s1">LooseVersion</span>
+                <span class="s1">self</span><span class="s2">.</span><span class="s1">version </span><span class="s2">= </span><span class="s1">version </span><span class="s2">= </span><span class="s1">LooseVersion</span><span class="s2">(</span><span class="s1">l</span><span class="s2">[</span><span class="s5">0</span><span class="s2">])</span>
+        <span class="s0">return </span><span class="s1">version</span>
+
+    <span class="s0">def </span><span class="s1">get_flags</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s2">[</span><span class="s3">'-qextname'</span><span class="s2">]</span>
+
+    <span class="s0">def </span><span class="s1">get_flags_debug</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s2">[</span><span class="s3">'-g'</span><span class="s2">]</span>
+
+    <span class="s0">def </span><span class="s1">get_flags_linker_so</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">opt </span><span class="s2">= []</span>
+        <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform</span><span class="s2">==</span><span class="s3">'darwin'</span><span class="s2">:</span>
+            <span class="s1">opt</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s3">'-Wl,-bundle,-flat_namespace,-undefined,suppress'</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">opt</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s3">'-bshared'</span><span class="s2">)</span>
+        <span class="s1">version </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_version</span><span class="s2">(</span><span class="s1">ok_status</span><span class="s2">=[</span><span class="s5">0</span><span class="s2">, </span><span class="s5">40</span><span class="s2">])</span>
+        <span class="s0">if </span><span class="s1">version </span><span class="s0">is not None</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform</span><span class="s2">.</span><span class="s1">startswith</span><span class="s2">(</span><span class="s3">'aix'</span><span class="s2">):</span>
+                <span class="s1">xlf_cfg </span><span class="s2">= </span><span class="s3">'/etc/xlf.cfg'</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s1">xlf_cfg </span><span class="s2">= </span><span class="s3">'/etc/opt/ibmcmp/xlf/%s/xlf.cfg' </span><span class="s2">% </span><span class="s1">version</span>
+            <span class="s1">fo</span><span class="s2">, </span><span class="s1">new_cfg </span><span class="s2">= </span><span class="s1">make_temp_file</span><span class="s2">(</span><span class="s1">suffix</span><span class="s2">=</span><span class="s3">'_xlf.cfg'</span><span class="s2">)</span>
+            <span class="s1">log</span><span class="s2">.</span><span class="s1">info</span><span class="s2">(</span><span class="s3">'Creating '</span><span class="s2">+</span><span class="s1">new_cfg</span><span class="s2">)</span>
+            <span class="s0">with </span><span class="s1">open</span><span class="s2">(</span><span class="s1">xlf_cfg</span><span class="s2">) </span><span class="s0">as </span><span class="s1">fi</span><span class="s2">:</span>
+                <span class="s1">crt1_match </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">compile</span><span class="s2">(</span><span class="s3">r'\s*crt\s*=\s*(?P&lt;path&gt;.*)/crt1.o'</span><span class="s2">).</span><span class="s1">match</span>
+                <span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">fi</span><span class="s2">:</span>
+                    <span class="s1">m </span><span class="s2">= </span><span class="s1">crt1_match</span><span class="s2">(</span><span class="s1">line</span><span class="s2">)</span>
+                    <span class="s0">if </span><span class="s1">m</span><span class="s2">:</span>
+                        <span class="s1">fo</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s3">'crt = %s/bundle1.o</span><span class="s0">\n</span><span class="s3">' </span><span class="s2">% (</span><span class="s1">m</span><span class="s2">.</span><span class="s1">group</span><span class="s2">(</span><span class="s3">'path'</span><span class="s2">)))</span>
+                    <span class="s0">else</span><span class="s2">:</span>
+                        <span class="s1">fo</span><span class="s2">.</span><span class="s1">write</span><span class="s2">(</span><span class="s1">line</span><span class="s2">)</span>
+            <span class="s1">fo</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+            <span class="s1">opt</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s3">'-F'</span><span class="s2">+</span><span class="s1">new_cfg</span><span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">opt</span>
+
+    <span class="s0">def </span><span class="s1">get_flags_opt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s2">[</span><span class="s3">'-O3'</span><span class="s2">]</span>
+
+<span class="s0">if </span><span class="s1">__name__ </span><span class="s2">== </span><span class="s3">'__main__'</span><span class="s2">:</span>
+    <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils </span><span class="s0">import </span><span class="s1">customized_fcompiler</span>
+    <span class="s1">log</span><span class="s2">.</span><span class="s1">set_verbosity</span><span class="s2">(</span><span class="s5">2</span><span class="s2">)</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s1">customized_fcompiler</span><span class="s2">(</span><span class="s1">compiler</span><span class="s2">=</span><span class="s3">'ibm'</span><span class="s2">).</span><span class="s1">get_version</span><span class="s2">())</span>
+</pre>
+</body>
+</html>

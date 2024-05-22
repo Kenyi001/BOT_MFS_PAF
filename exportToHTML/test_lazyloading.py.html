@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>test_lazyloading.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_lazyloading.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">importlib</span>
+<span class="s0">from </span><span class="s1">importlib</span><span class="s2">.</span><span class="s1">util </span><span class="s0">import </span><span class="s1">LazyLoader</span><span class="s2">, </span><span class="s1">find_spec</span><span class="s2">, </span><span class="s1">module_from_spec</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+
+<span class="s3"># Warning raised by _reload_guard() in numpy/__init__.py</span>
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">filterwarnings</span><span class="s2">(</span><span class="s4">&quot;ignore:The NumPy module was reloaded&quot;</span><span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_lazy_load</span><span class="s2">():</span>
+    <span class="s3"># gh-22045. lazyload doesn't import submodule names into the namespace</span>
+    <span class="s3"># muck with sys.modules to test the importing system</span>
+    <span class="s1">old_numpy </span><span class="s2">= </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s4">&quot;numpy&quot;</span><span class="s2">)</span>
+
+    <span class="s1">numpy_modules </span><span class="s2">= {}</span>
+    <span class="s0">for </span><span class="s1">mod_name</span><span class="s2">, </span><span class="s1">mod </span><span class="s0">in </span><span class="s1">list</span><span class="s2">(</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">.</span><span class="s1">items</span><span class="s2">()):</span>
+        <span class="s0">if </span><span class="s1">mod_name</span><span class="s2">[:</span><span class="s5">6</span><span class="s2">] == </span><span class="s4">&quot;numpy.&quot;</span><span class="s2">:</span>
+            <span class="s1">numpy_modules</span><span class="s2">[</span><span class="s1">mod_name</span><span class="s2">] = </span><span class="s1">mod</span>
+            <span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s1">mod_name</span><span class="s2">)</span>
+
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s3"># create lazy load of numpy as np</span>
+        <span class="s1">spec </span><span class="s2">= </span><span class="s1">find_spec</span><span class="s2">(</span><span class="s4">&quot;numpy&quot;</span><span class="s2">)</span>
+        <span class="s1">module </span><span class="s2">= </span><span class="s1">module_from_spec</span><span class="s2">(</span><span class="s1">spec</span><span class="s2">)</span>
+        <span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">[</span><span class="s4">&quot;numpy&quot;</span><span class="s2">] = </span><span class="s1">module</span>
+        <span class="s1">loader </span><span class="s2">= </span><span class="s1">LazyLoader</span><span class="s2">(</span><span class="s1">spec</span><span class="s2">.</span><span class="s1">loader</span><span class="s2">)</span>
+        <span class="s1">loader</span><span class="s2">.</span><span class="s1">exec_module</span><span class="s2">(</span><span class="s1">module</span><span class="s2">)</span>
+        <span class="s1">np </span><span class="s2">= </span><span class="s1">module</span>
+
+        <span class="s3"># test a subpackage import</span>
+        <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">lib </span><span class="s0">import </span><span class="s1">recfunctions</span>
+
+        <span class="s3"># test triggering the import of the package</span>
+        <span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span>
+
+    <span class="s0">finally</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">old_numpy</span><span class="s2">:</span>
+            <span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">[</span><span class="s4">&quot;numpy&quot;</span><span class="s2">] = </span><span class="s1">old_numpy</span>
+            <span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">.</span><span class="s1">update</span><span class="s2">(</span><span class="s1">numpy_modules</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

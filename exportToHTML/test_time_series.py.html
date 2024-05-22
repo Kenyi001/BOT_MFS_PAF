@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>test_time_series.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_time_series.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">datetime</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">DataFrame</span><span class="s2">,</span>
+    <span class="s1">Series</span><span class="s2">,</span>
+    <span class="s1">_testing </span><span class="s0">as </span><span class="s1">tm</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">tests</span><span class="s2">.</span><span class="s1">io</span><span class="s2">.</span><span class="s1">pytables</span><span class="s2">.</span><span class="s1">common </span><span class="s0">import </span><span class="s1">ensure_clean_store</span>
+
+<span class="s1">pytestmark </span><span class="s2">= </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">single_cpu</span>
+
+
+<span class="s0">def </span><span class="s1">test_store_datetime_fractional_secs</span><span class="s2">(</span><span class="s1">setup_path</span><span class="s2">):</span>
+    <span class="s0">with </span><span class="s1">ensure_clean_store</span><span class="s2">(</span><span class="s1">setup_path</span><span class="s2">) </span><span class="s0">as </span><span class="s1">store</span><span class="s2">:</span>
+        <span class="s1">dt </span><span class="s2">= </span><span class="s1">datetime</span><span class="s2">.</span><span class="s1">datetime</span><span class="s2">(</span><span class="s3">2012</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">, </span><span class="s3">4</span><span class="s2">, </span><span class="s3">5</span><span class="s2">, </span><span class="s3">123456</span><span class="s2">)</span>
+        <span class="s1">series </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s3">0</span><span class="s2">], [</span><span class="s1">dt</span><span class="s2">])</span>
+        <span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">] = </span><span class="s1">series</span>
+        <span class="s0">assert </span><span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">].</span><span class="s1">index</span><span class="s2">[</span><span class="s3">0</span><span class="s2">] == </span><span class="s1">dt</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">filterwarnings</span><span class="s2">(</span><span class="s4">r&quot;ignore:PeriodDtype\[B\] is deprecated:FutureWarning&quot;</span><span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_tseries_indices_series</span><span class="s2">(</span><span class="s1">setup_path</span><span class="s2">):</span>
+    <span class="s0">with </span><span class="s1">ensure_clean_store</span><span class="s2">(</span><span class="s1">setup_path</span><span class="s2">) </span><span class="s0">as </span><span class="s1">store</span><span class="s2">:</span>
+        <span class="s1">idx </span><span class="s2">= </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">makeDateIndex</span><span class="s2">(</span><span class="s3">10</span><span class="s2">)</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">default_rng</span><span class="s2">(</span><span class="s3">2</span><span class="s2">).</span><span class="s1">standard_normal</span><span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">idx</span><span class="s2">)), </span><span class="s1">idx</span><span class="s2">)</span>
+        <span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">] = </span><span class="s1">ser</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">]</span>
+
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">ser</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq </span><span class="s2">== </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_class_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">=</span><span class="s4">&quot;series index&quot;</span><span class="s2">)</span>
+
+        <span class="s1">idx </span><span class="s2">= </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">makePeriodIndex</span><span class="s2">(</span><span class="s3">10</span><span class="s2">)</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">default_rng</span><span class="s2">(</span><span class="s3">2</span><span class="s2">).</span><span class="s1">standard_normal</span><span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">idx</span><span class="s2">)), </span><span class="s1">idx</span><span class="s2">)</span>
+        <span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">] = </span><span class="s1">ser</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">]</span>
+
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">ser</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq </span><span class="s2">== </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_class_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">=</span><span class="s4">&quot;series index&quot;</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">filterwarnings</span><span class="s2">(</span><span class="s4">r&quot;ignore:PeriodDtype\[B\] is deprecated:FutureWarning&quot;</span><span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_tseries_indices_frame</span><span class="s2">(</span><span class="s1">setup_path</span><span class="s2">):</span>
+    <span class="s0">with </span><span class="s1">ensure_clean_store</span><span class="s2">(</span><span class="s1">setup_path</span><span class="s2">) </span><span class="s0">as </span><span class="s1">store</span><span class="s2">:</span>
+        <span class="s1">idx </span><span class="s2">= </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">makeDateIndex</span><span class="s2">(</span><span class="s3">10</span><span class="s2">)</span>
+        <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span>
+            <span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">default_rng</span><span class="s2">(</span><span class="s3">2</span><span class="s2">).</span><span class="s1">standard_normal</span><span class="s2">((</span><span class="s1">len</span><span class="s2">(</span><span class="s1">idx</span><span class="s2">), </span><span class="s3">3</span><span class="s2">)), </span><span class="s1">index</span><span class="s2">=</span><span class="s1">idx</span>
+        <span class="s2">)</span>
+        <span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">] = </span><span class="s1">df</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">]</span>
+
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">df</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq </span><span class="s2">== </span><span class="s1">df</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_class_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">df</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">=</span><span class="s4">&quot;dataframe index&quot;</span><span class="s2">)</span>
+
+        <span class="s1">idx </span><span class="s2">= </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">makePeriodIndex</span><span class="s2">(</span><span class="s3">10</span><span class="s2">)</span>
+        <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">default_rng</span><span class="s2">(</span><span class="s3">2</span><span class="s2">).</span><span class="s1">standard_normal</span><span class="s2">((</span><span class="s1">len</span><span class="s2">(</span><span class="s1">idx</span><span class="s2">), </span><span class="s3">3</span><span class="s2">)), </span><span class="s1">idx</span><span class="s2">)</span>
+        <span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">] = </span><span class="s1">df</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">store</span><span class="s2">[</span><span class="s4">&quot;a&quot;</span><span class="s2">]</span>
+
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">df</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq </span><span class="s2">== </span><span class="s1">df</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">freq</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_class_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">df</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">=</span><span class="s4">&quot;dataframe index&quot;</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

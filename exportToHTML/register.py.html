@@ -1,0 +1,343 @@
+<html>
+<head>
+<title>register.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+register.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot;distutils.command.register 
+ 
+Implements the Distutils 'register' command (register with the repository). 
+&quot;&quot;&quot;</span>
+
+<span class="s2"># created 2002/10/21, Richard Jones</span>
+
+<span class="s3">import </span><span class="s1">getpass</span>
+<span class="s3">import </span><span class="s1">io</span>
+<span class="s3">import </span><span class="s1">logging</span>
+<span class="s3">import </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">parse</span>
+<span class="s3">import </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">request</span>
+<span class="s3">from </span><span class="s1">warnings </span><span class="s3">import </span><span class="s1">warn</span>
+
+<span class="s3">from </span><span class="s4">..</span><span class="s1">core </span><span class="s3">import </span><span class="s1">PyPIRCCommand</span>
+<span class="s3">from </span><span class="s1">distutils</span><span class="s4">.</span><span class="s1">_log </span><span class="s3">import </span><span class="s1">log</span>
+
+
+<span class="s3">class </span><span class="s1">register</span><span class="s4">(</span><span class="s1">PyPIRCCommand</span><span class="s4">):</span>
+    <span class="s1">description </span><span class="s4">= </span><span class="s5">&quot;register the distribution with the Python package index&quot;</span>
+    <span class="s1">user_options </span><span class="s4">= </span><span class="s1">PyPIRCCommand</span><span class="s4">.</span><span class="s1">user_options </span><span class="s4">+ [</span>
+        <span class="s4">(</span><span class="s5">'list-classifiers'</span><span class="s4">, </span><span class="s3">None</span><span class="s4">, </span><span class="s5">'list the valid Trove classifiers'</span><span class="s4">),</span>
+        <span class="s4">(</span>
+            <span class="s5">'strict'</span><span class="s4">,</span>
+            <span class="s3">None</span><span class="s4">,</span>
+            <span class="s5">'Will stop the registering if the meta-data are not fully compliant'</span><span class="s4">,</span>
+        <span class="s4">),</span>
+    <span class="s4">]</span>
+    <span class="s1">boolean_options </span><span class="s4">= </span><span class="s1">PyPIRCCommand</span><span class="s4">.</span><span class="s1">boolean_options </span><span class="s4">+ [</span>
+        <span class="s5">'verify'</span><span class="s4">,</span>
+        <span class="s5">'list-classifiers'</span><span class="s4">,</span>
+        <span class="s5">'strict'</span><span class="s4">,</span>
+    <span class="s4">]</span>
+
+    <span class="s1">sub_commands </span><span class="s4">= [(</span><span class="s5">'check'</span><span class="s4">, </span><span class="s3">lambda </span><span class="s1">self</span><span class="s4">: </span><span class="s3">True</span><span class="s4">)]</span>
+
+    <span class="s3">def </span><span class="s1">initialize_options</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s1">PyPIRCCommand</span><span class="s4">.</span><span class="s1">initialize_options</span><span class="s4">(</span><span class="s1">self</span><span class="s4">)</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">list_classifiers </span><span class="s4">= </span><span class="s6">0</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">strict </span><span class="s4">= </span><span class="s6">0</span>
+
+    <span class="s3">def </span><span class="s1">finalize_options</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s1">PyPIRCCommand</span><span class="s4">.</span><span class="s1">finalize_options</span><span class="s4">(</span><span class="s1">self</span><span class="s4">)</span>
+        <span class="s2"># setting options for the `check` subcommand</span>
+        <span class="s1">check_options </span><span class="s4">= {</span>
+            <span class="s5">'strict'</span><span class="s4">: (</span><span class="s5">'register'</span><span class="s4">, </span><span class="s1">self</span><span class="s4">.</span><span class="s1">strict</span><span class="s4">),</span>
+            <span class="s5">'restructuredtext'</span><span class="s4">: (</span><span class="s5">'register'</span><span class="s4">, </span><span class="s6">1</span><span class="s4">),</span>
+        <span class="s4">}</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">distribution</span><span class="s4">.</span><span class="s1">command_options</span><span class="s4">[</span><span class="s5">'check'</span><span class="s4">] = </span><span class="s1">check_options</span>
+
+    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">finalize_options</span><span class="s4">()</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">_set_config</span><span class="s4">()</span>
+
+        <span class="s2"># Run sub commands</span>
+        <span class="s3">for </span><span class="s1">cmd_name </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">get_sub_commands</span><span class="s4">():</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">run_command</span><span class="s4">(</span><span class="s1">cmd_name</span><span class="s4">)</span>
+
+        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">dry_run</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">verify_metadata</span><span class="s4">()</span>
+        <span class="s3">elif </span><span class="s1">self</span><span class="s4">.</span><span class="s1">list_classifiers</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">classifiers</span><span class="s4">()</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">send_metadata</span><span class="s4">()</span>
+
+    <span class="s3">def </span><span class="s1">check_metadata</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s0">&quot;&quot;&quot;Deprecated API.&quot;&quot;&quot;</span>
+        <span class="s1">warn</span><span class="s4">(</span>
+            <span class="s5">&quot;distutils.command.register.check_metadata is deprecated; &quot;</span>
+            <span class="s5">&quot;use the check command instead&quot;</span><span class="s4">,</span>
+            <span class="s1">DeprecationWarning</span><span class="s4">,</span>
+        <span class="s4">)</span>
+        <span class="s1">check </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">distribution</span><span class="s4">.</span><span class="s1">get_command_obj</span><span class="s4">(</span><span class="s5">'check'</span><span class="s4">)</span>
+        <span class="s1">check</span><span class="s4">.</span><span class="s1">ensure_finalized</span><span class="s4">()</span>
+        <span class="s1">check</span><span class="s4">.</span><span class="s1">strict </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">strict</span>
+        <span class="s1">check</span><span class="s4">.</span><span class="s1">restructuredtext </span><span class="s4">= </span><span class="s6">1</span>
+        <span class="s1">check</span><span class="s4">.</span><span class="s1">run</span><span class="s4">()</span>
+
+    <span class="s3">def </span><span class="s1">_set_config</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s0">'''Reads the configuration file and set attributes.'''</span>
+        <span class="s1">config </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_read_pypirc</span><span class="s4">()</span>
+        <span class="s3">if </span><span class="s1">config </span><span class="s4">!= {}:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">username </span><span class="s4">= </span><span class="s1">config</span><span class="s4">[</span><span class="s5">'username'</span><span class="s4">]</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">password </span><span class="s4">= </span><span class="s1">config</span><span class="s4">[</span><span class="s5">'password'</span><span class="s4">]</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">repository </span><span class="s4">= </span><span class="s1">config</span><span class="s4">[</span><span class="s5">'repository'</span><span class="s4">]</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">realm </span><span class="s4">= </span><span class="s1">config</span><span class="s4">[</span><span class="s5">'realm'</span><span class="s4">]</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">has_config </span><span class="s4">= </span><span class="s3">True</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">repository </span><span class="s3">not in </span><span class="s4">(</span><span class="s5">'pypi'</span><span class="s4">, </span><span class="s1">self</span><span class="s4">.</span><span class="s1">DEFAULT_REPOSITORY</span><span class="s4">):</span>
+                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'%s not found in .pypirc' </span><span class="s4">% </span><span class="s1">self</span><span class="s4">.</span><span class="s1">repository</span><span class="s4">)</span>
+            <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">repository </span><span class="s4">== </span><span class="s5">'pypi'</span><span class="s4">:</span>
+                <span class="s1">self</span><span class="s4">.</span><span class="s1">repository </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">DEFAULT_REPOSITORY</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">has_config </span><span class="s4">= </span><span class="s3">False</span>
+
+    <span class="s3">def </span><span class="s1">classifiers</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s0">'''Fetch the list of classifiers from the server.'''</span>
+        <span class="s1">url </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">repository </span><span class="s4">+ </span><span class="s5">'?:action=list_classifiers'</span>
+        <span class="s1">response </span><span class="s4">= </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">request</span><span class="s4">.</span><span class="s1">urlopen</span><span class="s4">(</span><span class="s1">url</span><span class="s4">)</span>
+        <span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_read_pypi_response</span><span class="s4">(</span><span class="s1">response</span><span class="s4">))</span>
+
+    <span class="s3">def </span><span class="s1">verify_metadata</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+        <span class="s0">'''Send the metadata to the package index server to be checked.'''</span>
+        <span class="s2"># send the info to the server and report the result</span>
+        <span class="s4">(</span><span class="s1">code</span><span class="s4">, </span><span class="s1">result</span><span class="s4">) = </span><span class="s1">self</span><span class="s4">.</span><span class="s1">post_to_server</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">build_post_data</span><span class="s4">(</span><span class="s5">'verify'</span><span class="s4">))</span>
+        <span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s5">'Server response (%s): %s'</span><span class="s4">, </span><span class="s1">code</span><span class="s4">, </span><span class="s1">result</span><span class="s4">)</span>
+
+    <span class="s3">def </span><span class="s1">send_metadata</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):  </span><span class="s2"># noqa: C901</span>
+        <span class="s0">'''Send the metadata to the package index server. 
+ 
+        Well, do the following: 
+        1. figure who the user is, and then 
+        2. send the data as a Basic auth'ed POST. 
+ 
+        First we try to read the username/password from $HOME/.pypirc, 
+        which is a ConfigParser-formatted file with a section 
+        [distutils] containing username and password entries (both 
+        in clear text). Eg: 
+ 
+            [distutils] 
+            index-servers = 
+                pypi 
+ 
+            [pypi] 
+            username: fred 
+            password: sekrit 
+ 
+        Otherwise, to figure who the user is, we offer the user three 
+        choices: 
+ 
+         1. use existing login, 
+         2. register as a new user, or 
+         3. set the password to a random string and email the user. 
+ 
+        '''</span>
+        <span class="s2"># see if we can short-cut and get the username/password from the</span>
+        <span class="s2"># config</span>
+        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">has_config</span><span class="s4">:</span>
+            <span class="s1">choice </span><span class="s4">= </span><span class="s5">'1'</span>
+            <span class="s1">username </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">username</span>
+            <span class="s1">password </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">password</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s1">choice </span><span class="s4">= </span><span class="s5">'x'</span>
+            <span class="s1">username </span><span class="s4">= </span><span class="s1">password </span><span class="s4">= </span><span class="s5">''</span>
+
+        <span class="s2"># get the user's login info</span>
+        <span class="s1">choices </span><span class="s4">= </span><span class="s5">'1 2 3 4'</span><span class="s4">.</span><span class="s1">split</span><span class="s4">()</span>
+        <span class="s3">while </span><span class="s1">choice </span><span class="s3">not in </span><span class="s1">choices</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">announce</span><span class="s4">(</span>
+                <span class="s5">'''</span><span class="s3">\ 
+</span><span class="s5">We need to know who you are, so please choose either: 
+ 1. use your existing login, 
+ 2. register as a new user, 
+ 3. have the server generate a new password for you (and email it to you), or 
+ 4. quit 
+Your selection [default 1]: '''</span><span class="s4">,</span>
+                <span class="s1">logging</span><span class="s4">.</span><span class="s1">INFO</span><span class="s4">,</span>
+            <span class="s4">)</span>
+            <span class="s1">choice </span><span class="s4">= </span><span class="s1">input</span><span class="s4">()</span>
+            <span class="s3">if not </span><span class="s1">choice</span><span class="s4">:</span>
+                <span class="s1">choice </span><span class="s4">= </span><span class="s5">'1'</span>
+            <span class="s3">elif </span><span class="s1">choice </span><span class="s3">not in </span><span class="s1">choices</span><span class="s4">:</span>
+                <span class="s1">print</span><span class="s4">(</span><span class="s5">'Please choose one of the four options!'</span><span class="s4">)</span>
+
+        <span class="s3">if </span><span class="s1">choice </span><span class="s4">== </span><span class="s5">'1'</span><span class="s4">:</span>
+            <span class="s2"># get the username and password</span>
+            <span class="s3">while not </span><span class="s1">username</span><span class="s4">:</span>
+                <span class="s1">username </span><span class="s4">= </span><span class="s1">input</span><span class="s4">(</span><span class="s5">'Username: '</span><span class="s4">)</span>
+            <span class="s3">while not </span><span class="s1">password</span><span class="s4">:</span>
+                <span class="s1">password </span><span class="s4">= </span><span class="s1">getpass</span><span class="s4">.</span><span class="s1">getpass</span><span class="s4">(</span><span class="s5">'Password: '</span><span class="s4">)</span>
+
+            <span class="s2"># set up the authentication</span>
+            <span class="s1">auth </span><span class="s4">= </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">request</span><span class="s4">.</span><span class="s1">HTTPPasswordMgr</span><span class="s4">()</span>
+            <span class="s1">host </span><span class="s4">= </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">parse</span><span class="s4">.</span><span class="s1">urlparse</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">repository</span><span class="s4">)[</span><span class="s6">1</span><span class="s4">]</span>
+            <span class="s1">auth</span><span class="s4">.</span><span class="s1">add_password</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">realm</span><span class="s4">, </span><span class="s1">host</span><span class="s4">, </span><span class="s1">username</span><span class="s4">, </span><span class="s1">password</span><span class="s4">)</span>
+            <span class="s2"># send the info to the server and report the result</span>
+            <span class="s1">code</span><span class="s4">, </span><span class="s1">result </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">post_to_server</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">build_post_data</span><span class="s4">(</span><span class="s5">'submit'</span><span class="s4">), </span><span class="s1">auth</span><span class="s4">)</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">announce</span><span class="s4">(</span><span class="s5">'Server response ({}): {}'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">code</span><span class="s4">, </span><span class="s1">result</span><span class="s4">), </span><span class="s1">logging</span><span class="s4">.</span><span class="s1">INFO</span><span class="s4">)</span>
+
+            <span class="s2"># possibly save the login</span>
+            <span class="s3">if </span><span class="s1">code </span><span class="s4">== </span><span class="s6">200</span><span class="s4">:</span>
+                <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">has_config</span><span class="s4">:</span>
+                    <span class="s2"># sharing the password in the distribution instance</span>
+                    <span class="s2"># so the upload command can reuse it</span>
+                    <span class="s1">self</span><span class="s4">.</span><span class="s1">distribution</span><span class="s4">.</span><span class="s1">password </span><span class="s4">= </span><span class="s1">password</span>
+                <span class="s3">else</span><span class="s4">:</span>
+                    <span class="s1">self</span><span class="s4">.</span><span class="s1">announce</span><span class="s4">(</span>
+                        <span class="s4">(</span>
+                            <span class="s5">'I can store your PyPI login so future '</span>
+                            <span class="s5">'submissions will be faster.'</span>
+                        <span class="s4">),</span>
+                        <span class="s1">logging</span><span class="s4">.</span><span class="s1">INFO</span><span class="s4">,</span>
+                    <span class="s4">)</span>
+                    <span class="s1">self</span><span class="s4">.</span><span class="s1">announce</span><span class="s4">(</span>
+                        <span class="s5">'(the login will be stored in %s)' </span><span class="s4">% </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_get_rc_file</span><span class="s4">(),</span>
+                        <span class="s1">logging</span><span class="s4">.</span><span class="s1">INFO</span><span class="s4">,</span>
+                    <span class="s4">)</span>
+                    <span class="s1">choice </span><span class="s4">= </span><span class="s5">'X'</span>
+                    <span class="s3">while </span><span class="s1">choice</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() </span><span class="s3">not in </span><span class="s5">'yn'</span><span class="s4">:</span>
+                        <span class="s1">choice </span><span class="s4">= </span><span class="s1">input</span><span class="s4">(</span><span class="s5">'Save your login (y/N)?'</span><span class="s4">)</span>
+                        <span class="s3">if not </span><span class="s1">choice</span><span class="s4">:</span>
+                            <span class="s1">choice </span><span class="s4">= </span><span class="s5">'n'</span>
+                    <span class="s3">if </span><span class="s1">choice</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() == </span><span class="s5">'y'</span><span class="s4">:</span>
+                        <span class="s1">self</span><span class="s4">.</span><span class="s1">_store_pypirc</span><span class="s4">(</span><span class="s1">username</span><span class="s4">, </span><span class="s1">password</span><span class="s4">)</span>
+
+        <span class="s3">elif </span><span class="s1">choice </span><span class="s4">== </span><span class="s5">'2'</span><span class="s4">:</span>
+            <span class="s1">data </span><span class="s4">= {</span><span class="s5">':action'</span><span class="s4">: </span><span class="s5">'user'</span><span class="s4">}</span>
+            <span class="s1">data</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">] = </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'password'</span><span class="s4">] = </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'email'</span><span class="s4">] = </span><span class="s5">''</span>
+            <span class="s1">data</span><span class="s4">[</span><span class="s5">'confirm'</span><span class="s4">] = </span><span class="s3">None</span>
+            <span class="s3">while not </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">]:</span>
+                <span class="s1">data</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">] = </span><span class="s1">input</span><span class="s4">(</span><span class="s5">'Username: '</span><span class="s4">)</span>
+            <span class="s3">while </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'password'</span><span class="s4">] != </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'confirm'</span><span class="s4">]:</span>
+                <span class="s3">while not </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'password'</span><span class="s4">]:</span>
+                    <span class="s1">data</span><span class="s4">[</span><span class="s5">'password'</span><span class="s4">] = </span><span class="s1">getpass</span><span class="s4">.</span><span class="s1">getpass</span><span class="s4">(</span><span class="s5">'Password: '</span><span class="s4">)</span>
+                <span class="s3">while not </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'confirm'</span><span class="s4">]:</span>
+                    <span class="s1">data</span><span class="s4">[</span><span class="s5">'confirm'</span><span class="s4">] = </span><span class="s1">getpass</span><span class="s4">.</span><span class="s1">getpass</span><span class="s4">(</span><span class="s5">' Confirm: '</span><span class="s4">)</span>
+                <span class="s3">if </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'password'</span><span class="s4">] != </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'confirm'</span><span class="s4">]:</span>
+                    <span class="s1">data</span><span class="s4">[</span><span class="s5">'password'</span><span class="s4">] = </span><span class="s5">''</span>
+                    <span class="s1">data</span><span class="s4">[</span><span class="s5">'confirm'</span><span class="s4">] = </span><span class="s3">None</span>
+                    <span class="s1">print</span><span class="s4">(</span><span class="s5">&quot;Password and confirm don't match!&quot;</span><span class="s4">)</span>
+            <span class="s3">while not </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'email'</span><span class="s4">]:</span>
+                <span class="s1">data</span><span class="s4">[</span><span class="s5">'email'</span><span class="s4">] = </span><span class="s1">input</span><span class="s4">(</span><span class="s5">'   EMail: '</span><span class="s4">)</span>
+            <span class="s1">code</span><span class="s4">, </span><span class="s1">result </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">post_to_server</span><span class="s4">(</span><span class="s1">data</span><span class="s4">)</span>
+            <span class="s3">if </span><span class="s1">code </span><span class="s4">!= </span><span class="s6">200</span><span class="s4">:</span>
+                <span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s5">'Server response (%s): %s'</span><span class="s4">, </span><span class="s1">code</span><span class="s4">, </span><span class="s1">result</span><span class="s4">)</span>
+            <span class="s3">else</span><span class="s4">:</span>
+                <span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s5">'You will receive an email shortly.'</span><span class="s4">)</span>
+                <span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s5">'Follow the instructions in it to ' 'complete registration.'</span><span class="s4">)</span>
+        <span class="s3">elif </span><span class="s1">choice </span><span class="s4">== </span><span class="s5">'3'</span><span class="s4">:</span>
+            <span class="s1">data </span><span class="s4">= {</span><span class="s5">':action'</span><span class="s4">: </span><span class="s5">'password_reset'</span><span class="s4">}</span>
+            <span class="s1">data</span><span class="s4">[</span><span class="s5">'email'</span><span class="s4">] = </span><span class="s5">''</span>
+            <span class="s3">while not </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'email'</span><span class="s4">]:</span>
+                <span class="s1">data</span><span class="s4">[</span><span class="s5">'email'</span><span class="s4">] = </span><span class="s1">input</span><span class="s4">(</span><span class="s5">'Your email address: '</span><span class="s4">)</span>
+            <span class="s1">code</span><span class="s4">, </span><span class="s1">result </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">post_to_server</span><span class="s4">(</span><span class="s1">data</span><span class="s4">)</span>
+            <span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s5">'Server response (%s): %s'</span><span class="s4">, </span><span class="s1">code</span><span class="s4">, </span><span class="s1">result</span><span class="s4">)</span>
+
+    <span class="s3">def </span><span class="s1">build_post_data</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">action</span><span class="s4">):</span>
+        <span class="s2"># figure the data to send - the metadata plus some additional</span>
+        <span class="s2"># information used by the package server</span>
+        <span class="s1">meta </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">distribution</span><span class="s4">.</span><span class="s1">metadata</span>
+        <span class="s1">data </span><span class="s4">= {</span>
+            <span class="s5">':action'</span><span class="s4">: </span><span class="s1">action</span><span class="s4">,</span>
+            <span class="s5">'metadata_version'</span><span class="s4">: </span><span class="s5">'1.0'</span><span class="s4">,</span>
+            <span class="s5">'name'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_name</span><span class="s4">(),</span>
+            <span class="s5">'version'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_version</span><span class="s4">(),</span>
+            <span class="s5">'summary'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_description</span><span class="s4">(),</span>
+            <span class="s5">'home_page'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_url</span><span class="s4">(),</span>
+            <span class="s5">'author'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_contact</span><span class="s4">(),</span>
+            <span class="s5">'author_email'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_contact_email</span><span class="s4">(),</span>
+            <span class="s5">'license'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_licence</span><span class="s4">(),</span>
+            <span class="s5">'description'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_long_description</span><span class="s4">(),</span>
+            <span class="s5">'keywords'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_keywords</span><span class="s4">(),</span>
+            <span class="s5">'platform'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_platforms</span><span class="s4">(),</span>
+            <span class="s5">'classifiers'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_classifiers</span><span class="s4">(),</span>
+            <span class="s5">'download_url'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_download_url</span><span class="s4">(),</span>
+            <span class="s2"># PEP 314</span>
+            <span class="s5">'provides'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_provides</span><span class="s4">(),</span>
+            <span class="s5">'requires'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_requires</span><span class="s4">(),</span>
+            <span class="s5">'obsoletes'</span><span class="s4">: </span><span class="s1">meta</span><span class="s4">.</span><span class="s1">get_obsoletes</span><span class="s4">(),</span>
+        <span class="s4">}</span>
+        <span class="s3">if </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'provides'</span><span class="s4">] </span><span class="s3">or </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'requires'</span><span class="s4">] </span><span class="s3">or </span><span class="s1">data</span><span class="s4">[</span><span class="s5">'obsoletes'</span><span class="s4">]:</span>
+            <span class="s1">data</span><span class="s4">[</span><span class="s5">'metadata_version'</span><span class="s4">] = </span><span class="s5">'1.1'</span>
+        <span class="s3">return </span><span class="s1">data</span>
+
+    <span class="s3">def </span><span class="s1">post_to_server</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">data</span><span class="s4">, </span><span class="s1">auth</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):  </span><span class="s2"># noqa: C901</span>
+        <span class="s0">'''Post a query to the server, and return a string response.'''</span>
+        <span class="s3">if </span><span class="s5">'name' </span><span class="s3">in </span><span class="s1">data</span><span class="s4">:</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">announce</span><span class="s4">(</span>
+                <span class="s5">'Registering {} to {}'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">data</span><span class="s4">[</span><span class="s5">'name'</span><span class="s4">], </span><span class="s1">self</span><span class="s4">.</span><span class="s1">repository</span><span class="s4">),</span>
+                <span class="s1">logging</span><span class="s4">.</span><span class="s1">INFO</span><span class="s4">,</span>
+            <span class="s4">)</span>
+        <span class="s2"># Build up the MIME payload for the urllib2 POST data</span>
+        <span class="s1">boundary </span><span class="s4">= </span><span class="s5">'--------------GHSKFJDLGDS7543FJKLFHRE75642756743254'</span>
+        <span class="s1">sep_boundary </span><span class="s4">= </span><span class="s5">'</span><span class="s3">\n</span><span class="s5">--' </span><span class="s4">+ </span><span class="s1">boundary</span>
+        <span class="s1">end_boundary </span><span class="s4">= </span><span class="s1">sep_boundary </span><span class="s4">+ </span><span class="s5">'--'</span>
+        <span class="s1">body </span><span class="s4">= </span><span class="s1">io</span><span class="s4">.</span><span class="s1">StringIO</span><span class="s4">()</span>
+        <span class="s3">for </span><span class="s1">key</span><span class="s4">, </span><span class="s1">value </span><span class="s3">in </span><span class="s1">data</span><span class="s4">.</span><span class="s1">items</span><span class="s4">():</span>
+            <span class="s2"># handle multiple entries for the same name</span>
+            <span class="s3">if </span><span class="s1">type</span><span class="s4">(</span><span class="s1">value</span><span class="s4">) </span><span class="s3">not in </span><span class="s4">(</span><span class="s1">type</span><span class="s4">([]), </span><span class="s1">type</span><span class="s4">(())):</span>
+                <span class="s1">value </span><span class="s4">= [</span><span class="s1">value</span><span class="s4">]</span>
+            <span class="s3">for </span><span class="s1">value </span><span class="s3">in </span><span class="s1">value</span><span class="s4">:</span>
+                <span class="s1">value </span><span class="s4">= </span><span class="s1">str</span><span class="s4">(</span><span class="s1">value</span><span class="s4">)</span>
+                <span class="s1">body</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s1">sep_boundary</span><span class="s4">)</span>
+                <span class="s1">body</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">Content-Disposition: form-data; name=&quot;%s&quot;' </span><span class="s4">% </span><span class="s1">key</span><span class="s4">)</span>
+                <span class="s1">body</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s5">&quot;</span><span class="s3">\n\n</span><span class="s5">&quot;</span><span class="s4">)</span>
+                <span class="s1">body</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s1">value</span><span class="s4">)</span>
+                <span class="s3">if </span><span class="s1">value </span><span class="s3">and </span><span class="s1">value</span><span class="s4">[-</span><span class="s6">1</span><span class="s4">] == </span><span class="s5">'</span><span class="s3">\r</span><span class="s5">'</span><span class="s4">:</span>
+                    <span class="s1">body</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">)  </span><span class="s2"># write an extra newline (lurve Macs)</span>
+        <span class="s1">body</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s1">end_boundary</span><span class="s4">)</span>
+        <span class="s1">body</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s5">&quot;</span><span class="s3">\n</span><span class="s5">&quot;</span><span class="s4">)</span>
+        <span class="s1">body </span><span class="s4">= </span><span class="s1">body</span><span class="s4">.</span><span class="s1">getvalue</span><span class="s4">().</span><span class="s1">encode</span><span class="s4">(</span><span class="s5">&quot;utf-8&quot;</span><span class="s4">)</span>
+
+        <span class="s2"># build the Request</span>
+        <span class="s1">headers </span><span class="s4">= {</span>
+            <span class="s5">'Content-type'</span><span class="s4">: </span><span class="s5">'multipart/form-data; boundary=%s; charset=utf-8'</span>
+            <span class="s4">% </span><span class="s1">boundary</span><span class="s4">,</span>
+            <span class="s5">'Content-length'</span><span class="s4">: </span><span class="s1">str</span><span class="s4">(</span><span class="s1">len</span><span class="s4">(</span><span class="s1">body</span><span class="s4">)),</span>
+        <span class="s4">}</span>
+        <span class="s1">req </span><span class="s4">= </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">request</span><span class="s4">.</span><span class="s1">Request</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">repository</span><span class="s4">, </span><span class="s1">body</span><span class="s4">, </span><span class="s1">headers</span><span class="s4">)</span>
+
+        <span class="s2"># handle HTTP and include the Basic Auth handler</span>
+        <span class="s1">opener </span><span class="s4">= </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">request</span><span class="s4">.</span><span class="s1">build_opener</span><span class="s4">(</span>
+            <span class="s1">urllib</span><span class="s4">.</span><span class="s1">request</span><span class="s4">.</span><span class="s1">HTTPBasicAuthHandler</span><span class="s4">(</span><span class="s1">password_mgr</span><span class="s4">=</span><span class="s1">auth</span><span class="s4">)</span>
+        <span class="s4">)</span>
+        <span class="s1">data </span><span class="s4">= </span><span class="s5">''</span>
+        <span class="s3">try</span><span class="s4">:</span>
+            <span class="s1">result </span><span class="s4">= </span><span class="s1">opener</span><span class="s4">.</span><span class="s1">open</span><span class="s4">(</span><span class="s1">req</span><span class="s4">)</span>
+        <span class="s3">except </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">error</span><span class="s4">.</span><span class="s1">HTTPError </span><span class="s3">as </span><span class="s1">e</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">show_response</span><span class="s4">:</span>
+                <span class="s1">data </span><span class="s4">= </span><span class="s1">e</span><span class="s4">.</span><span class="s1">fp</span><span class="s4">.</span><span class="s1">read</span><span class="s4">()</span>
+            <span class="s1">result </span><span class="s4">= </span><span class="s1">e</span><span class="s4">.</span><span class="s1">code</span><span class="s4">, </span><span class="s1">e</span><span class="s4">.</span><span class="s1">msg</span>
+        <span class="s3">except </span><span class="s1">urllib</span><span class="s4">.</span><span class="s1">error</span><span class="s4">.</span><span class="s1">URLError </span><span class="s3">as </span><span class="s1">e</span><span class="s4">:</span>
+            <span class="s1">result </span><span class="s4">= </span><span class="s6">500</span><span class="s4">, </span><span class="s1">str</span><span class="s4">(</span><span class="s1">e</span><span class="s4">)</span>
+        <span class="s3">else</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">show_response</span><span class="s4">:</span>
+                <span class="s1">data </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_read_pypi_response</span><span class="s4">(</span><span class="s1">result</span><span class="s4">)</span>
+            <span class="s1">result </span><span class="s4">= </span><span class="s6">200</span><span class="s4">, </span><span class="s5">'OK'</span>
+        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">show_response</span><span class="s4">:</span>
+            <span class="s1">msg </span><span class="s4">= </span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">.</span><span class="s1">join</span><span class="s4">((</span><span class="s5">'-' </span><span class="s4">* </span><span class="s6">75</span><span class="s4">, </span><span class="s1">data</span><span class="s4">, </span><span class="s5">'-' </span><span class="s4">* </span><span class="s6">75</span><span class="s4">))</span>
+            <span class="s1">self</span><span class="s4">.</span><span class="s1">announce</span><span class="s4">(</span><span class="s1">msg</span><span class="s4">, </span><span class="s1">logging</span><span class="s4">.</span><span class="s1">INFO</span><span class="s4">)</span>
+        <span class="s3">return </span><span class="s1">result</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>base.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+base.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">abc</span>
+
+<span class="s0">from </span><span class="s1">pip</span><span class="s2">.</span><span class="s1">_internal</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">package_finder </span><span class="s0">import </span><span class="s1">PackageFinder</span>
+<span class="s0">from </span><span class="s1">pip</span><span class="s2">.</span><span class="s1">_internal</span><span class="s2">.</span><span class="s1">metadata</span><span class="s2">.</span><span class="s1">base </span><span class="s0">import </span><span class="s1">BaseDistribution</span>
+<span class="s0">from </span><span class="s1">pip</span><span class="s2">.</span><span class="s1">_internal</span><span class="s2">.</span><span class="s1">req </span><span class="s0">import </span><span class="s1">InstallRequirement</span>
+
+
+<span class="s0">class </span><span class="s1">AbstractDistribution</span><span class="s2">(</span><span class="s1">metaclass</span><span class="s2">=</span><span class="s1">abc</span><span class="s2">.</span><span class="s1">ABCMeta</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot;A base class for handling installable artifacts. 
+ 
+    The requirements for anything installable are as follows: 
+ 
+     - we must be able to determine the requirement name 
+       (or we can't correctly handle the non-upgrade case). 
+ 
+     - for packages with setup requirements, we must also be able 
+       to determine their requirements without installing additional 
+       packages (for the same reason as run-time dependencies) 
+ 
+     - we must be able to create a Distribution object exposing the 
+       above metadata. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">req</span><span class="s2">: </span><span class="s1">InstallRequirement</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">()</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">req </span><span class="s2">= </span><span class="s1">req</span>
+
+    <span class="s2">@</span><span class="s1">abc</span><span class="s2">.</span><span class="s1">abstractmethod</span>
+    <span class="s0">def </span><span class="s1">get_metadata_distribution</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; BaseDistribution</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span><span class="s2">()</span>
+
+    <span class="s2">@</span><span class="s1">abc</span><span class="s2">.</span><span class="s1">abstractmethod</span>
+    <span class="s0">def </span><span class="s1">prepare_distribution_metadata</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">finder</span><span class="s2">: </span><span class="s1">PackageFinder</span><span class="s2">,</span>
+        <span class="s1">build_isolation</span><span class="s2">: </span><span class="s1">bool</span><span class="s2">,</span>
+        <span class="s1">check_build_deps</span><span class="s2">: </span><span class="s1">bool</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span><span class="s2">()</span>
+</pre>
+</body>
+</html>

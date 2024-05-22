@@ -1,0 +1,97 @@
+<html>
+<head>
+<title>test_build_ext.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_build_ext.py</font>
+</center></td></tr></table>
+<pre><span class="s0">'''Tests for numpy.distutils.build_ext.'''</span>
+
+<span class="s2">import </span><span class="s1">os</span>
+<span class="s2">import </span><span class="s1">subprocess</span>
+<span class="s2">import </span><span class="s1">sys</span>
+<span class="s2">from </span><span class="s1">textwrap </span><span class="s2">import </span><span class="s1">indent</span><span class="s3">, </span><span class="s1">dedent</span>
+<span class="s2">import </span><span class="s1">pytest</span>
+<span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">testing </span><span class="s2">import </span><span class="s1">IS_WASM</span>
+
+<span class="s3">@</span><span class="s1">pytest</span><span class="s3">.</span><span class="s1">mark</span><span class="s3">.</span><span class="s1">skipif</span><span class="s3">(</span><span class="s1">IS_WASM</span><span class="s3">, </span><span class="s1">reason</span><span class="s3">=</span><span class="s4">&quot;cannot start subprocess in wasm&quot;</span><span class="s3">)</span>
+<span class="s3">@</span><span class="s1">pytest</span><span class="s3">.</span><span class="s1">mark</span><span class="s3">.</span><span class="s1">slow</span>
+<span class="s2">def </span><span class="s1">test_multi_fortran_libs_link</span><span class="s3">(</span><span class="s1">tmp_path</span><span class="s3">):</span>
+    <span class="s0">''' 
+    Ensures multiple &quot;fake&quot; static libraries are correctly linked. 
+    see gh-18295 
+    '''</span>
+
+    <span class="s5"># We need to make sure we actually have an f77 compiler.</span>
+    <span class="s5"># This is nontrivial, so we'll borrow the utilities</span>
+    <span class="s5"># from f2py tests:</span>
+    <span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">f2py</span><span class="s3">.</span><span class="s1">tests</span><span class="s3">.</span><span class="s1">util </span><span class="s2">import </span><span class="s1">has_f77_compiler</span>
+    <span class="s2">if not </span><span class="s1">has_f77_compiler</span><span class="s3">():</span>
+        <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s4">'No F77 compiler found'</span><span class="s3">)</span>
+
+    <span class="s5"># make some dummy sources</span>
+    <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">tmp_path </span><span class="s3">/ </span><span class="s4">'_dummy1.f'</span><span class="s3">, </span><span class="s4">'w'</span><span class="s3">) </span><span class="s2">as </span><span class="s1">fid</span><span class="s3">:</span>
+        <span class="s1">fid</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">indent</span><span class="s3">(</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">'''</span><span class="s2">\ 
+            </span><span class="s4">FUNCTION dummy_one() 
+            RETURN 
+            END FUNCTION'''</span><span class="s3">), </span><span class="s1">prefix</span><span class="s3">=</span><span class="s4">' '</span><span class="s3">*</span><span class="s6">6</span><span class="s3">))</span>
+    <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">tmp_path </span><span class="s3">/ </span><span class="s4">'_dummy2.f'</span><span class="s3">, </span><span class="s4">'w'</span><span class="s3">) </span><span class="s2">as </span><span class="s1">fid</span><span class="s3">:</span>
+        <span class="s1">fid</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">indent</span><span class="s3">(</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">'''</span><span class="s2">\ 
+            </span><span class="s4">FUNCTION dummy_two() 
+            RETURN 
+            END FUNCTION'''</span><span class="s3">), </span><span class="s1">prefix</span><span class="s3">=</span><span class="s4">' '</span><span class="s3">*</span><span class="s6">6</span><span class="s3">))</span>
+    <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">tmp_path </span><span class="s3">/ </span><span class="s4">'_dummy.c'</span><span class="s3">, </span><span class="s4">'w'</span><span class="s3">) </span><span class="s2">as </span><span class="s1">fid</span><span class="s3">:</span>
+        <span class="s5"># doesn't need to load - just needs to exist</span>
+        <span class="s1">fid</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">'int PyInit_dummyext;'</span><span class="s3">)</span>
+
+    <span class="s5"># make a setup file</span>
+    <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">tmp_path </span><span class="s3">/ </span><span class="s4">'setup.py'</span><span class="s3">, </span><span class="s4">'w'</span><span class="s3">) </span><span class="s2">as </span><span class="s1">fid</span><span class="s3">:</span>
+        <span class="s1">srctree </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">dirname</span><span class="s3">(</span><span class="s1">__file__</span><span class="s3">), </span><span class="s4">'..'</span><span class="s3">, </span><span class="s4">'..'</span><span class="s3">, </span><span class="s4">'..'</span><span class="s3">)</span>
+        <span class="s1">fid</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">f'''</span><span class="s2">\ 
+            </span><span class="s4">def configuration(parent_package=&quot;&quot;, top_path=None):</span>
+                <span class="s4">from numpy.distutils.misc_util import Configuration</span>
+                <span class="s4">config = Configuration(&quot;&quot;, parent_package, top_path)</span>
+                <span class="s4">config.add_library(&quot;dummy1&quot;, sources=[&quot;_dummy1.f&quot;])</span>
+                <span class="s4">config.add_library(&quot;dummy2&quot;, sources=[&quot;_dummy2.f&quot;])</span>
+                <span class="s4">config.add_extension(&quot;dummyext&quot;, sources=[&quot;_dummy.c&quot;], libraries=[&quot;dummy1&quot;, &quot;dummy2&quot;])</span>
+                <span class="s4">return config</span>
+
+
+            <span class="s4">if __name__ == &quot;__main__&quot;:</span>
+                <span class="s4">import sys</span>
+                <span class="s4">sys.path.insert(0, r&quot;</span><span class="s2">{</span><span class="s1">srctree</span><span class="s2">}</span><span class="s4">&quot;)</span>
+                <span class="s4">from numpy.distutils.core import setup</span>
+                <span class="s4">setup(**configuration(top_path=&quot;&quot;).todict())'''</span><span class="s3">))</span>
+
+    <span class="s5"># build the test extensino and &quot;install&quot; into a temporary directory</span>
+    <span class="s1">build_dir </span><span class="s3">= </span><span class="s1">tmp_path</span>
+    <span class="s1">subprocess</span><span class="s3">.</span><span class="s1">check_call</span><span class="s3">([</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span><span class="s3">, </span><span class="s4">'setup.py'</span><span class="s3">, </span><span class="s4">'build'</span><span class="s3">, </span><span class="s4">'install'</span><span class="s3">,</span>
+                           <span class="s4">'--prefix'</span><span class="s3">, </span><span class="s1">str</span><span class="s3">(</span><span class="s1">tmp_path </span><span class="s3">/ </span><span class="s4">'installdir'</span><span class="s3">),</span>
+                           <span class="s4">'--record'</span><span class="s3">, </span><span class="s1">str</span><span class="s3">(</span><span class="s1">tmp_path </span><span class="s3">/ </span><span class="s4">'tmp_install_log.txt'</span><span class="s3">),</span>
+                          <span class="s3">],</span>
+                          <span class="s1">cwd</span><span class="s3">=</span><span class="s1">str</span><span class="s3">(</span><span class="s1">build_dir</span><span class="s3">),</span>
+                      <span class="s3">)</span>
+    <span class="s5"># get the path to the so</span>
+    <span class="s1">so </span><span class="s3">= </span><span class="s2">None</span>
+    <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">tmp_path </span><span class="s3">/</span><span class="s4">'tmp_install_log.txt'</span><span class="s3">) </span><span class="s2">as </span><span class="s1">fid</span><span class="s3">:</span>
+        <span class="s2">for </span><span class="s1">line </span><span class="s2">in </span><span class="s1">fid</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s4">'dummyext' </span><span class="s2">in </span><span class="s1">line</span><span class="s3">:</span>
+                <span class="s1">so </span><span class="s3">= </span><span class="s1">line</span><span class="s3">.</span><span class="s1">strip</span><span class="s3">()</span>
+                <span class="s2">break</span>
+    <span class="s2">assert </span><span class="s1">so </span><span class="s2">is not None</span>
+</pre>
+</body>
+</html>

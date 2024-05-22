@@ -1,0 +1,147 @@
+<html>
+<head>
+<title>test_timeouts.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_timeouts.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">time</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Awaitable</span><span class="s2">, </span><span class="s1">Callable</span><span class="s2">, </span><span class="s1">TypeVar</span>
+
+<span class="s0">import </span><span class="s1">outcome</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s2">.. </span><span class="s0">import </span><span class="s1">_core</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">_tests</span><span class="s2">.</span><span class="s1">tutil </span><span class="s0">import </span><span class="s1">slow</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">_timeouts </span><span class="s0">import </span><span class="s2">*</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">assert_checkpoints</span>
+
+<span class="s1">T </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;T&quot;</span><span class="s2">)</span>
+
+
+<span class="s0">async def </span><span class="s1">check_takes_about</span><span class="s2">(</span><span class="s1">f</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[[], </span><span class="s1">Awaitable</span><span class="s2">[</span><span class="s1">T</span><span class="s2">]], </span><span class="s1">expected_dur</span><span class="s2">: </span><span class="s1">float</span><span class="s2">) </span><span class="s1">-&gt; T</span><span class="s2">:</span>
+    <span class="s1">start </span><span class="s2">= </span><span class="s1">time</span><span class="s2">.</span><span class="s1">perf_counter</span><span class="s2">()</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s0">await </span><span class="s1">outcome</span><span class="s2">.</span><span class="s1">acapture</span><span class="s2">(</span><span class="s1">f</span><span class="s2">)</span>
+    <span class="s1">dur </span><span class="s2">= </span><span class="s1">time</span><span class="s2">.</span><span class="s1">perf_counter</span><span class="s2">() - </span><span class="s1">start</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s1">dur </span><span class="s2">/ </span><span class="s1">expected_dur</span><span class="s2">)</span>
+    <span class="s4"># 1.5 is an arbitrary fudge factor because there's always some delay</span>
+    <span class="s4"># between when we become eligible to wake up and when we actually do. We</span>
+    <span class="s4"># used to sleep for 0.05, and regularly observed overruns of 1.6x on</span>
+    <span class="s4"># Appveyor, and then started seeing overruns of 2.3x on Travis's macOS, so</span>
+    <span class="s4"># now we bumped up the sleep to 1 second, marked the tests as slow, and</span>
+    <span class="s4"># hopefully now the proportional error will be less huge.</span>
+    <span class="s4">#</span>
+    <span class="s4"># We also also for durations that are a hair shorter than expected. For</span>
+    <span class="s4"># example, here's a run on Windows where a 1.0 second sleep was measured</span>
+    <span class="s4"># to take 0.9999999999999858 seconds:</span>
+    <span class="s4">#   https://ci.appveyor.com/project/njsmith/trio/build/1.0.768/job/3lbdyxl63q3h9s21</span>
+    <span class="s4"># I believe that what happened here is that Windows's low clock resolution</span>
+    <span class="s4"># meant that our calls to time.monotonic() returned exactly the same</span>
+    <span class="s4"># values as the calls inside the actual run loop, but the two subtractions</span>
+    <span class="s4"># returned slightly different values because the run loop's clock adds a</span>
+    <span class="s4"># random floating point offset to both times, which should cancel out, but</span>
+    <span class="s4"># lol floating point we got slightly different rounding errors. (That</span>
+    <span class="s4"># value above is exactly 128 ULPs below 1.0, which would make sense if it</span>
+    <span class="s4"># started as a 1 ULP error at a different dynamic range.)</span>
+    <span class="s0">assert </span><span class="s2">(</span><span class="s5">1 </span><span class="s2">- </span><span class="s5">1e-8</span><span class="s2">) &lt;= (</span><span class="s1">dur </span><span class="s2">/ </span><span class="s1">expected_dur</span><span class="s2">) &lt; </span><span class="s5">1.5</span>
+
+    <span class="s0">return </span><span class="s1">result</span><span class="s2">.</span><span class="s1">unwrap</span><span class="s2">()</span>
+
+
+<span class="s4"># How long to (attempt to) sleep for when testing. Smaller numbers make the</span>
+<span class="s4"># test suite go faster.</span>
+<span class="s1">TARGET </span><span class="s2">= </span><span class="s5">1.0</span>
+
+
+<span class="s2">@</span><span class="s1">slow</span>
+<span class="s0">async def </span><span class="s1">test_sleep</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s0">async def </span><span class="s1">sleep_1</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">await </span><span class="s1">sleep_until</span><span class="s2">(</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">current_time</span><span class="s2">() + </span><span class="s1">TARGET</span><span class="s2">)</span>
+
+    <span class="s0">await </span><span class="s1">check_takes_about</span><span class="s2">(</span><span class="s1">sleep_1</span><span class="s2">, </span><span class="s1">TARGET</span><span class="s2">)</span>
+
+    <span class="s0">async def </span><span class="s1">sleep_2</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s1">TARGET</span><span class="s2">)</span>
+
+    <span class="s0">await </span><span class="s1">check_takes_about</span><span class="s2">(</span><span class="s1">sleep_2</span><span class="s2">, </span><span class="s1">TARGET</span><span class="s2">)</span>
+
+    <span class="s0">with </span><span class="s1">assert_checkpoints</span><span class="s2">():</span>
+        <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">0</span><span class="s2">)</span>
+    <span class="s4"># This also serves as a test of the trivial move_on_at</span>
+    <span class="s0">with </span><span class="s1">move_on_at</span><span class="s2">(</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">current_time</span><span class="s2">()):</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">Cancelled</span><span class="s2">):</span>
+            <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">0</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">slow</span>
+<span class="s0">async def </span><span class="s1">test_move_on_after</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s0">async def </span><span class="s1">sleep_3</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">with </span><span class="s1">move_on_after</span><span class="s2">(</span><span class="s1">TARGET</span><span class="s2">):</span>
+            <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">100</span><span class="s2">)</span>
+
+    <span class="s0">await </span><span class="s1">check_takes_about</span><span class="s2">(</span><span class="s1">sleep_3</span><span class="s2">, </span><span class="s1">TARGET</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">slow</span>
+<span class="s0">async def </span><span class="s1">test_fail</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s0">async def </span><span class="s1">sleep_4</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">with </span><span class="s1">fail_at</span><span class="s2">(</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">current_time</span><span class="s2">() + </span><span class="s1">TARGET</span><span class="s2">):</span>
+            <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">100</span><span class="s2">)</span>
+
+    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">TooSlowError</span><span class="s2">):</span>
+        <span class="s0">await </span><span class="s1">check_takes_about</span><span class="s2">(</span><span class="s1">sleep_4</span><span class="s2">, </span><span class="s1">TARGET</span><span class="s2">)</span>
+
+    <span class="s0">with </span><span class="s1">fail_at</span><span class="s2">(</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">current_time</span><span class="s2">() + </span><span class="s5">100</span><span class="s2">):</span>
+        <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">0</span><span class="s2">)</span>
+
+    <span class="s0">async def </span><span class="s1">sleep_5</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">with </span><span class="s1">fail_after</span><span class="s2">(</span><span class="s1">TARGET</span><span class="s2">):</span>
+            <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">100</span><span class="s2">)</span>
+
+    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">TooSlowError</span><span class="s2">):</span>
+        <span class="s0">await </span><span class="s1">check_takes_about</span><span class="s2">(</span><span class="s1">sleep_5</span><span class="s2">, </span><span class="s1">TARGET</span><span class="s2">)</span>
+
+    <span class="s0">with </span><span class="s1">fail_after</span><span class="s2">(</span><span class="s5">100</span><span class="s2">):</span>
+        <span class="s0">await </span><span class="s1">sleep</span><span class="s2">(</span><span class="s5">0</span><span class="s2">)</span>
+
+
+<span class="s0">async def </span><span class="s1">test_timeouts_raise_value_error</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s4"># deadlines are allowed to be negative, but not delays.</span>
+    <span class="s4"># neither delays nor deadlines are allowed to be NaN</span>
+
+    <span class="s1">nan </span><span class="s2">= </span><span class="s1">float</span><span class="s2">(</span><span class="s3">&quot;nan&quot;</span><span class="s2">)</span>
+
+    <span class="s0">for </span><span class="s1">fun</span><span class="s2">, </span><span class="s1">val </span><span class="s0">in </span><span class="s2">(</span>
+        <span class="s2">(</span><span class="s1">sleep</span><span class="s2">, -</span><span class="s5">1</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">sleep</span><span class="s2">, </span><span class="s1">nan</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">sleep_until</span><span class="s2">, </span><span class="s1">nan</span><span class="s2">),</span>
+    <span class="s2">):</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">):</span>
+            <span class="s0">await </span><span class="s1">fun</span><span class="s2">(</span><span class="s1">val</span><span class="s2">)</span>
+
+    <span class="s0">for </span><span class="s1">cm</span><span class="s2">, </span><span class="s1">val </span><span class="s0">in </span><span class="s2">(</span>
+        <span class="s2">(</span><span class="s1">fail_after</span><span class="s2">, -</span><span class="s5">1</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">fail_after</span><span class="s2">, </span><span class="s1">nan</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">fail_at</span><span class="s2">, </span><span class="s1">nan</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">move_on_after</span><span class="s2">, -</span><span class="s5">1</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">move_on_after</span><span class="s2">, </span><span class="s1">nan</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s1">move_on_at</span><span class="s2">, </span><span class="s1">nan</span><span class="s2">),</span>
+    <span class="s2">):</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">):</span>
+            <span class="s0">with </span><span class="s1">cm</span><span class="s2">(</span><span class="s1">val</span><span class="s2">):</span>
+                <span class="s0">pass  </span><span class="s4"># pragma: no cover</span>
+</pre>
+</body>
+</html>

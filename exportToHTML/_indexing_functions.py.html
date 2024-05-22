@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>_indexing_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_indexing_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_array_object </span><span class="s0">import </span><span class="s1">Array</span>
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_dtypes </span><span class="s0">import </span><span class="s1">_integer_dtypes</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s0">def </span><span class="s1">take</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">int</span><span class="s2">] = </span><span class="s0">None</span><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.take &lt;numpy.take&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">axis </span><span class="s0">is None and </span><span class="s1">x</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">!= </span><span class="s4">1</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s5">&quot;axis must be specified when ndim &gt; 1&quot;</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">indices</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s5">&quot;Only integer dtypes are allowed in indexing&quot;</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">indices</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">!= </span><span class="s4">1</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s5">&quot;Only 1-dim indices array is supported&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">take</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">indices</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">))</span>
+</pre>
+</body>
+</html>

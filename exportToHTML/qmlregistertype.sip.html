@@ -1,0 +1,119 @@
+<html>
+<head>
+<title>qmlregistertype.sip</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qmlregistertype.sip</font>
+</center></td></tr></table>
+<pre><span class="s0">// This is the SIP specification of the qmlRegisterType() function.</span>
+<span class="s0">//</span>
+<span class="s0">// Copyright (c) 2023 Riverbank Computing Limited &lt;info@riverbankcomputing.com&gt;</span>
+<span class="s0">// </span>
+<span class="s0">// This file is part of PyQt5.</span>
+<span class="s0">// </span>
+<span class="s0">// This file may be used under the terms of the GNU General Public License</span>
+<span class="s0">// version 3.0 as published by the Free Software Foundation and appearing in</span>
+<span class="s0">// the file LICENSE included in the packaging of this file.  Please review the</span>
+<span class="s0">// following information to ensure the GNU General Public License version 3.0</span>
+<span class="s0">// requirements will be met: http://www.gnu.org/copyleft/gpl.html.</span>
+<span class="s0">// </span>
+<span class="s0">// If you do not wish to use this file under the terms of the GPL version 3.0</span>
+<span class="s0">// then you may purchase a commercial license.  For more information contact</span>
+<span class="s0">// info@riverbankcomputing.com.</span>
+<span class="s0">// </span>
+<span class="s0">// This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE</span>
+<span class="s0">// WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</span>
+
+
+<span class="s0">%ModuleHeaderCode</span>
+<span class="s0">#include &lt;qpyqml_api.h&gt;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">%ModuleCode</span>
+<span class="s0">// Imports from QtCore.</span>
+<span class="s0">pyqt5_qtqml_get_qmetaobject_t pyqt5_qtqml_get_qmetaobject;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">%PostInitialisationCode</span>
+<span class="s0">// Imports from QtCore.</span>
+<span class="s0">pyqt5_qtqml_get_qmetaobject = (pyqt5_qtqml_get_qmetaobject_t)sipImportSymbol(</span>
+        <span class="s0">&quot;pyqt5_get_qmetaobject&quot;);</span>
+<span class="s0">Q_ASSERT(pyqt5_qtqml_get_qmetaobject);</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">int qmlRegisterRevision(SIP_PYTYPE, int revision, const char *uri, int major,</span>
+        <span class="s0">int minor, SIP_PYTYPE attachedProperties = 0);</span>
+<span class="s0">%MethodCode</span>
+    <span class="s0">if ((sipRes = qpyqml_register_library_type((PyTypeObject *)a0, a2, a3, a4, 0, a1, (PyTypeObject *)a5)) &lt; 0)</span>
+        <span class="s0">sipError = sipErrorFail;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">%If (Qt_5_2_0 -)</span>
+<span class="s0">int qmlRegisterSingletonType(const QUrl &amp;url, const char *uri, int major,</span>
+        <span class="s0">int minor, const char *qmlName);</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">int qmlRegisterSingletonType(SIP_PYTYPE, const char *uri, int major, int minor,</span>
+        <span class="s0">const char *typeName, SIP_PYCALLABLE factory /TypeHint=&quot;Callable[[QQmlEngine, QJSEngine], Any]&quot;/);</span>
+<span class="s0">%MethodCode</span>
+    <span class="s0">if ((sipRes = qpyqml_register_singleton_type((PyTypeObject *)a0, a1, a2, a3, a4, a5)) &lt; 0)</span>
+        <span class="s0">sipError = sipErrorFail;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">int qmlRegisterType(const QUrl &amp;url, const char *uri, int major, int minor,</span>
+        <span class="s0">const char *qmlName);</span>
+
+
+<span class="s0">int qmlRegisterType(SIP_PYTYPE, SIP_PYTYPE attachedProperties = 0);</span>
+<span class="s0">%MethodCode</span>
+    <span class="s0">if ((sipRes = qpyqml_register_type((PyTypeObject *)a0, (PyTypeObject *)a1)) &lt; 0)</span>
+        <span class="s0">sipError = sipErrorFail;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">int qmlRegisterType(SIP_PYTYPE, const char *uri, int major, int minor,</span>
+        <span class="s0">const char *qmlName, SIP_PYTYPE attachedProperties = 0);</span>
+<span class="s0">%MethodCode</span>
+    <span class="s0">if ((sipRes = qpyqml_register_library_type((PyTypeObject *)a0, a1, a2, a3, a4, -1, (PyTypeObject *)a5)) &lt; 0)</span>
+        <span class="s0">sipError = sipErrorFail;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">int qmlRegisterType(SIP_PYTYPE, int revision, const char *uri, int major,</span>
+        <span class="s0">int minor, const char *qmlName, SIP_PYTYPE attachedProperties = 0);</span>
+<span class="s0">%MethodCode</span>
+    <span class="s0">if ((sipRes = qpyqml_register_library_type((PyTypeObject *)a0, a2, a3, a4, a5, a1, (PyTypeObject *)a6)) &lt; 0)</span>
+        <span class="s0">sipError = sipErrorFail;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">int qmlRegisterUncreatableType(SIP_PYTYPE, const char *uri, int major,</span>
+        <span class="s0">int minor, const char *qmlName, const QString &amp;reason);</span>
+<span class="s0">%MethodCode</span>
+    <span class="s0">if ((sipRes = qpyqml_register_uncreatable_type((PyTypeObject *)a0, a1, a2, a3, a4, *a5, -1)) &lt; 0)</span>
+        <span class="s0">sipError = sipErrorFail;</span>
+<span class="s0">%End</span>
+
+
+<span class="s0">int qmlRegisterUncreatableType(SIP_PYTYPE, int revision, const char *uri,</span>
+        <span class="s0">int major, int minor, const char *qmlName, const QString &amp;reason);</span>
+<span class="s0">%MethodCode</span>
+    <span class="s0">if ((sipRes = qpyqml_register_uncreatable_type((PyTypeObject *)a0, a2, a3, a4, a5, *a6, a1)) &lt; 0)</span>
+        <span class="s0">sipError = sipErrorFail;</span>
+<span class="s0">%End</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<html>
+<head>
+<title>compressors.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #7a7e85;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+compressors.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+Patched ``BZ2File`` and ``LZMAFile`` to handle pickle protocol 5. 
+&quot;&quot;&quot;</span>
+
+<span class="s2">from </span><span class="s1">__future__ </span><span class="s2">import </span><span class="s1">annotations</span>
+
+<span class="s2">from </span><span class="s1">pickle </span><span class="s2">import </span><span class="s1">PickleBuffer</span>
+
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">compat</span><span class="s3">.</span><span class="s1">_constants </span><span class="s2">import </span><span class="s1">PY310</span>
+
+<span class="s2">try</span><span class="s3">:</span>
+    <span class="s2">import </span><span class="s1">bz2</span>
+
+    <span class="s1">has_bz2 </span><span class="s3">= </span><span class="s2">True</span>
+<span class="s2">except </span><span class="s1">ImportError</span><span class="s3">:</span>
+    <span class="s1">has_bz2 </span><span class="s3">= </span><span class="s2">False</span>
+
+<span class="s2">try</span><span class="s3">:</span>
+    <span class="s2">import </span><span class="s1">lzma</span>
+
+    <span class="s1">has_lzma </span><span class="s3">= </span><span class="s2">True</span>
+<span class="s2">except </span><span class="s1">ImportError</span><span class="s3">:</span>
+    <span class="s1">has_lzma </span><span class="s3">= </span><span class="s2">False</span>
+
+
+<span class="s2">def </span><span class="s1">flatten_buffer</span><span class="s3">(</span>
+    <span class="s1">b</span><span class="s3">: </span><span class="s1">bytes </span><span class="s3">| </span><span class="s1">bytearray </span><span class="s3">| </span><span class="s1">memoryview </span><span class="s3">| </span><span class="s1">PickleBuffer</span><span class="s3">,</span>
+<span class="s3">) </span><span class="s1">-&gt; bytes </span><span class="s3">| </span><span class="s1">bytearray </span><span class="s3">| </span><span class="s1">memoryview</span><span class="s3">:</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Return some 1-D `uint8` typed buffer. 
+ 
+    Coerces anything that does not match that description to one that does 
+    without copying if possible (otherwise will copy). 
+    &quot;&quot;&quot;</span>
+
+    <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">b</span><span class="s3">, (</span><span class="s1">bytes</span><span class="s3">, </span><span class="s1">bytearray</span><span class="s3">)):</span>
+        <span class="s2">return </span><span class="s1">b</span>
+
+    <span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">b</span><span class="s3">, </span><span class="s1">PickleBuffer</span><span class="s3">):</span>
+        <span class="s1">b </span><span class="s3">= </span><span class="s1">PickleBuffer</span><span class="s3">(</span><span class="s1">b</span><span class="s3">)</span>
+
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s4"># coerce to 1-D `uint8` C-contiguous `memoryview` zero-copy</span>
+        <span class="s2">return </span><span class="s1">b</span><span class="s3">.</span><span class="s1">raw</span><span class="s3">()</span>
+    <span class="s2">except </span><span class="s1">BufferError</span><span class="s3">:</span>
+        <span class="s4"># perform in-memory copy if buffer is not contiguous</span>
+        <span class="s2">return </span><span class="s1">memoryview</span><span class="s3">(</span><span class="s1">b</span><span class="s3">).</span><span class="s1">tobytes</span><span class="s3">(</span><span class="s5">&quot;A&quot;</span><span class="s3">)</span>
+
+
+<span class="s2">if </span><span class="s1">has_bz2</span><span class="s3">:</span>
+
+    <span class="s2">class </span><span class="s1">BZ2File</span><span class="s3">(</span><span class="s1">bz2</span><span class="s3">.</span><span class="s1">BZ2File</span><span class="s3">):</span>
+        <span class="s2">if not </span><span class="s1">PY310</span><span class="s3">:</span>
+
+            <span class="s2">def </span><span class="s1">write</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">b</span><span class="s3">) </span><span class="s1">-&gt; int</span><span class="s3">:</span>
+                <span class="s4"># Workaround issue where `bz2.BZ2File` expects `len`</span>
+                <span class="s4"># to return the number of bytes in `b` by converting</span>
+                <span class="s4"># `b` into something that meets that constraint with</span>
+                <span class="s4"># minimal copying.</span>
+                <span class="s4">#</span>
+                <span class="s4"># Note: This is fixed in Python 3.10.</span>
+                <span class="s2">return </span><span class="s1">super</span><span class="s3">().</span><span class="s1">write</span><span class="s3">(</span><span class="s1">flatten_buffer</span><span class="s3">(</span><span class="s1">b</span><span class="s3">))</span>
+
+
+<span class="s2">if </span><span class="s1">has_lzma</span><span class="s3">:</span>
+
+    <span class="s2">class </span><span class="s1">LZMAFile</span><span class="s3">(</span><span class="s1">lzma</span><span class="s3">.</span><span class="s1">LZMAFile</span><span class="s3">):</span>
+        <span class="s2">if not </span><span class="s1">PY310</span><span class="s3">:</span>
+
+            <span class="s2">def </span><span class="s1">write</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">b</span><span class="s3">) </span><span class="s1">-&gt; int</span><span class="s3">:</span>
+                <span class="s4"># Workaround issue where `lzma.LZMAFile` expects `len`</span>
+                <span class="s4"># to return the number of bytes in `b` by converting</span>
+                <span class="s4"># `b` into something that meets that constraint with</span>
+                <span class="s4"># minimal copying.</span>
+                <span class="s4">#</span>
+                <span class="s4"># Note: This is fixed in Python 3.10.</span>
+                <span class="s2">return </span><span class="s1">super</span><span class="s3">().</span><span class="s1">write</span><span class="s3">(</span><span class="s1">flatten_buffer</span><span class="s3">(</span><span class="s1">b</span><span class="s3">))</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<html>
+<head>
+<title>test_tz_convert.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_tz_convert.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">DataFrame</span><span class="s2">,</span>
+    <span class="s1">Index</span><span class="s2">,</span>
+    <span class="s1">MultiIndex</span><span class="s2">,</span>
+    <span class="s1">Series</span><span class="s2">,</span>
+    <span class="s1">date_range</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">import </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_testing </span><span class="s0">as </span><span class="s1">tm</span>
+
+
+<span class="s0">class </span><span class="s1">TestTZConvert</span><span class="s2">:</span>
+    <span class="s0">def </span><span class="s1">test_tz_convert</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">frame_or_series</span><span class="s2">):</span>
+        <span class="s1">rng </span><span class="s2">= </span><span class="s1">date_range</span><span class="s2">(</span><span class="s3">&quot;1/1/2011&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">200</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s3">&quot;D&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s3">&quot;US/Eastern&quot;</span><span class="s2">)</span>
+
+        <span class="s1">obj </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s3">&quot;a&quot;</span><span class="s2">: </span><span class="s4">1</span><span class="s2">}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">rng</span><span class="s2">)</span>
+        <span class="s1">obj </span><span class="s2">= </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">get_obj</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">frame_or_series</span><span class="s2">)</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">tz_convert</span><span class="s2">(</span><span class="s3">&quot;Europe/Berlin&quot;</span><span class="s2">)</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s3">&quot;a&quot;</span><span class="s2">: </span><span class="s4">1</span><span class="s2">}, </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">tz_convert</span><span class="s2">(</span><span class="s3">&quot;Europe/Berlin&quot;</span><span class="s2">))</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">get_obj</span><span class="s2">(</span><span class="s1">expected</span><span class="s2">, </span><span class="s1">frame_or_series</span><span class="s2">)</span>
+
+        <span class="s0">assert </span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">tz</span><span class="s2">.</span><span class="s1">zone </span><span class="s2">== </span><span class="s3">&quot;Europe/Berlin&quot;</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_tz_convert_axis1</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">rng </span><span class="s2">= </span><span class="s1">date_range</span><span class="s2">(</span><span class="s3">&quot;1/1/2011&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">200</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s3">&quot;D&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s3">&quot;US/Eastern&quot;</span><span class="s2">)</span>
+
+        <span class="s1">obj </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s3">&quot;a&quot;</span><span class="s2">: </span><span class="s4">1</span><span class="s2">}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">rng</span><span class="s2">)</span>
+
+        <span class="s1">obj </span><span class="s2">= </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">T</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">tz_convert</span><span class="s2">(</span><span class="s3">&quot;Europe/Berlin&quot;</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s4">1</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">result</span><span class="s2">.</span><span class="s1">columns</span><span class="s2">.</span><span class="s1">tz</span><span class="s2">.</span><span class="s1">zone </span><span class="s2">== </span><span class="s3">&quot;Europe/Berlin&quot;</span>
+
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s3">&quot;a&quot;</span><span class="s2">: </span><span class="s4">1</span><span class="s2">}, </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">tz_convert</span><span class="s2">(</span><span class="s3">&quot;Europe/Berlin&quot;</span><span class="s2">))</span>
+
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">.</span><span class="s1">T</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_tz_convert_naive</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">frame_or_series</span><span class="s2">):</span>
+        <span class="s5"># can't convert tz-naive</span>
+        <span class="s1">rng </span><span class="s2">= </span><span class="s1">date_range</span><span class="s2">(</span><span class="s3">&quot;1/1/2011&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">200</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s3">&quot;D&quot;</span><span class="s2">)</span>
+        <span class="s1">ts </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s4">1</span><span class="s2">, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">rng</span><span class="s2">)</span>
+        <span class="s1">ts </span><span class="s2">= </span><span class="s1">frame_or_series</span><span class="s2">(</span><span class="s1">ts</span><span class="s2">)</span>
+
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s3">&quot;Cannot convert tz-naive&quot;</span><span class="s2">):</span>
+            <span class="s1">ts</span><span class="s2">.</span><span class="s1">tz_convert</span><span class="s2">(</span><span class="s3">&quot;US/Eastern&quot;</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s3">&quot;fn&quot;</span><span class="s2">, [</span><span class="s3">&quot;tz_localize&quot;</span><span class="s2">, </span><span class="s3">&quot;tz_convert&quot;</span><span class="s2">])</span>
+    <span class="s0">def </span><span class="s1">test_tz_convert_and_localize</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">):</span>
+        <span class="s1">l0 </span><span class="s2">= </span><span class="s1">date_range</span><span class="s2">(</span><span class="s3">&quot;20140701&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">5</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s3">&quot;D&quot;</span><span class="s2">)</span>
+        <span class="s1">l1 </span><span class="s2">= </span><span class="s1">date_range</span><span class="s2">(</span><span class="s3">&quot;20140701&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">5</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s3">&quot;D&quot;</span><span class="s2">)</span>
+
+        <span class="s1">int_idx </span><span class="s2">= </span><span class="s1">Index</span><span class="s2">(</span><span class="s1">range</span><span class="s2">(</span><span class="s4">5</span><span class="s2">))</span>
+
+        <span class="s0">if </span><span class="s1">fn </span><span class="s2">== </span><span class="s3">&quot;tz_convert&quot;</span><span class="s2">:</span>
+            <span class="s1">l0 </span><span class="s2">= </span><span class="s1">l0</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s3">&quot;UTC&quot;</span><span class="s2">)</span>
+            <span class="s1">l1 </span><span class="s2">= </span><span class="s1">l1</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s3">&quot;UTC&quot;</span><span class="s2">)</span>
+
+        <span class="s0">for </span><span class="s1">idx </span><span class="s0">in </span><span class="s2">[</span><span class="s1">l0</span><span class="s2">, </span><span class="s1">l1</span><span class="s2">]:</span>
+            <span class="s1">l0_expected </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">idx</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">)</span>
+            <span class="s1">l1_expected </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">idx</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">)</span>
+
+            <span class="s1">df1 </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">(</span><span class="s4">5</span><span class="s2">), </span><span class="s1">index</span><span class="s2">=</span><span class="s1">l0</span><span class="s2">)</span>
+            <span class="s1">df1 </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">df1</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">)</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">df1</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">l0_expected</span><span class="s2">)</span>
+
+            <span class="s5"># MultiIndex</span>
+            <span class="s5"># GH7846</span>
+            <span class="s1">df2 </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">(</span><span class="s4">5</span><span class="s2">), </span><span class="s1">MultiIndex</span><span class="s2">.</span><span class="s1">from_arrays</span><span class="s2">([</span><span class="s1">l0</span><span class="s2">, </span><span class="s1">l1</span><span class="s2">]))</span>
+
+            <span class="s5"># freq is not preserved in MultiIndex construction</span>
+            <span class="s1">l1_expected </span><span class="s2">= </span><span class="s1">l1_expected</span><span class="s2">.</span><span class="s1">_with_freq</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+            <span class="s1">l0_expected </span><span class="s2">= </span><span class="s1">l0_expected</span><span class="s2">.</span><span class="s1">_with_freq</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+            <span class="s1">l1 </span><span class="s2">= </span><span class="s1">l1</span><span class="s2">.</span><span class="s1">_with_freq</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+            <span class="s1">l0 </span><span class="s2">= </span><span class="s1">l0</span><span class="s2">.</span><span class="s1">_with_freq</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+
+            <span class="s1">df3 </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">df2</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">, </span><span class="s1">level</span><span class="s2">=</span><span class="s4">0</span><span class="s2">)</span>
+            <span class="s0">assert not </span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">0</span><span class="s2">].</span><span class="s1">equals</span><span class="s2">(</span><span class="s1">l0</span><span class="s2">)</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">0</span><span class="s2">], </span><span class="s1">l0_expected</span><span class="s2">)</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">1</span><span class="s2">], </span><span class="s1">l1</span><span class="s2">)</span>
+            <span class="s0">assert not </span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">1</span><span class="s2">].</span><span class="s1">equals</span><span class="s2">(</span><span class="s1">l1_expected</span><span class="s2">)</span>
+
+            <span class="s1">df3 </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">df2</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">, </span><span class="s1">level</span><span class="s2">=</span><span class="s4">1</span><span class="s2">)</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">0</span><span class="s2">], </span><span class="s1">l0</span><span class="s2">)</span>
+            <span class="s0">assert not </span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">0</span><span class="s2">].</span><span class="s1">equals</span><span class="s2">(</span><span class="s1">l0_expected</span><span class="s2">)</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">1</span><span class="s2">], </span><span class="s1">l1_expected</span><span class="s2">)</span>
+            <span class="s0">assert not </span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">1</span><span class="s2">].</span><span class="s1">equals</span><span class="s2">(</span><span class="s1">l1</span><span class="s2">)</span>
+
+            <span class="s1">df4 </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">(</span><span class="s4">5</span><span class="s2">), </span><span class="s1">MultiIndex</span><span class="s2">.</span><span class="s1">from_arrays</span><span class="s2">([</span><span class="s1">int_idx</span><span class="s2">, </span><span class="s1">l0</span><span class="s2">]))</span>
+
+            <span class="s5"># TODO: untested</span>
+            <span class="s1">getattr</span><span class="s2">(</span><span class="s1">df4</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">, </span><span class="s1">level</span><span class="s2">=</span><span class="s4">1</span><span class="s2">)</span>
+
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">0</span><span class="s2">], </span><span class="s1">l0</span><span class="s2">)</span>
+            <span class="s0">assert not </span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">0</span><span class="s2">].</span><span class="s1">equals</span><span class="s2">(</span><span class="s1">l0_expected</span><span class="s2">)</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">1</span><span class="s2">], </span><span class="s1">l1_expected</span><span class="s2">)</span>
+            <span class="s0">assert not </span><span class="s1">df3</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s4">1</span><span class="s2">].</span><span class="s1">equals</span><span class="s2">(</span><span class="s1">l1</span><span class="s2">)</span>
+
+        <span class="s5"># Bad Inputs</span>
+
+        <span class="s5"># Not DatetimeIndex / PeriodIndex</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s3">&quot;DatetimeIndex&quot;</span><span class="s2">):</span>
+            <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">index</span><span class="s2">=</span><span class="s1">int_idx</span><span class="s2">)</span>
+            <span class="s1">getattr</span><span class="s2">(</span><span class="s1">df</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">)</span>
+
+        <span class="s5"># Not DatetimeIndex / PeriodIndex</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s3">&quot;DatetimeIndex&quot;</span><span class="s2">):</span>
+            <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">(</span><span class="s4">5</span><span class="s2">), </span><span class="s1">MultiIndex</span><span class="s2">.</span><span class="s1">from_arrays</span><span class="s2">([</span><span class="s1">int_idx</span><span class="s2">, </span><span class="s1">l0</span><span class="s2">]))</span>
+            <span class="s1">getattr</span><span class="s2">(</span><span class="s1">df</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">, </span><span class="s1">level</span><span class="s2">=</span><span class="s4">0</span><span class="s2">)</span>
+
+        <span class="s5"># Invalid level</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s3">&quot;not valid&quot;</span><span class="s2">):</span>
+            <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">index</span><span class="s2">=</span><span class="s1">l0</span><span class="s2">)</span>
+            <span class="s1">getattr</span><span class="s2">(</span><span class="s1">df</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">)(</span><span class="s3">&quot;US/Pacific&quot;</span><span class="s2">, </span><span class="s1">level</span><span class="s2">=</span><span class="s4">1</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s3">&quot;copy&quot;</span><span class="s2">, [</span><span class="s0">True</span><span class="s2">, </span><span class="s0">False</span><span class="s2">])</span>
+    <span class="s0">def </span><span class="s1">test_tz_convert_copy_inplace_mutate</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">, </span><span class="s1">frame_or_series</span><span class="s2">):</span>
+        <span class="s5"># GH#6326</span>
+        <span class="s1">obj </span><span class="s2">= </span><span class="s1">frame_or_series</span><span class="s2">(</span>
+            <span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">0</span><span class="s2">, </span><span class="s4">5</span><span class="s2">),</span>
+            <span class="s1">index</span><span class="s2">=</span><span class="s1">date_range</span><span class="s2">(</span><span class="s3">&quot;20131027&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">5</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s3">&quot;1H&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s3">&quot;Europe/Berlin&quot;</span><span class="s2">),</span>
+        <span class="s2">)</span>
+        <span class="s1">orig </span><span class="s2">= </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">tz_convert</span><span class="s2">(</span><span class="s3">&quot;UTC&quot;</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s1">copy</span><span class="s2">)</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">frame_or_series</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">0</span><span class="s2">, </span><span class="s4">5</span><span class="s2">), </span><span class="s1">index</span><span class="s2">=</span><span class="s1">obj</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">tz_convert</span><span class="s2">(</span><span class="s3">&quot;UTC&quot;</span><span class="s2">))</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">orig</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">result</span><span class="s2">.</span><span class="s1">index </span><span class="s0">is not </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">index</span>
+        <span class="s0">assert </span><span class="s1">result </span><span class="s0">is not </span><span class="s1">obj</span>
+</pre>
+</body>
+</html>

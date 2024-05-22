@@ -1,0 +1,294 @@
+<html>
+<head>
+<title>test_min_max.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_min_max.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_libs</span><span class="s2">.</span><span class="s1">tslibs </span><span class="s0">import </span><span class="s1">iNaT</span>
+
+<span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">DataFrame</span><span class="s2">,</span>
+    <span class="s1">Index</span><span class="s2">,</span>
+    <span class="s1">Series</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">import </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_testing </span><span class="s0">as </span><span class="s1">tm</span>
+
+
+<span class="s0">def </span><span class="s1">test_max_min_non_numeric</span><span class="s2">():</span>
+    <span class="s3"># #2700</span>
+    <span class="s1">aa </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;nn&quot;</span><span class="s2">: [</span><span class="s5">11</span><span class="s2">, </span><span class="s5">11</span><span class="s2">, </span><span class="s5">22</span><span class="s2">, </span><span class="s5">22</span><span class="s2">], </span><span class="s4">&quot;ii&quot;</span><span class="s2">: [</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s5">3</span><span class="s2">, </span><span class="s5">4</span><span class="s2">], </span><span class="s4">&quot;ss&quot;</span><span class="s2">: </span><span class="s5">4 </span><span class="s2">* [</span><span class="s4">&quot;mama&quot;</span><span class="s2">]})</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">aa</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;nn&quot;</span><span class="s2">).</span><span class="s1">max</span><span class="s2">()</span>
+    <span class="s0">assert </span><span class="s4">&quot;ss&quot; </span><span class="s0">in </span><span class="s1">result</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">aa</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;nn&quot;</span><span class="s2">).</span><span class="s1">max</span><span class="s2">(</span><span class="s1">numeric_only</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+    <span class="s0">assert </span><span class="s4">&quot;ss&quot; </span><span class="s0">in </span><span class="s1">result</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">aa</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;nn&quot;</span><span class="s2">).</span><span class="s1">min</span><span class="s2">()</span>
+    <span class="s0">assert </span><span class="s4">&quot;ss&quot; </span><span class="s0">in </span><span class="s1">result</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">aa</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;nn&quot;</span><span class="s2">).</span><span class="s1">min</span><span class="s2">(</span><span class="s1">numeric_only</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+    <span class="s0">assert </span><span class="s4">&quot;ss&quot; </span><span class="s0">in </span><span class="s1">result</span>
+
+
+<span class="s0">def </span><span class="s1">test_max_min_object_multiple_columns</span><span class="s2">(</span><span class="s1">using_array_manager</span><span class="s2">):</span>
+    <span class="s3"># GH#41111 case where the aggregation is valid for some columns but not</span>
+    <span class="s3"># others; we split object blocks column-wise, consistent with</span>
+    <span class="s3"># DataFrame._reduce</span>
+
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span>
+        <span class="s2">{</span>
+            <span class="s4">&quot;A&quot;</span><span class="s2">: [</span><span class="s5">1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s5">3</span><span class="s2">],</span>
+            <span class="s4">&quot;B&quot;</span><span class="s2">: [</span><span class="s5">1</span><span class="s2">, </span><span class="s4">&quot;foo&quot;</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s4">&quot;bar&quot;</span><span class="s2">, </span><span class="s0">False</span><span class="s2">],</span>
+            <span class="s4">&quot;C&quot;</span><span class="s2">: [</span><span class="s4">&quot;a&quot;</span><span class="s2">, </span><span class="s4">&quot;b&quot;</span><span class="s2">, </span><span class="s4">&quot;c&quot;</span><span class="s2">, </span><span class="s4">&quot;d&quot;</span><span class="s2">, </span><span class="s4">&quot;e&quot;</span><span class="s2">],</span>
+        <span class="s2">}</span>
+    <span class="s2">)</span>
+    <span class="s1">df</span><span class="s2">.</span><span class="s1">_consolidate_inplace</span><span class="s2">()  </span><span class="s3"># should already be consolidate, but double-check</span>
+    <span class="s0">if not </span><span class="s1">using_array_manager</span><span class="s2">:</span>
+        <span class="s0">assert </span><span class="s1">len</span><span class="s2">(</span><span class="s1">df</span><span class="s2">.</span><span class="s1">_mgr</span><span class="s2">.</span><span class="s1">blocks</span><span class="s2">) == </span><span class="s5">2</span>
+
+    <span class="s1">gb </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;A&quot;</span><span class="s2">)</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">[[</span><span class="s4">&quot;C&quot;</span><span class="s2">]].</span><span class="s1">max</span><span class="s2">()</span>
+    <span class="s3"># &quot;max&quot; is valid for column &quot;C&quot; but not for &quot;B&quot;</span>
+    <span class="s1">ei </span><span class="s2">= </span><span class="s1">Index</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s5">3</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;A&quot;</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;C&quot;</span><span class="s2">: [</span><span class="s4">&quot;b&quot;</span><span class="s2">, </span><span class="s4">&quot;d&quot;</span><span class="s2">, </span><span class="s4">&quot;e&quot;</span><span class="s2">]}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">ei</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">[[</span><span class="s4">&quot;C&quot;</span><span class="s2">]].</span><span class="s1">min</span><span class="s2">()</span>
+    <span class="s3"># &quot;min&quot; is valid for column &quot;C&quot; but not for &quot;B&quot;</span>
+    <span class="s1">ei </span><span class="s2">= </span><span class="s1">Index</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s5">3</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;A&quot;</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;C&quot;</span><span class="s2">: [</span><span class="s4">&quot;a&quot;</span><span class="s2">, </span><span class="s4">&quot;c&quot;</span><span class="s2">, </span><span class="s4">&quot;e&quot;</span><span class="s2">]}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">ei</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_min_date_with_nans</span><span class="s2">():</span>
+    <span class="s3"># GH26321</span>
+    <span class="s1">dates </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">to_datetime</span><span class="s2">(</span>
+        <span class="s1">Series</span><span class="s2">([</span><span class="s4">&quot;2019-05-09&quot;</span><span class="s2">, </span><span class="s4">&quot;2019-05-09&quot;</span><span class="s2">, </span><span class="s4">&quot;2019-05-09&quot;</span><span class="s2">]), </span><span class="s1">format</span><span class="s2">=</span><span class="s4">&quot;%Y-%m-%d&quot;</span>
+    <span class="s2">).</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">date</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;a&quot;</span><span class="s2">: [</span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">, </span><span class="s4">&quot;1&quot;</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">], </span><span class="s4">&quot;b&quot;</span><span class="s2">: [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">], </span><span class="s4">&quot;c&quot;</span><span class="s2">: </span><span class="s1">dates</span><span class="s2">})</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;b&quot;</span><span class="s2">, </span><span class="s1">as_index</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)[</span><span class="s4">&quot;c&quot;</span><span class="s2">].</span><span class="s1">min</span><span class="s2">()[</span><span class="s4">&quot;c&quot;</span><span class="s2">]</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">to_datetime</span><span class="s2">(</span>
+        <span class="s1">Series</span><span class="s2">([</span><span class="s4">&quot;2019-05-09&quot;</span><span class="s2">, </span><span class="s4">&quot;2019-05-09&quot;</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;c&quot;</span><span class="s2">), </span><span class="s1">format</span><span class="s2">=</span><span class="s4">&quot;%Y-%m-%d&quot;</span>
+    <span class="s2">).</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">date</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;b&quot;</span><span class="s2">)[</span><span class="s4">&quot;c&quot;</span><span class="s2">].</span><span class="s1">min</span><span class="s2">()</span>
+    <span class="s1">expected</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">name </span><span class="s2">= </span><span class="s4">&quot;b&quot;</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_max_inat</span><span class="s2">():</span>
+    <span class="s3"># GH#40767 dont interpret iNaT as NaN</span>
+    <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s1">iNaT</span><span class="s2">])</span>
+    <span class="s1">key </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">)</span>
+    <span class="s1">gb </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s1">key</span><span class="s2">)</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">max</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">2</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">({</span><span class="s5">1</span><span class="s2">: </span><span class="s5">1</span><span class="s2">}, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">, </span><span class="s1">check_exact</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">min</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">2</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">({</span><span class="s5">1</span><span class="s2">: </span><span class="s1">iNaT</span><span class="s2">}, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">, </span><span class="s1">check_exact</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+    <span class="s3"># not enough entries -&gt; gets masked to NaN</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">min</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">3</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">({</span><span class="s5">1</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">})</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">, </span><span class="s1">check_exact</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_max_inat_not_all_na</span><span class="s2">():</span>
+    <span class="s3"># GH#40767 dont interpret iNaT as NaN</span>
+
+    <span class="s3"># make sure we dont round iNaT+1 to iNaT</span>
+    <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s1">iNaT</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s1">iNaT </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">])</span>
+    <span class="s1">gb </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s5">3</span><span class="s2">, </span><span class="s5">3</span><span class="s2">])</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">min</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">2</span><span class="s2">)</span>
+
+    <span class="s3"># Note: in converting to float64, the iNaT + 1 maps to iNaT, i.e. is lossy</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">({</span><span class="s5">1</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">, </span><span class="s5">2</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">, </span><span class="s5">3</span><span class="s2">: </span><span class="s1">iNaT </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">})</span>
+    <span class="s1">expected</span><span class="s2">.</span><span class="s1">index </span><span class="s2">= </span><span class="s1">expected</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">int</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">, </span><span class="s1">check_exact</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s4">&quot;func&quot;</span><span class="s2">, [</span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">])</span>
+<span class="s0">def </span><span class="s1">test_groupby_aggregate_period_column</span><span class="s2">(</span><span class="s1">func</span><span class="s2">):</span>
+    <span class="s3"># GH 31471</span>
+    <span class="s1">groups </span><span class="s2">= [</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">]</span>
+    <span class="s1">periods </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">period_range</span><span class="s2">(</span><span class="s4">&quot;2020&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s5">2</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s4">&quot;Y&quot;</span><span class="s2">)</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;a&quot;</span><span class="s2">: </span><span class="s1">groups</span><span class="s2">, </span><span class="s4">&quot;b&quot;</span><span class="s2">: </span><span class="s1">periods</span><span class="s2">})</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;a&quot;</span><span class="s2">)[</span><span class="s4">&quot;b&quot;</span><span class="s2">], </span><span class="s1">func</span><span class="s2">)()</span>
+    <span class="s1">idx </span><span class="s2">= </span><span class="s1">Index</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;a&quot;</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">periods</span><span class="s2">, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">idx</span><span class="s2">, </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;b&quot;</span><span class="s2">)</span>
+
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s4">&quot;func&quot;</span><span class="s2">, [</span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">])</span>
+<span class="s0">def </span><span class="s1">test_groupby_aggregate_period_frame</span><span class="s2">(</span><span class="s1">func</span><span class="s2">):</span>
+    <span class="s3"># GH 31471</span>
+    <span class="s1">groups </span><span class="s2">= [</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">]</span>
+    <span class="s1">periods </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">period_range</span><span class="s2">(</span><span class="s4">&quot;2020&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s5">2</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s4">&quot;Y&quot;</span><span class="s2">)</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;a&quot;</span><span class="s2">: </span><span class="s1">groups</span><span class="s2">, </span><span class="s4">&quot;b&quot;</span><span class="s2">: </span><span class="s1">periods</span><span class="s2">})</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;a&quot;</span><span class="s2">), </span><span class="s1">func</span><span class="s2">)()</span>
+    <span class="s1">idx </span><span class="s2">= </span><span class="s1">Index</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;a&quot;</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;b&quot;</span><span class="s2">: </span><span class="s1">periods</span><span class="s2">}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">idx</span><span class="s2">)</span>
+
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_aggregate_numeric_object_dtype</span><span class="s2">():</span>
+    <span class="s3"># https://github.com/pandas-dev/pandas/issues/39329</span>
+    <span class="s3"># simplified case: multiple object columns where one is all-NaN</span>
+    <span class="s3"># -&gt; gets split as the all-NaN is inferred as float</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span>
+        <span class="s2">{</span><span class="s4">&quot;key&quot;</span><span class="s2">: [</span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">], </span><span class="s4">&quot;col1&quot;</span><span class="s2">: </span><span class="s1">list</span><span class="s2">(</span><span class="s4">&quot;abcd&quot;</span><span class="s2">), </span><span class="s4">&quot;col2&quot;</span><span class="s2">: [</span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">] * </span><span class="s5">4</span><span class="s2">},</span>
+    <span class="s2">).</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">object</span><span class="s2">)</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;key&quot;</span><span class="s2">).</span><span class="s1">min</span><span class="s2">()</span>
+    <span class="s1">expected </span><span class="s2">= (</span>
+        <span class="s1">DataFrame</span><span class="s2">(</span>
+            <span class="s2">{</span><span class="s4">&quot;key&quot;</span><span class="s2">: [</span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">], </span><span class="s4">&quot;col1&quot;</span><span class="s2">: [</span><span class="s4">&quot;a&quot;</span><span class="s2">, </span><span class="s4">&quot;c&quot;</span><span class="s2">], </span><span class="s4">&quot;col2&quot;</span><span class="s2">: [</span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">]},</span>
+        <span class="s2">)</span>
+        <span class="s2">.</span><span class="s1">set_index</span><span class="s2">(</span><span class="s4">&quot;key&quot;</span><span class="s2">)</span>
+        <span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">object</span><span class="s2">)</span>
+    <span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s3"># same but with numbers</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span>
+        <span class="s2">{</span><span class="s4">&quot;key&quot;</span><span class="s2">: [</span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">], </span><span class="s4">&quot;col1&quot;</span><span class="s2">: </span><span class="s1">list</span><span class="s2">(</span><span class="s4">&quot;abcd&quot;</span><span class="s2">), </span><span class="s4">&quot;col2&quot;</span><span class="s2">: </span><span class="s1">range</span><span class="s2">(</span><span class="s5">4</span><span class="s2">)},</span>
+    <span class="s2">).</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">object</span><span class="s2">)</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;key&quot;</span><span class="s2">).</span><span class="s1">min</span><span class="s2">()</span>
+    <span class="s1">expected </span><span class="s2">= (</span>
+        <span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;key&quot;</span><span class="s2">: [</span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">], </span><span class="s4">&quot;col1&quot;</span><span class="s2">: [</span><span class="s4">&quot;a&quot;</span><span class="s2">, </span><span class="s4">&quot;c&quot;</span><span class="s2">], </span><span class="s4">&quot;col2&quot;</span><span class="s2">: [</span><span class="s5">0</span><span class="s2">, </span><span class="s5">2</span><span class="s2">]})</span>
+        <span class="s2">.</span><span class="s1">set_index</span><span class="s2">(</span><span class="s4">&quot;key&quot;</span><span class="s2">)</span>
+        <span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">object</span><span class="s2">)</span>
+    <span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s4">&quot;func&quot;</span><span class="s2">, [</span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">])</span>
+<span class="s0">def </span><span class="s1">test_aggregate_categorical_lost_index</span><span class="s2">(</span><span class="s1">func</span><span class="s2">: </span><span class="s1">str</span><span class="s2">):</span>
+    <span class="s3"># GH: 28641 groupby drops index, when grouping over categorical column with min/max</span>
+    <span class="s1">ds </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s4">&quot;b&quot;</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;category&quot;</span><span class="s2">).</span><span class="s1">cat</span><span class="s2">.</span><span class="s1">as_ordered</span><span class="s2">()</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;A&quot;</span><span class="s2">: [</span><span class="s5">1997</span><span class="s2">], </span><span class="s4">&quot;B&quot;</span><span class="s2">: </span><span class="s1">ds</span><span class="s2">})</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;A&quot;</span><span class="s2">).</span><span class="s1">agg</span><span class="s2">({</span><span class="s4">&quot;B&quot;</span><span class="s2">: </span><span class="s1">func</span><span class="s2">})</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;B&quot;</span><span class="s2">: [</span><span class="s4">&quot;b&quot;</span><span class="s2">]}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">Index</span><span class="s2">([</span><span class="s5">1997</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;A&quot;</span><span class="s2">))</span>
+
+    <span class="s3"># ordered categorical dtype should be preserved</span>
+    <span class="s1">expected</span><span class="s2">[</span><span class="s4">&quot;B&quot;</span><span class="s2">] = </span><span class="s1">expected</span><span class="s2">[</span><span class="s4">&quot;B&quot;</span><span class="s2">].</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">ds</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s4">&quot;dtype&quot;</span><span class="s2">, [</span><span class="s4">&quot;Int64&quot;</span><span class="s2">, </span><span class="s4">&quot;Int32&quot;</span><span class="s2">, </span><span class="s4">&quot;Float64&quot;</span><span class="s2">, </span><span class="s4">&quot;Float32&quot;</span><span class="s2">, </span><span class="s4">&quot;boolean&quot;</span><span class="s2">])</span>
+<span class="s0">def </span><span class="s1">test_groupby_min_max_nullable</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">):</span>
+    <span class="s0">if </span><span class="s1">dtype </span><span class="s2">== </span><span class="s4">&quot;Int64&quot;</span><span class="s2">:</span>
+        <span class="s3"># GH#41743 avoid precision loss</span>
+        <span class="s1">ts </span><span class="s2">= </span><span class="s5">1618556707013635762</span>
+    <span class="s0">elif </span><span class="s1">dtype </span><span class="s2">== </span><span class="s4">&quot;boolean&quot;</span><span class="s2">:</span>
+        <span class="s1">ts </span><span class="s2">= </span><span class="s5">0</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s1">ts </span><span class="s2">= </span><span class="s5">4.0</span>
+
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;id&quot;</span><span class="s2">: [</span><span class="s5">2</span><span class="s2">, </span><span class="s5">2</span><span class="s2">], </span><span class="s4">&quot;ts&quot;</span><span class="s2">: [</span><span class="s1">ts</span><span class="s2">, </span><span class="s1">ts </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">]})</span>
+    <span class="s1">df</span><span class="s2">[</span><span class="s4">&quot;ts&quot;</span><span class="s2">] = </span><span class="s1">df</span><span class="s2">[</span><span class="s4">&quot;ts&quot;</span><span class="s2">].</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">)</span>
+
+    <span class="s1">gb </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;id&quot;</span><span class="s2">)</span>
+
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">min</span><span class="s2">()</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[:</span><span class="s5">1</span><span class="s2">].</span><span class="s1">set_index</span><span class="s2">(</span><span class="s4">&quot;id&quot;</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s1">res_max </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">max</span><span class="s2">()</span>
+    <span class="s1">expected_max </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[</span><span class="s5">1</span><span class="s2">:].</span><span class="s1">set_index</span><span class="s2">(</span><span class="s4">&quot;id&quot;</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">res_max</span><span class="s2">, </span><span class="s1">expected_max</span><span class="s2">)</span>
+
+    <span class="s1">result2 </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">min</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">3</span><span class="s2">)</span>
+    <span class="s1">expected2 </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;ts&quot;</span><span class="s2">: [</span><span class="s1">pd</span><span class="s2">.</span><span class="s1">NA</span><span class="s2">]}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">expected</span><span class="s2">.</span><span class="s1">index</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result2</span><span class="s2">, </span><span class="s1">expected2</span><span class="s2">)</span>
+
+    <span class="s1">res_max2 </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">max</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">3</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">res_max2</span><span class="s2">, </span><span class="s1">expected2</span><span class="s2">)</span>
+
+    <span class="s3"># Case with NA values</span>
+    <span class="s1">df2 </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;id&quot;</span><span class="s2">: [</span><span class="s5">2</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s5">2</span><span class="s2">], </span><span class="s4">&quot;ts&quot;</span><span class="s2">: [</span><span class="s1">ts</span><span class="s2">, </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">NA</span><span class="s2">, </span><span class="s1">ts </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">]})</span>
+    <span class="s1">df2</span><span class="s2">[</span><span class="s4">&quot;ts&quot;</span><span class="s2">] = </span><span class="s1">df2</span><span class="s2">[</span><span class="s4">&quot;ts&quot;</span><span class="s2">].</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">gb2 </span><span class="s2">= </span><span class="s1">df2</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;id&quot;</span><span class="s2">)</span>
+
+    <span class="s1">result3 </span><span class="s2">= </span><span class="s1">gb2</span><span class="s2">.</span><span class="s1">min</span><span class="s2">()</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result3</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s1">res_max3 </span><span class="s2">= </span><span class="s1">gb2</span><span class="s2">.</span><span class="s1">max</span><span class="s2">()</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">res_max3</span><span class="s2">, </span><span class="s1">expected_max</span><span class="s2">)</span>
+
+    <span class="s1">result4 </span><span class="s2">= </span><span class="s1">gb2</span><span class="s2">.</span><span class="s1">min</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">100</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result4</span><span class="s2">, </span><span class="s1">expected2</span><span class="s2">)</span>
+
+    <span class="s1">res_max4 </span><span class="s2">= </span><span class="s1">gb2</span><span class="s2">.</span><span class="s1">max</span><span class="s2">(</span><span class="s1">min_count</span><span class="s2">=</span><span class="s5">100</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">res_max4</span><span class="s2">, </span><span class="s1">expected2</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_min_max_nullable_uint64_empty_group</span><span class="s2">():</span>
+    <span class="s3"># don't raise NotImplementedError from libgroupby</span>
+    <span class="s1">cat </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">Categorical</span><span class="s2">([</span><span class="s5">0</span><span class="s2">] * </span><span class="s5">10</span><span class="s2">, </span><span class="s1">categories</span><span class="s2">=[</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">])</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;A&quot;</span><span class="s2">: </span><span class="s1">cat</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">: </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s5">10</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint64</span><span class="s2">))})</span>
+    <span class="s1">gb </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s1">observed</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+
+    <span class="s1">res </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">min</span><span class="s2">()</span>
+
+    <span class="s1">idx </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">CategoricalIndex</span><span class="s2">([</span><span class="s5">0</span><span class="s2">, </span><span class="s5">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">cat</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;A&quot;</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s4">&quot;B&quot;</span><span class="s2">: </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s5">0</span><span class="s2">, </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">NA</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;UInt64&quot;</span><span class="s2">)}, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">idx</span><span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">res</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s1">res </span><span class="s2">= </span><span class="s1">gb</span><span class="s2">.</span><span class="s1">max</span><span class="s2">()</span>
+    <span class="s1">expected</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[</span><span class="s5">0</span><span class="s2">, </span><span class="s5">0</span><span class="s2">] = </span><span class="s5">9</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">res</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s4">&quot;func&quot;</span><span class="s2">, [</span><span class="s4">&quot;first&quot;</span><span class="s2">, </span><span class="s4">&quot;last&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">])</span>
+<span class="s0">def </span><span class="s1">test_groupby_min_max_categorical</span><span class="s2">(</span><span class="s1">func</span><span class="s2">):</span>
+    <span class="s3"># GH: 52151</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span>
+        <span class="s2">{</span>
+            <span class="s4">&quot;col1&quot;</span><span class="s2">: </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">Categorical</span><span class="s2">([</span><span class="s4">&quot;A&quot;</span><span class="s2">], </span><span class="s1">categories</span><span class="s2">=</span><span class="s1">list</span><span class="s2">(</span><span class="s4">&quot;AB&quot;</span><span class="s2">), </span><span class="s1">ordered</span><span class="s2">=</span><span class="s0">True</span><span class="s2">),</span>
+            <span class="s4">&quot;col2&quot;</span><span class="s2">: </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">Categorical</span><span class="s2">([</span><span class="s5">1</span><span class="s2">], </span><span class="s1">categories</span><span class="s2">=[</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">], </span><span class="s1">ordered</span><span class="s2">=</span><span class="s0">True</span><span class="s2">),</span>
+            <span class="s4">&quot;value&quot;</span><span class="s2">: </span><span class="s5">0.1</span><span class="s2">,</span>
+        <span class="s2">}</span>
+    <span class="s2">)</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">df</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s4">&quot;col1&quot;</span><span class="s2">, </span><span class="s1">observed</span><span class="s2">=</span><span class="s0">False</span><span class="s2">), </span><span class="s1">func</span><span class="s2">)()</span>
+
+    <span class="s1">idx </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">CategoricalIndex</span><span class="s2">(</span><span class="s1">data</span><span class="s2">=[</span><span class="s4">&quot;A&quot;</span><span class="s2">, </span><span class="s4">&quot;B&quot;</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;col1&quot;</span><span class="s2">, </span><span class="s1">ordered</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s1">expected </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span>
+        <span class="s2">{</span>
+            <span class="s4">&quot;col2&quot;</span><span class="s2">: </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">Categorical</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s0">None</span><span class="s2">], </span><span class="s1">categories</span><span class="s2">=[</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">], </span><span class="s1">ordered</span><span class="s2">=</span><span class="s0">True</span><span class="s2">),</span>
+            <span class="s4">&quot;value&quot;</span><span class="s2">: [</span><span class="s5">0.1</span><span class="s2">, </span><span class="s0">None</span><span class="s2">],</span>
+        <span class="s2">},</span>
+        <span class="s1">index</span><span class="s2">=</span><span class="s1">idx</span><span class="s2">,</span>
+    <span class="s2">)</span>
+    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

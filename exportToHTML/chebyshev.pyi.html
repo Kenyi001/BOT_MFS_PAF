@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>chebyshev.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+chebyshev.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">ndarray</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">int_</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">_polybase </span><span class="s0">import </span><span class="s1">ABCPolyBase</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">polyutils </span><span class="s0">import </span><span class="s1">trimcoef</span>
+
+<span class="s1">__all__</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]</span>
+
+<span class="s1">chebtrim </span><span class="s2">= </span><span class="s1">trimcoef</span>
+
+<span class="s0">def </span><span class="s1">poly2cheb</span><span class="s2">(</span><span class="s1">pol</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">cheb2poly</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+
+<span class="s1">chebdomain</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">chebzero</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">chebone</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">chebx</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+
+<span class="s0">def </span><span class="s1">chebline</span><span class="s2">(</span><span class="s1">off</span><span class="s2">, </span><span class="s1">scl</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebfromroots</span><span class="s2">(</span><span class="s1">roots</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebadd</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebsub</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebmulx</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebmul</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebdiv</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebpow</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">pow</span><span class="s2">, </span><span class="s1">maxpower</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">chebder</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">chebint</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">k </span><span class="s2">= ..., </span><span class="s1">lbnd</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">chebval</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">c</span><span class="s2">, </span><span class="s1">tensor</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">chebval2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebgrid2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebval3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebgrid3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebvander</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebvander2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebvander3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebfit</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">, </span><span class="s1">rcond</span><span class="s2">=..., </span><span class="s1">full</span><span class="s2">=..., </span><span class="s1">w</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">chebcompanion</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebroots</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebinterpolate</span><span class="s2">(</span><span class="s1">func</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">, </span><span class="s1">args </span><span class="s2">= ...): ...</span>
+<span class="s0">def </span><span class="s1">chebgauss</span><span class="s2">(</span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebweight</span><span class="s2">(</span><span class="s1">x</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebpts1</span><span class="s2">(</span><span class="s1">npts</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">chebpts2</span><span class="s2">(</span><span class="s1">npts</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">Chebyshev</span><span class="s2">(</span><span class="s1">ABCPolyBase</span><span class="s2">):</span>
+    <span class="s2">@</span><span class="s1">classmethod</span>
+    <span class="s0">def </span><span class="s1">interpolate</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">func</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">, </span><span class="s1">domain</span><span class="s2">=..., </span><span class="s1">args </span><span class="s2">= ...): ...</span>
+    <span class="s1">domain</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">window</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">basis_name</span><span class="s2">: </span><span class="s1">Any</span>
+</pre>
+</body>
+</html>

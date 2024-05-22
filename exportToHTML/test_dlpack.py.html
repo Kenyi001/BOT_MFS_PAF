@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>test_dlpack.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_dlpack.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">assert_array_equal</span><span class="s2">, </span><span class="s1">IS_PYPY</span>
+
+
+<span class="s0">class </span><span class="s1">TestDLPack</span><span class="s2">:</span>
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">skipif</span><span class="s2">(</span><span class="s1">IS_PYPY</span><span class="s2">, </span><span class="s1">reason</span><span class="s2">=</span><span class="s3">&quot;PyPy can't get refcounts.&quot;</span><span class="s2">)</span>
+    <span class="s0">def </span><span class="s1">test_dunder_dlpack_refcount</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">)</span>
+        <span class="s1">y </span><span class="s2">= </span><span class="s1">x</span><span class="s2">.</span><span class="s1">__dlpack__</span><span class="s2">()</span>
+        <span class="s0">assert </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">getrefcount</span><span class="s2">(</span><span class="s1">x</span><span class="s2">) == </span><span class="s4">3</span>
+        <span class="s0">del </span><span class="s1">y</span>
+        <span class="s0">assert </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">getrefcount</span><span class="s2">(</span><span class="s1">x</span><span class="s2">) == </span><span class="s4">2</span>
+
+    <span class="s0">def </span><span class="s1">test_dunder_dlpack_stream</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">)</span>
+        <span class="s1">x</span><span class="s2">.</span><span class="s1">__dlpack__</span><span class="s2">(</span><span class="s1">stream</span><span class="s2">=</span><span class="s0">None</span><span class="s2">)</span>
+
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">RuntimeError</span><span class="s2">):</span>
+            <span class="s1">x</span><span class="s2">.</span><span class="s1">__dlpack__</span><span class="s2">(</span><span class="s1">stream</span><span class="s2">=</span><span class="s4">1</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_strides_not_multiple_of_itemsize</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">dt </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">([(</span><span class="s3">'int'</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">int32</span><span class="s2">), (</span><span class="s3">'char'</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">int8</span><span class="s2">)])</span>
+        <span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">((</span><span class="s4">5</span><span class="s2">,), </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">dt</span><span class="s2">)</span>
+        <span class="s1">z </span><span class="s2">= </span><span class="s1">y</span><span class="s2">[</span><span class="s3">'int'</span><span class="s2">]</span>
+
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">BufferError</span><span class="s2">):</span>
+            <span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">z</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">skipif</span><span class="s2">(</span><span class="s1">IS_PYPY</span><span class="s2">, </span><span class="s1">reason</span><span class="s2">=</span><span class="s3">&quot;PyPy can't get refcounts.&quot;</span><span class="s2">)</span>
+    <span class="s0">def </span><span class="s1">test_from_dlpack_refcount</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">)</span>
+        <span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">getrefcount</span><span class="s2">(</span><span class="s1">x</span><span class="s2">) == </span><span class="s4">3</span>
+        <span class="s0">del </span><span class="s1">y</span>
+        <span class="s0">assert </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">getrefcount</span><span class="s2">(</span><span class="s1">x</span><span class="s2">) == </span><span class="s4">2</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s3">&quot;dtype&quot;</span><span class="s2">, [</span>
+        <span class="s1">np</span><span class="s2">.</span><span class="s1">bool_</span><span class="s2">,</span>
+        <span class="s1">np</span><span class="s2">.</span><span class="s1">int8</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">int16</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">int32</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">,</span>
+        <span class="s1">np</span><span class="s2">.</span><span class="s1">uint8</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint16</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint32</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint64</span><span class="s2">,</span>
+        <span class="s1">np</span><span class="s2">.</span><span class="s1">float16</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float32</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">,</span>
+        <span class="s1">np</span><span class="s2">.</span><span class="s1">complex64</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">complex128</span>
+    <span class="s2">])</span>
+    <span class="s0">def </span><span class="s1">test_dtype_passthrough</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">).</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">)</span>
+        <span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+
+        <span class="s0">assert </span><span class="s1">y</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_invalid_dtype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">datetime64</span><span class="s2">(</span><span class="s3">'2021-05-27'</span><span class="s2">))</span>
+
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">BufferError</span><span class="s2">):</span>
+            <span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_invalid_byte_swapping</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">dt </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">(</span><span class="s3">'=i8'</span><span class="s2">).</span><span class="s1">newbyteorder</span><span class="s2">()</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">dt</span><span class="s2">)</span>
+
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">BufferError</span><span class="s2">):</span>
+            <span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_non_contiguous</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">25</span><span class="s2">).</span><span class="s1">reshape</span><span class="s2">((</span><span class="s4">5</span><span class="s2">, </span><span class="s4">5</span><span class="s2">))</span>
+
+        <span class="s1">y1 </span><span class="s2">= </span><span class="s1">x</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">y1</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">y1</span><span class="s2">))</span>
+
+        <span class="s1">y2 </span><span class="s2">= </span><span class="s1">x</span><span class="s2">[:, </span><span class="s4">0</span><span class="s2">]</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">y2</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">y2</span><span class="s2">))</span>
+
+        <span class="s1">y3 </span><span class="s2">= </span><span class="s1">x</span><span class="s2">[</span><span class="s4">1</span><span class="s2">, :]</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">y3</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">y3</span><span class="s2">))</span>
+
+        <span class="s1">y4 </span><span class="s2">= </span><span class="s1">x</span><span class="s2">[</span><span class="s4">1</span><span class="s2">]</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">y4</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">y4</span><span class="s2">))</span>
+
+        <span class="s1">y5 </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">diagonal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">).</span><span class="s1">copy</span><span class="s2">()</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">y5</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">y5</span><span class="s2">))</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s3">&quot;ndim&quot;</span><span class="s2">, </span><span class="s1">range</span><span class="s2">(</span><span class="s4">33</span><span class="s2">))</span>
+    <span class="s0">def </span><span class="s1">test_higher_dims</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">ndim</span><span class="s2">):</span>
+        <span class="s1">shape </span><span class="s2">= (</span><span class="s4">1</span><span class="s2">,) * </span><span class="s1">ndim</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">(</span><span class="s1">shape</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+
+        <span class="s0">assert </span><span class="s1">shape </span><span class="s2">== </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">).</span><span class="s1">shape</span>
+
+    <span class="s0">def </span><span class="s1">test_dlpack_device</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">x</span><span class="s2">.</span><span class="s1">__dlpack_device__</span><span class="s2">() == (</span><span class="s4">1</span><span class="s2">, </span><span class="s4">0</span><span class="s2">)</span>
+        <span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">y</span><span class="s2">.</span><span class="s1">__dlpack_device__</span><span class="s2">() == (</span><span class="s4">1</span><span class="s2">, </span><span class="s4">0</span><span class="s2">)</span>
+        <span class="s1">z </span><span class="s2">= </span><span class="s1">y</span><span class="s2">[::</span><span class="s4">2</span><span class="s2">]</span>
+        <span class="s0">assert </span><span class="s1">z</span><span class="s2">.</span><span class="s1">__dlpack_device__</span><span class="s2">() == (</span><span class="s4">1</span><span class="s2">, </span><span class="s4">0</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">dlpack_deleter_exception</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">)</span>
+        <span class="s1">_ </span><span class="s2">= </span><span class="s1">x</span><span class="s2">.</span><span class="s1">__dlpack__</span><span class="s2">()</span>
+        <span class="s0">raise </span><span class="s1">RuntimeError</span>
+
+    <span class="s0">def </span><span class="s1">test_dlpack_destructor_exception</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">RuntimeError</span><span class="s2">):</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">dlpack_deleter_exception</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">test_readonly</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s4">5</span><span class="s2">)</span>
+        <span class="s1">x</span><span class="s2">.</span><span class="s1">flags</span><span class="s2">.</span><span class="s1">writeable </span><span class="s2">= </span><span class="s0">False</span>
+        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">BufferError</span><span class="s2">):</span>
+            <span class="s1">x</span><span class="s2">.</span><span class="s1">__dlpack__</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">test_ndim0</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s4">1.0</span><span class="s2">)</span>
+        <span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_size1dims_arrays</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">=</span><span class="s3">'f8'</span><span class="s2">, </span><span class="s1">shape</span><span class="s2">=(</span><span class="s4">10</span><span class="s2">, </span><span class="s4">5</span><span class="s2">, </span><span class="s4">1</span><span class="s2">), </span><span class="s1">strides</span><span class="s2">=(</span><span class="s4">8</span><span class="s2">, </span><span class="s4">80</span><span class="s2">, </span><span class="s4">4</span><span class="s2">),</span>
+                       <span class="s1">buffer</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">(</span><span class="s4">1000</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint8</span><span class="s2">), </span><span class="s1">order</span><span class="s2">=</span><span class="s3">'F'</span><span class="s2">)</span>
+        <span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">from_dlpack</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

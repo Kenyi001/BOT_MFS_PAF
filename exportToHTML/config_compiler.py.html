@@ -1,0 +1,149 @@
+<html>
+<head>
+<title>config_compiler.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #2aacb8;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+config_compiler.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">core </span><span class="s0">import </span><span class="s1">Command</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils </span><span class="s0">import </span><span class="s1">log</span>
+
+<span class="s3">#XXX: Linker flags</span>
+
+<span class="s0">def </span><span class="s1">show_fortran_compilers</span><span class="s2">(</span><span class="s1">_cache</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+    <span class="s3"># Using cache to prevent infinite recursion.</span>
+    <span class="s0">if </span><span class="s1">_cache</span><span class="s2">:</span>
+        <span class="s0">return</span>
+    <span class="s0">elif </span><span class="s1">_cache </span><span class="s0">is None</span><span class="s2">:</span>
+        <span class="s1">_cache </span><span class="s2">= []</span>
+    <span class="s1">_cache</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s4">1</span><span class="s2">)</span>
+    <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">fcompiler </span><span class="s0">import </span><span class="s1">show_fcompilers</span>
+    <span class="s0">import </span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">core</span>
+    <span class="s1">dist </span><span class="s2">= </span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">_setup_distribution</span>
+    <span class="s1">show_fcompilers</span><span class="s2">(</span><span class="s1">dist</span><span class="s2">)</span>
+
+<span class="s0">class </span><span class="s1">config_fc</span><span class="s2">(</span><span class="s1">Command</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; Distutils command to hold user specified options 
+    to Fortran compilers. 
+ 
+    config_fc command is used by the FCompiler.customize() method. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">description </span><span class="s2">= </span><span class="s6">&quot;specify Fortran 77/Fortran 90 compiler information&quot;</span>
+
+    <span class="s1">user_options </span><span class="s2">= [</span>
+        <span class="s2">(</span><span class="s6">'fcompiler='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify Fortran compiler type&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'f77exec='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify F77 compiler command&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'f90exec='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify F90 compiler command&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'f77flags='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify F77 compiler flags&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'f90flags='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify F90 compiler flags&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'opt='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify optimization flags&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'arch='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify architecture specific optimization flags&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'debug'</span><span class="s2">, </span><span class="s6">'g'</span><span class="s2">, </span><span class="s6">&quot;compile with debugging information&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'noopt'</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;compile without optimization&quot;</span><span class="s2">),</span>
+        <span class="s2">(</span><span class="s6">'noarch'</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;compile without arch-dependent optimization&quot;</span><span class="s2">),</span>
+        <span class="s2">]</span>
+
+    <span class="s1">help_options </span><span class="s2">= [</span>
+        <span class="s2">(</span><span class="s6">'help-fcompiler'</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;list available Fortran compilers&quot;</span><span class="s2">,</span>
+         <span class="s1">show_fortran_compilers</span><span class="s2">),</span>
+        <span class="s2">]</span>
+
+    <span class="s1">boolean_options </span><span class="s2">= [</span><span class="s6">'debug'</span><span class="s2">, </span><span class="s6">'noopt'</span><span class="s2">, </span><span class="s6">'noarch'</span><span class="s2">]</span>
+
+    <span class="s0">def </span><span class="s1">initialize_options</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">fcompiler </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">f77exec </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">f90exec </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">f77flags </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">f90flags </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">opt </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">arch </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">debug </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">noopt </span><span class="s2">= </span><span class="s0">None</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">noarch </span><span class="s2">= </span><span class="s0">None</span>
+
+    <span class="s0">def </span><span class="s1">finalize_options</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">log</span><span class="s2">.</span><span class="s1">info</span><span class="s2">(</span><span class="s6">'unifing config_fc, config, build_clib, build_ext, build commands --fcompiler options'</span><span class="s2">)</span>
+        <span class="s1">build_clib </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'build_clib'</span><span class="s2">)</span>
+        <span class="s1">build_ext </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'build_ext'</span><span class="s2">)</span>
+        <span class="s1">config </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'config'</span><span class="s2">)</span>
+        <span class="s1">build </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'build'</span><span class="s2">)</span>
+        <span class="s1">cmd_list </span><span class="s2">= [</span><span class="s1">self</span><span class="s2">, </span><span class="s1">config</span><span class="s2">, </span><span class="s1">build_clib</span><span class="s2">, </span><span class="s1">build_ext</span><span class="s2">, </span><span class="s1">build</span><span class="s2">]</span>
+        <span class="s0">for </span><span class="s1">a </span><span class="s0">in </span><span class="s2">[</span><span class="s6">'fcompiler'</span><span class="s2">]:</span>
+            <span class="s1">l </span><span class="s2">= []</span>
+            <span class="s0">for </span><span class="s1">c </span><span class="s0">in </span><span class="s1">cmd_list</span><span class="s2">:</span>
+                <span class="s1">v </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">a</span><span class="s2">)</span>
+                <span class="s0">if </span><span class="s1">v </span><span class="s0">is not None</span><span class="s2">:</span>
+                    <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">v</span><span class="s2">, </span><span class="s1">str</span><span class="s2">): </span><span class="s1">v </span><span class="s2">= </span><span class="s1">v</span><span class="s2">.</span><span class="s1">compiler_type</span>
+                    <span class="s0">if </span><span class="s1">v </span><span class="s0">not in </span><span class="s1">l</span><span class="s2">: </span><span class="s1">l</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">v</span><span class="s2">)</span>
+            <span class="s0">if not </span><span class="s1">l</span><span class="s2">: </span><span class="s1">v1 </span><span class="s2">= </span><span class="s0">None</span>
+            <span class="s0">else</span><span class="s2">: </span><span class="s1">v1 </span><span class="s2">= </span><span class="s1">l</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]</span>
+            <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">l</span><span class="s2">)&gt;</span><span class="s4">1</span><span class="s2">:</span>
+                <span class="s1">log</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s6">'  commands have different --%s options: %s'</span><span class="s1">\</span>
+                         <span class="s6">', using first in list as default' </span><span class="s2">% (</span><span class="s1">a</span><span class="s2">, </span><span class="s1">l</span><span class="s2">))</span>
+            <span class="s0">if </span><span class="s1">v1</span><span class="s2">:</span>
+                <span class="s0">for </span><span class="s1">c </span><span class="s0">in </span><span class="s1">cmd_list</span><span class="s2">:</span>
+                    <span class="s0">if </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">a</span><span class="s2">) </span><span class="s0">is None</span><span class="s2">: </span><span class="s1">setattr</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">v1</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s3"># Do nothing.</span>
+        <span class="s0">return</span>
+
+<span class="s0">class </span><span class="s1">config_cc</span><span class="s2">(</span><span class="s1">Command</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; Distutils command to hold user specified options 
+    to C/C++ compilers. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">description </span><span class="s2">= </span><span class="s6">&quot;specify C/C++ compiler information&quot;</span>
+
+    <span class="s1">user_options </span><span class="s2">= [</span>
+        <span class="s2">(</span><span class="s6">'compiler='</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s6">&quot;specify C/C++ compiler type&quot;</span><span class="s2">),</span>
+        <span class="s2">]</span>
+
+    <span class="s0">def </span><span class="s1">initialize_options</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">compiler </span><span class="s2">= </span><span class="s0">None</span>
+
+    <span class="s0">def </span><span class="s1">finalize_options</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">log</span><span class="s2">.</span><span class="s1">info</span><span class="s2">(</span><span class="s6">'unifing config_cc, config, build_clib, build_ext, build commands --compiler options'</span><span class="s2">)</span>
+        <span class="s1">build_clib </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'build_clib'</span><span class="s2">)</span>
+        <span class="s1">build_ext </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'build_ext'</span><span class="s2">)</span>
+        <span class="s1">config </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'config'</span><span class="s2">)</span>
+        <span class="s1">build </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s6">'build'</span><span class="s2">)</span>
+        <span class="s1">cmd_list </span><span class="s2">= [</span><span class="s1">self</span><span class="s2">, </span><span class="s1">config</span><span class="s2">, </span><span class="s1">build_clib</span><span class="s2">, </span><span class="s1">build_ext</span><span class="s2">, </span><span class="s1">build</span><span class="s2">]</span>
+        <span class="s0">for </span><span class="s1">a </span><span class="s0">in </span><span class="s2">[</span><span class="s6">'compiler'</span><span class="s2">]:</span>
+            <span class="s1">l </span><span class="s2">= []</span>
+            <span class="s0">for </span><span class="s1">c </span><span class="s0">in </span><span class="s1">cmd_list</span><span class="s2">:</span>
+                <span class="s1">v </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">a</span><span class="s2">)</span>
+                <span class="s0">if </span><span class="s1">v </span><span class="s0">is not None</span><span class="s2">:</span>
+                    <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">v</span><span class="s2">, </span><span class="s1">str</span><span class="s2">): </span><span class="s1">v </span><span class="s2">= </span><span class="s1">v</span><span class="s2">.</span><span class="s1">compiler_type</span>
+                    <span class="s0">if </span><span class="s1">v </span><span class="s0">not in </span><span class="s1">l</span><span class="s2">: </span><span class="s1">l</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">v</span><span class="s2">)</span>
+            <span class="s0">if not </span><span class="s1">l</span><span class="s2">: </span><span class="s1">v1 </span><span class="s2">= </span><span class="s0">None</span>
+            <span class="s0">else</span><span class="s2">: </span><span class="s1">v1 </span><span class="s2">= </span><span class="s1">l</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]</span>
+            <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">l</span><span class="s2">)&gt;</span><span class="s4">1</span><span class="s2">:</span>
+                <span class="s1">log</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s6">'  commands have different --%s options: %s'</span><span class="s1">\</span>
+                         <span class="s6">', using first in list as default' </span><span class="s2">% (</span><span class="s1">a</span><span class="s2">, </span><span class="s1">l</span><span class="s2">))</span>
+            <span class="s0">if </span><span class="s1">v1</span><span class="s2">:</span>
+                <span class="s0">for </span><span class="s1">c </span><span class="s0">in </span><span class="s1">cmd_list</span><span class="s2">:</span>
+                    <span class="s0">if </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">a</span><span class="s2">) </span><span class="s0">is None</span><span class="s2">: </span><span class="s1">setattr</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">a</span><span class="s2">, </span><span class="s1">v1</span><span class="s2">)</span>
+        <span class="s0">return</span>
+
+    <span class="s0">def </span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s3"># Do nothing.</span>
+        <span class="s0">return</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<html>
+<head>
+<title>_sorting_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #2aacb8;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_sorting_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_array_object </span><span class="s0">import </span><span class="s1">Array</span>
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_dtypes </span><span class="s0">import </span><span class="s1">_real_numeric_dtypes</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+
+<span class="s3"># Note: the descending keyword argument is new in this function</span>
+<span class="s0">def </span><span class="s1">argsort</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">axis</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= -</span><span class="s4">1</span><span class="s2">, </span><span class="s1">descending</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">, </span><span class="s1">stable</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.argsort &lt;numpy.argsort&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s6">&quot;Only real numeric dtypes are allowed in argsort&quot;</span><span class="s2">)</span>
+    <span class="s3"># Note: this keyword argument is different, and the default is different.</span>
+    <span class="s1">kind </span><span class="s2">= </span><span class="s6">&quot;stable&quot; </span><span class="s0">if </span><span class="s1">stable </span><span class="s0">else </span><span class="s6">&quot;quicksort&quot;</span>
+    <span class="s0">if not </span><span class="s1">descending</span><span class="s2">:</span>
+        <span class="s1">res </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">argsort</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">kind</span><span class="s2">=</span><span class="s1">kind</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s3"># As NumPy has no native descending sort, we imitate it here. Note that</span>
+        <span class="s3"># simply flipping the results of np.argsort(x._array, ...) would not</span>
+        <span class="s3"># respect the relative order like it would in native descending sorts.</span>
+        <span class="s1">res </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">flip</span><span class="s2">(</span>
+            <span class="s1">np</span><span class="s2">.</span><span class="s1">argsort</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">flip</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">), </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">kind</span><span class="s2">=</span><span class="s1">kind</span><span class="s2">),</span>
+            <span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">,</span>
+        <span class="s2">)</span>
+        <span class="s3"># Rely on flip()/argsort() to validate axis</span>
+        <span class="s1">normalised_axis </span><span class="s2">= </span><span class="s1">axis </span><span class="s0">if </span><span class="s1">axis </span><span class="s2">&gt;= </span><span class="s4">0 </span><span class="s0">else </span><span class="s1">x</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">+ </span><span class="s1">axis</span>
+        <span class="s1">max_i </span><span class="s2">= </span><span class="s1">x</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s1">normalised_axis</span><span class="s2">] - </span><span class="s4">1</span>
+        <span class="s1">res </span><span class="s2">= </span><span class="s1">max_i </span><span class="s2">- </span><span class="s1">res</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">res</span><span class="s2">)</span>
+
+<span class="s3"># Note: the descending keyword argument is new in this function</span>
+<span class="s0">def </span><span class="s1">sort</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">axis</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= -</span><span class="s4">1</span><span class="s2">, </span><span class="s1">descending</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">, </span><span class="s1">stable</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.sort &lt;numpy.sort&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s6">&quot;Only real numeric dtypes are allowed in sort&quot;</span><span class="s2">)</span>
+    <span class="s3"># Note: this keyword argument is different, and the default is different.</span>
+    <span class="s1">kind </span><span class="s2">= </span><span class="s6">&quot;stable&quot; </span><span class="s0">if </span><span class="s1">stable </span><span class="s0">else </span><span class="s6">&quot;quicksort&quot;</span>
+    <span class="s1">res </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">sort</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">kind</span><span class="s2">=</span><span class="s1">kind</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">descending</span><span class="s2">:</span>
+        <span class="s1">res </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">flip</span><span class="s2">(</span><span class="s1">res</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">res</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

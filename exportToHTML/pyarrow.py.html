@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>pyarrow.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pyarrow.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; support pyarrow compatibility across versions &quot;&quot;&quot;</span>
+
+<span class="s2">from </span><span class="s1">__future__ </span><span class="s2">import </span><span class="s1">annotations</span>
+
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">version </span><span class="s2">import </span><span class="s1">Version</span>
+
+<span class="s2">try</span><span class="s3">:</span>
+    <span class="s2">import </span><span class="s1">pyarrow </span><span class="s2">as </span><span class="s1">pa</span>
+
+    <span class="s1">_palv </span><span class="s3">= </span><span class="s1">Version</span><span class="s3">(</span><span class="s1">Version</span><span class="s3">(</span><span class="s1">pa</span><span class="s3">.</span><span class="s1">__version__</span><span class="s3">).</span><span class="s1">base_version</span><span class="s3">)</span>
+    <span class="s1">pa_version_under7p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;7.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under8p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;8.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under9p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;9.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under10p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;10.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under11p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;11.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under12p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;12.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under13p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;13.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under14p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;14.0.0&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under14p1 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;14.0.1&quot;</span><span class="s3">)</span>
+    <span class="s1">pa_version_under15p0 </span><span class="s3">= </span><span class="s1">_palv </span><span class="s3">&lt; </span><span class="s1">Version</span><span class="s3">(</span><span class="s4">&quot;15.0.0&quot;</span><span class="s3">)</span>
+<span class="s2">except </span><span class="s1">ImportError</span><span class="s3">:</span>
+    <span class="s1">pa_version_under7p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under8p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under9p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under10p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under11p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under12p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under13p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under14p0 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under14p1 </span><span class="s3">= </span><span class="s2">True</span>
+    <span class="s1">pa_version_under15p0 </span><span class="s3">= </span><span class="s2">True</span>
+</pre>
+</body>
+</html>

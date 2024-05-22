@@ -1,0 +1,267 @@
+<html>
+<head>
+<title>_dtype_like.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_dtype_like.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">collections</span><span class="s2">.</span><span class="s1">abc </span><span class="s0">import </span><span class="s1">Sequence</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">Any</span><span class="s2">,</span>
+    <span class="s1">Sequence</span><span class="s2">,</span>
+    <span class="s1">Union</span><span class="s2">,</span>
+    <span class="s1">TypeVar</span><span class="s2">,</span>
+    <span class="s1">Protocol</span><span class="s2">,</span>
+    <span class="s1">TypedDict</span><span class="s2">,</span>
+    <span class="s1">runtime_checkable</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_shape </span><span class="s0">import </span><span class="s1">_ShapeLike</span>
+
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_char_codes </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">_BoolCodes</span><span class="s2">,</span>
+    <span class="s1">_UInt8Codes</span><span class="s2">,</span>
+    <span class="s1">_UInt16Codes</span><span class="s2">,</span>
+    <span class="s1">_UInt32Codes</span><span class="s2">,</span>
+    <span class="s1">_UInt64Codes</span><span class="s2">,</span>
+    <span class="s1">_Int8Codes</span><span class="s2">,</span>
+    <span class="s1">_Int16Codes</span><span class="s2">,</span>
+    <span class="s1">_Int32Codes</span><span class="s2">,</span>
+    <span class="s1">_Int64Codes</span><span class="s2">,</span>
+    <span class="s1">_Float16Codes</span><span class="s2">,</span>
+    <span class="s1">_Float32Codes</span><span class="s2">,</span>
+    <span class="s1">_Float64Codes</span><span class="s2">,</span>
+    <span class="s1">_Complex64Codes</span><span class="s2">,</span>
+    <span class="s1">_Complex128Codes</span><span class="s2">,</span>
+    <span class="s1">_ByteCodes</span><span class="s2">,</span>
+    <span class="s1">_ShortCodes</span><span class="s2">,</span>
+    <span class="s1">_IntCCodes</span><span class="s2">,</span>
+    <span class="s1">_IntPCodes</span><span class="s2">,</span>
+    <span class="s1">_IntCodes</span><span class="s2">,</span>
+    <span class="s1">_LongLongCodes</span><span class="s2">,</span>
+    <span class="s1">_UByteCodes</span><span class="s2">,</span>
+    <span class="s1">_UShortCodes</span><span class="s2">,</span>
+    <span class="s1">_UIntCCodes</span><span class="s2">,</span>
+    <span class="s1">_UIntPCodes</span><span class="s2">,</span>
+    <span class="s1">_UIntCodes</span><span class="s2">,</span>
+    <span class="s1">_ULongLongCodes</span><span class="s2">,</span>
+    <span class="s1">_HalfCodes</span><span class="s2">,</span>
+    <span class="s1">_SingleCodes</span><span class="s2">,</span>
+    <span class="s1">_DoubleCodes</span><span class="s2">,</span>
+    <span class="s1">_LongDoubleCodes</span><span class="s2">,</span>
+    <span class="s1">_CSingleCodes</span><span class="s2">,</span>
+    <span class="s1">_CDoubleCodes</span><span class="s2">,</span>
+    <span class="s1">_CLongDoubleCodes</span><span class="s2">,</span>
+    <span class="s1">_DT64Codes</span><span class="s2">,</span>
+    <span class="s1">_TD64Codes</span><span class="s2">,</span>
+    <span class="s1">_StrCodes</span><span class="s2">,</span>
+    <span class="s1">_BytesCodes</span><span class="s2">,</span>
+    <span class="s1">_VoidCodes</span><span class="s2">,</span>
+    <span class="s1">_ObjectCodes</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s1">_SCT </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_SCT&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">generic</span><span class="s2">)</span>
+<span class="s1">_DType_co </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;_DType_co&quot;</span><span class="s2">, </span><span class="s1">covariant</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+
+<span class="s1">_DTypeLikeNested </span><span class="s2">= </span><span class="s1">Any  </span><span class="s4"># TODO: wait for support for recursive types</span>
+
+
+<span class="s4"># Mandatory keys</span>
+<span class="s0">class </span><span class="s1">_DTypeDictBase</span><span class="s2">(</span><span class="s1">TypedDict</span><span class="s2">):</span>
+    <span class="s1">names</span><span class="s2">: </span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]</span>
+    <span class="s1">formats</span><span class="s2">: </span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">_DTypeLikeNested</span><span class="s2">]</span>
+
+
+<span class="s4"># Mandatory + optional keys</span>
+<span class="s0">class </span><span class="s1">_DTypeDict</span><span class="s2">(</span><span class="s1">_DTypeDictBase</span><span class="s2">, </span><span class="s1">total</span><span class="s2">=</span><span class="s0">False</span><span class="s2">):</span>
+    <span class="s4"># Only `str` elements are usable as indexing aliases,</span>
+    <span class="s4"># but `titles` can in principle accept any object</span>
+    <span class="s1">offsets</span><span class="s2">: </span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">int</span><span class="s2">]</span>
+    <span class="s1">titles</span><span class="s2">: </span><span class="s1">Sequence</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]</span>
+    <span class="s1">itemsize</span><span class="s2">: </span><span class="s1">int</span>
+    <span class="s1">aligned</span><span class="s2">: </span><span class="s1">bool</span>
+
+
+<span class="s4"># A protocol for anything with the dtype attribute</span>
+<span class="s2">@</span><span class="s1">runtime_checkable</span>
+<span class="s0">class </span><span class="s1">_SupportsDType</span><span class="s2">(</span><span class="s1">Protocol</span><span class="s2">[</span><span class="s1">_DType_co</span><span class="s2">]):</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">dtype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; _DType_co</span><span class="s2">: ...</span>
+
+
+<span class="s4"># A subset of `npt.DTypeLike` that can be parametrized w.r.t. `np.generic`</span>
+<span class="s1">_DTypeLike </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">_SCT</span><span class="s2">],</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">_SCT</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">_SCT</span><span class="s2">]],</span>
+<span class="s2">]</span>
+
+
+<span class="s4"># Would create a dtype[np.void]</span>
+<span class="s1">_VoidDTypeLike </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s4"># (flexible_dtype, itemsize)</span>
+    <span class="s1">tuple</span><span class="s2">[</span><span class="s1">_DTypeLikeNested</span><span class="s2">, </span><span class="s1">int</span><span class="s2">],</span>
+    <span class="s4"># (fixed_dtype, shape)</span>
+    <span class="s1">tuple</span><span class="s2">[</span><span class="s1">_DTypeLikeNested</span><span class="s2">, </span><span class="s1">_ShapeLike</span><span class="s2">],</span>
+    <span class="s4"># [(field_name, field_dtype, field_shape), ...]</span>
+    <span class="s4">#</span>
+    <span class="s4"># The type here is quite broad because NumPy accepts quite a wide</span>
+    <span class="s4"># range of inputs inside the list; see the tests for some</span>
+    <span class="s4"># examples.</span>
+    <span class="s1">list</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">],</span>
+    <span class="s4"># {'names': ..., 'formats': ..., 'offsets': ..., 'titles': ...,</span>
+    <span class="s4">#  'itemsize': ...}</span>
+    <span class="s1">_DTypeDict</span><span class="s2">,</span>
+    <span class="s4"># (base_dtype, new_dtype)</span>
+    <span class="s1">tuple</span><span class="s2">[</span><span class="s1">_DTypeLikeNested</span><span class="s2">, </span><span class="s1">_DTypeLikeNested</span><span class="s2">],</span>
+<span class="s2">]</span>
+
+<span class="s4"># Anything that can be coerced into numpy.dtype.</span>
+<span class="s4"># Reference: https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html</span>
+<span class="s1">DTypeLike </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">],</span>
+    <span class="s4"># default data type (float64)</span>
+    <span class="s0">None</span><span class="s2">,</span>
+    <span class="s4"># array-scalar types and generic types</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">],  </span><span class="s4"># NOTE: We're stuck with `type[Any]` due to object dtypes</span>
+    <span class="s4"># anything with a dtype attribute</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]],</span>
+    <span class="s4"># character codes, type strings or comma-separated fields, e.g., 'float64'</span>
+    <span class="s1">str</span><span class="s2">,</span>
+    <span class="s1">_VoidDTypeLike</span><span class="s2">,</span>
+<span class="s2">]</span>
+
+<span class="s4"># NOTE: while it is possible to provide the dtype as a dict of</span>
+<span class="s4"># dtype-like objects (e.g. `{'field1': ..., 'field2': ..., ...}`),</span>
+<span class="s4"># this syntax is officially discourged and</span>
+<span class="s4"># therefore not included in the Union defining `DTypeLike`.</span>
+<span class="s4">#</span>
+<span class="s4"># See https://github.com/numpy/numpy/issues/16891 for more details.</span>
+
+<span class="s4"># Aliases for commonly used dtype-like objects.</span>
+<span class="s4"># Note that the precision of `np.number` subclasses is ignored herein.</span>
+<span class="s1">_DTypeLikeBool </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">bool</span><span class="s2">],</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bool_</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bool_</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bool_</span><span class="s2">]],</span>
+    <span class="s1">_BoolCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeUInt </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">unsignedinteger</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">unsignedinteger</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">unsignedinteger</span><span class="s2">]],</span>
+    <span class="s1">_UInt8Codes</span><span class="s2">,</span>
+    <span class="s1">_UInt16Codes</span><span class="s2">,</span>
+    <span class="s1">_UInt32Codes</span><span class="s2">,</span>
+    <span class="s1">_UInt64Codes</span><span class="s2">,</span>
+    <span class="s1">_UByteCodes</span><span class="s2">,</span>
+    <span class="s1">_UShortCodes</span><span class="s2">,</span>
+    <span class="s1">_UIntCCodes</span><span class="s2">,</span>
+    <span class="s1">_UIntPCodes</span><span class="s2">,</span>
+    <span class="s1">_UIntCodes</span><span class="s2">,</span>
+    <span class="s1">_ULongLongCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeInt </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">int</span><span class="s2">],</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">signedinteger</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">signedinteger</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">signedinteger</span><span class="s2">]],</span>
+    <span class="s1">_Int8Codes</span><span class="s2">,</span>
+    <span class="s1">_Int16Codes</span><span class="s2">,</span>
+    <span class="s1">_Int32Codes</span><span class="s2">,</span>
+    <span class="s1">_Int64Codes</span><span class="s2">,</span>
+    <span class="s1">_ByteCodes</span><span class="s2">,</span>
+    <span class="s1">_ShortCodes</span><span class="s2">,</span>
+    <span class="s1">_IntCCodes</span><span class="s2">,</span>
+    <span class="s1">_IntPCodes</span><span class="s2">,</span>
+    <span class="s1">_IntCodes</span><span class="s2">,</span>
+    <span class="s1">_LongLongCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeFloat </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">float</span><span class="s2">],</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">floating</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">floating</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">floating</span><span class="s2">]],</span>
+    <span class="s1">_Float16Codes</span><span class="s2">,</span>
+    <span class="s1">_Float32Codes</span><span class="s2">,</span>
+    <span class="s1">_Float64Codes</span><span class="s2">,</span>
+    <span class="s1">_HalfCodes</span><span class="s2">,</span>
+    <span class="s1">_SingleCodes</span><span class="s2">,</span>
+    <span class="s1">_DoubleCodes</span><span class="s2">,</span>
+    <span class="s1">_LongDoubleCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeComplex </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">complex</span><span class="s2">],</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">complexfloating</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">complexfloating</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">complexfloating</span><span class="s2">]],</span>
+    <span class="s1">_Complex64Codes</span><span class="s2">,</span>
+    <span class="s1">_Complex128Codes</span><span class="s2">,</span>
+    <span class="s1">_CSingleCodes</span><span class="s2">,</span>
+    <span class="s1">_CDoubleCodes</span><span class="s2">,</span>
+    <span class="s1">_CLongDoubleCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeDT64 </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">timedelta64</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">timedelta64</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">timedelta64</span><span class="s2">]],</span>
+    <span class="s1">_TD64Codes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeTD64 </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">datetime64</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">datetime64</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">datetime64</span><span class="s2">]],</span>
+    <span class="s1">_DT64Codes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeStr </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">str</span><span class="s2">],</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">str_</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">str_</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">str_</span><span class="s2">]],</span>
+    <span class="s1">_StrCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeBytes </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">],</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bytes_</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bytes_</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bytes_</span><span class="s2">]],</span>
+    <span class="s1">_BytesCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeVoid </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">void</span><span class="s2">],</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">void</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">void</span><span class="s2">]],</span>
+    <span class="s1">_VoidCodes</span><span class="s2">,</span>
+    <span class="s1">_VoidDTypeLike</span><span class="s2">,</span>
+<span class="s2">]</span>
+<span class="s1">_DTypeLikeObject </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">type</span><span class="s2">,</span>
+    <span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">object_</span><span class="s2">],</span>
+    <span class="s1">_SupportsDType</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">object_</span><span class="s2">]],</span>
+    <span class="s1">_ObjectCodes</span><span class="s2">,</span>
+<span class="s2">]</span>
+
+<span class="s1">_DTypeLikeComplex_co </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span>
+    <span class="s1">_DTypeLikeBool</span><span class="s2">,</span>
+    <span class="s1">_DTypeLikeUInt</span><span class="s2">,</span>
+    <span class="s1">_DTypeLikeInt</span><span class="s2">,</span>
+    <span class="s1">_DTypeLikeFloat</span><span class="s2">,</span>
+    <span class="s1">_DTypeLikeComplex</span><span class="s2">,</span>
+<span class="s2">]</span>
+</pre>
+</body>
+</html>

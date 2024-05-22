@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>egg_info.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+egg_info.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+
+<span class="s0">from </span><span class="s1">setuptools</span><span class="s2">.</span><span class="s1">command</span><span class="s2">.</span><span class="s1">egg_info </span><span class="s0">import </span><span class="s1">egg_info </span><span class="s0">as </span><span class="s1">_egg_info</span>
+
+<span class="s0">class </span><span class="s1">egg_info</span><span class="s2">(</span><span class="s1">_egg_info</span><span class="s2">):</span>
+    <span class="s0">def </span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s3">'sdist' </span><span class="s0">in </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">:</span>
+            <span class="s0">import </span><span class="s1">warnings</span>
+            <span class="s0">import </span><span class="s1">textwrap</span>
+            <span class="s1">msg </span><span class="s2">= </span><span class="s1">textwrap</span><span class="s2">.</span><span class="s1">dedent</span><span class="s2">(</span><span class="s3">&quot;&quot;&quot; 
+                `build_src` is being run, this may lead to missing 
+                files in your sdist!  You want to use distutils.sdist 
+                instead of the setuptools version: 
+ 
+                    from distutils.command.sdist import sdist 
+                    cmdclass={'sdist': sdist}&quot; 
+ 
+                See numpy's setup.py or gh-7131 for details.&quot;&quot;&quot;</span><span class="s2">)</span>
+            <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s1">msg</span><span class="s2">, </span><span class="s1">UserWarning</span><span class="s2">, </span><span class="s1">stacklevel</span><span class="s2">=</span><span class="s4">2</span><span class="s2">)</span>
+
+        <span class="s5"># We need to ensure that build_src has been executed in order to give</span>
+        <span class="s5"># setuptools' egg_info command real filenames instead of functions which</span>
+        <span class="s5"># generate files.</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">run_command</span><span class="s2">(</span><span class="s3">&quot;build_src&quot;</span><span class="s2">)</span>
+        <span class="s1">_egg_info</span><span class="s2">.</span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

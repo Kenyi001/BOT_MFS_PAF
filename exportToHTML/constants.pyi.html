@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>constants.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+constants.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Literal</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">_type_aliases </span><span class="s0">import </span><span class="s1">_SCTypes</span>
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&gt;= (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">11</span><span class="s2">):</span>
+    <span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">assert_type</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s0">from </span><span class="s1">typing_extensions </span><span class="s0">import </span><span class="s1">assert_type</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">Inf</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">Infinity</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">NAN</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">NINF</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">NZERO</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">NaN</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">PINF</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">PZERO</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">e</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">euler_gamma</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">infty</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">pi</span><span class="s2">, </span><span class="s1">float</span><span class="s2">)</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ALLOW_THREADS</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">BUFSIZE</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">8192</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">CLIP</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ERR_CALL</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">3</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ERR_DEFAULT</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">521</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ERR_IGNORE</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ERR_LOG</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">5</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ERR_PRINT</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">4</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ERR_RAISE</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">2</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ERR_WARN</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">1</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">FLOATING_POINT_SUPPORT</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">1</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">FPE_DIVIDEBYZERO</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">1</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">FPE_INVALID</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">8</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">FPE_OVERFLOW</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">2</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">FPE_UNDERFLOW</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">4</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">MAXDIMS</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">32</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">MAY_SHARE_BOUNDS</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">MAY_SHARE_EXACT</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[-</span><span class="s3">1</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">RAISE</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">2</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">SHIFT_DIVIDEBYZERO</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">0</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">SHIFT_INVALID</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">9</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">SHIFT_OVERFLOW</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">3</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">SHIFT_UNDERFLOW</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">6</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">UFUNC_BUFSIZE_DEFAULT</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">8192</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">WRAP</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">1</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">tracemalloc_domain</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s3">389047</span><span class="s2">])</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">little_endian</span><span class="s2">, </span><span class="s1">bool</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">True_</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">bool_</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">False_</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">bool_</span><span class="s2">)</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">UFUNC_PYVALS_NAME</span><span class="s2">, </span><span class="s1">Literal</span><span class="s2">[</span><span class="s4">&quot;UFUNC_PYVALS&quot;</span><span class="s2">])</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sctypeDict</span><span class="s2">, </span><span class="s1">dict</span><span class="s2">[</span><span class="s1">int </span><span class="s2">| </span><span class="s1">str</span><span class="s2">, </span><span class="s1">type</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">generic</span><span class="s2">]])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sctypes</span><span class="s2">, </span><span class="s1">_SCTypes</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

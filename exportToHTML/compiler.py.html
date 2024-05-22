@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>compiler.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+compiler.py</font>
+</center></td></tr></table>
+<pre><span class="s0">#############################################################################</span>
+<span class="s0">##</span>
+<span class="s0">## Copyright (C) 2019 Riverbank Computing Limited.</span>
+<span class="s0">## Copyright (C) 2006 Thorsten Marek.</span>
+<span class="s0">## All right reserved.</span>
+<span class="s0">##</span>
+<span class="s0">## This file is part of PyQt.</span>
+<span class="s0">##</span>
+<span class="s0">## You may use this file under the terms of the GPL v2 or the revised BSD</span>
+<span class="s0">## license as follows:</span>
+<span class="s0">##</span>
+<span class="s0">## &quot;Redistribution and use in source and binary forms, with or without</span>
+<span class="s0">## modification, are permitted provided that the following conditions are</span>
+<span class="s0">## met:</span>
+<span class="s0">##   * Redistributions of source code must retain the above copyright</span>
+<span class="s0">##     notice, this list of conditions and the following disclaimer.</span>
+<span class="s0">##   * Redistributions in binary form must reproduce the above copyright</span>
+<span class="s0">##     notice, this list of conditions and the following disclaimer in</span>
+<span class="s0">##     the documentation and/or other materials provided with the</span>
+<span class="s0">##     distribution.</span>
+<span class="s0">##   * Neither the name of the Riverbank Computing Limited nor the names</span>
+<span class="s0">##     of its contributors may be used to endorse or promote products</span>
+<span class="s0">##     derived from this software without specific prior written</span>
+<span class="s0">##     permission.</span>
+<span class="s0">##</span>
+<span class="s0">## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="s0">## &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="s0">## LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR</span>
+<span class="s0">## A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT</span>
+<span class="s0">## OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,</span>
+<span class="s0">## SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="s0">## LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,</span>
+<span class="s0">## DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY</span>
+<span class="s0">## THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="s0">## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="s0">## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.&quot;</span>
+<span class="s0">##</span>
+<span class="s0">#############################################################################</span>
+
+
+<span class="s2">import </span><span class="s1">sys</span>
+
+<span class="s2">from </span><span class="s3">..</span><span class="s1">properties </span><span class="s2">import </span><span class="s1">Properties</span>
+<span class="s2">from </span><span class="s3">..</span><span class="s1">uiparser </span><span class="s2">import </span><span class="s1">UIParser</span>
+<span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">qtproxies</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">indenter </span><span class="s2">import </span><span class="s1">createCodeIndenter</span><span class="s3">, </span><span class="s1">getIndenter</span><span class="s3">, </span><span class="s1">write_code</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">qobjectcreator </span><span class="s2">import </span><span class="s1">CompilerCreatorPolicy</span>
+
+
+<span class="s2">class </span><span class="s1">UICompiler</span><span class="s3">(</span><span class="s1">UIParser</span><span class="s3">):</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">UIParser</span><span class="s3">.</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">qtproxies</span><span class="s3">.</span><span class="s1">QtCore</span><span class="s3">, </span><span class="s1">qtproxies</span><span class="s3">.</span><span class="s1">QtGui</span><span class="s3">,</span>
+                <span class="s1">qtproxies</span><span class="s3">.</span><span class="s1">QtWidgets</span><span class="s3">, </span><span class="s1">CompilerCreatorPolicy</span><span class="s3">())</span>
+
+    <span class="s2">def </span><span class="s1">reset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">qtproxies</span><span class="s3">.</span><span class="s1">i18n_strings </span><span class="s3">= []</span>
+        <span class="s1">UIParser</span><span class="s3">.</span><span class="s1">reset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">setContext</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">context</span><span class="s3">):</span>
+        <span class="s1">qtproxies</span><span class="s3">.</span><span class="s1">i18n_context </span><span class="s3">= </span><span class="s1">context</span>
+
+    <span class="s2">def </span><span class="s1">createToplevelWidget</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">classname</span><span class="s3">, </span><span class="s1">widgetname</span><span class="s3">):</span>
+        <span class="s1">indenter </span><span class="s3">= </span><span class="s1">getIndenter</span><span class="s3">()</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">level </span><span class="s3">= </span><span class="s4">0</span>
+
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;from PyQt5 import QtCore, QtGui, QtWidgets&quot;</span><span class="s3">)</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;&quot;</span><span class="s3">)</span>
+
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;&quot;</span><span class="s3">)</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;class Ui_%s(object):&quot; </span><span class="s3">% </span><span class="s1">self</span><span class="s3">.</span><span class="s1">uiname</span><span class="s3">)</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">indent</span><span class="s3">()</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;def setupUi(self, %s):&quot; </span><span class="s3">% </span><span class="s1">widgetname</span><span class="s3">)</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">indent</span><span class="s3">()</span>
+        <span class="s1">w </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">factory</span><span class="s3">.</span><span class="s1">createQObject</span><span class="s3">(</span><span class="s1">classname</span><span class="s3">, </span><span class="s1">widgetname</span><span class="s3">, (),</span>
+                                   <span class="s1">is_attribute </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+                                   <span class="s1">no_instantiation </span><span class="s3">= </span><span class="s2">True</span><span class="s3">)</span>
+        <span class="s1">w</span><span class="s3">.</span><span class="s1">baseclass </span><span class="s3">= </span><span class="s1">classname</span>
+        <span class="s1">w</span><span class="s3">.</span><span class="s1">uiclass </span><span class="s3">= </span><span class="s5">&quot;Ui_%s&quot; </span><span class="s3">% </span><span class="s1">self</span><span class="s3">.</span><span class="s1">uiname</span>
+        <span class="s2">return </span><span class="s1">w</span>
+
+    <span class="s2">def </span><span class="s1">setDelayedProps</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">write_code</span><span class="s3">(</span><span class="s5">&quot;&quot;</span><span class="s3">)</span>
+        <span class="s1">write_code</span><span class="s3">(</span><span class="s5">&quot;self.retranslateUi(%s)&quot; </span><span class="s3">% </span><span class="s1">self</span><span class="s3">.</span><span class="s1">toplevelWidget</span><span class="s3">)</span>
+        <span class="s1">UIParser</span><span class="s3">.</span><span class="s1">setDelayedProps</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">finalize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">indenter </span><span class="s3">= </span><span class="s1">getIndenter</span><span class="s3">()</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">level </span><span class="s3">= </span><span class="s4">1</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;&quot;</span><span class="s3">)</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;def retranslateUi(self, %s):&quot; </span><span class="s3">% </span><span class="s1">self</span><span class="s3">.</span><span class="s1">toplevelWidget</span><span class="s3">)</span>
+
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">indent</span><span class="s3">()</span>
+
+        <span class="s2">if </span><span class="s1">qtproxies</span><span class="s3">.</span><span class="s1">i18n_strings</span><span class="s3">:</span>
+            <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;_translate = QtCore.QCoreApplication.translate&quot;</span><span class="s3">)</span>
+            <span class="s2">for </span><span class="s1">s </span><span class="s2">in </span><span class="s1">qtproxies</span><span class="s3">.</span><span class="s1">i18n_strings</span><span class="s3">:</span>
+                <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">s</span><span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">indenter</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s5">&quot;pass&quot;</span><span class="s3">)</span>
+
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">()</span>
+        <span class="s1">indenter</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">()</span>
+
+        <span class="s0"># Keep a reference to the resource modules to import because the parser</span>
+        <span class="s0"># will reset() before returning.</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_resources </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">resources</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_resources</span><span class="s3">.</span><span class="s1">sort</span><span class="s3">()</span>
+
+    <span class="s2">def </span><span class="s1">compileUi</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">input_stream</span><span class="s3">, </span><span class="s1">output_stream</span><span class="s3">, </span><span class="s1">from_imports</span><span class="s3">, </span><span class="s1">resource_suffix</span><span class="s3">, </span><span class="s1">import_from</span><span class="s3">):</span>
+        <span class="s1">createCodeIndenter</span><span class="s3">(</span><span class="s1">output_stream</span><span class="s3">)</span>
+        <span class="s1">w </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">parse</span><span class="s3">(</span><span class="s1">input_stream</span><span class="s3">, </span><span class="s1">resource_suffix</span><span class="s3">)</span>
+
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">factory</span><span class="s3">.</span><span class="s1">_cpolicy</span><span class="s3">.</span><span class="s1">_writeOutImports</span><span class="s3">()</span>
+
+        <span class="s2">for </span><span class="s1">res </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_resources</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s1">from_imports</span><span class="s3">:</span>
+                <span class="s1">write_code</span><span class="s3">(</span><span class="s5">&quot;from %s import %s&quot; </span><span class="s3">% (</span><span class="s1">import_from</span><span class="s3">, </span><span class="s1">res</span><span class="s3">))</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s1">write_code</span><span class="s3">(</span><span class="s5">&quot;import %s&quot; </span><span class="s3">% </span><span class="s1">res</span><span class="s3">)</span>
+
+        <span class="s2">return </span><span class="s3">{</span><span class="s5">&quot;widgetname&quot;</span><span class="s3">: </span><span class="s1">str</span><span class="s3">(</span><span class="s1">w</span><span class="s3">),</span>
+                <span class="s5">&quot;uiclass&quot; </span><span class="s3">: </span><span class="s1">w</span><span class="s3">.</span><span class="s1">uiclass</span><span class="s3">,</span>
+                <span class="s5">&quot;baseclass&quot; </span><span class="s3">: </span><span class="s1">w</span><span class="s3">.</span><span class="s1">baseclass</span><span class="s3">}</span>
+</pre>
+</body>
+</html>

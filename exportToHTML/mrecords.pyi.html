@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>mrecords.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+mrecords.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span><span class="s2">, </span><span class="s1">TypeVar</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">dtype</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">ma </span><span class="s0">import </span><span class="s1">MaskedArray</span>
+
+<span class="s1">__all__</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]</span>
+
+<span class="s3"># TODO: Set the `bound` to something more suitable once we</span>
+<span class="s3"># have proper shape support</span>
+<span class="s1">_ShapeType </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s4">&quot;_ShapeType&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">Any</span><span class="s2">)</span>
+<span class="s1">_DType_co </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s4">&quot;_DType_co&quot;</span><span class="s2">, </span><span class="s1">bound</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">], </span><span class="s1">covariant</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+<span class="s0">class </span><span class="s1">MaskedRecords</span><span class="s2">(</span><span class="s1">MaskedArray</span><span class="s2">[</span><span class="s1">_ShapeType</span><span class="s2">, </span><span class="s1">_DType_co</span><span class="s2">]):</span>
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span>
+        <span class="s1">cls</span><span class="s2">,</span>
+        <span class="s1">shape</span><span class="s2">,</span>
+        <span class="s1">dtype</span><span class="s2">=...,</span>
+        <span class="s1">buf</span><span class="s2">=...,</span>
+        <span class="s1">offset</span><span class="s2">=...,</span>
+        <span class="s1">strides</span><span class="s2">=...,</span>
+        <span class="s1">formats</span><span class="s2">=...,</span>
+        <span class="s1">names</span><span class="s2">=...,</span>
+        <span class="s1">titles</span><span class="s2">=...,</span>
+        <span class="s1">byteorder</span><span class="s2">=...,</span>
+        <span class="s1">aligned</span><span class="s2">=...,</span>
+        <span class="s1">mask</span><span class="s2">=...,</span>
+        <span class="s1">hard_mask</span><span class="s2">=...,</span>
+        <span class="s1">fill_value</span><span class="s2">=...,</span>
+        <span class="s1">keep_mask</span><span class="s2">=...,</span>
+        <span class="s1">copy</span><span class="s2">=...,</span>
+        <span class="s2">**</span><span class="s1">options</span><span class="s2">,</span>
+    <span class="s2">): ...</span>
+    <span class="s1">_mask</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">_fill_value</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">_data</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">_fieldmask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__array_finalize__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__len__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__getattribute__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">attr</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__setattr__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">attr</span><span class="s2">, </span><span class="s1">val</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__getitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indx</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">__setitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">indx</span><span class="s2">, </span><span class="s1">value</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">view</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=..., </span><span class="s1">type</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">harden_mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">soften_mask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">copy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+    <span class="s0">def </span><span class="s1">tolist</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=...): ...</span>
+    <span class="s0">def </span><span class="s1">__reduce__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">): ...</span>
+
+<span class="s1">mrecarray </span><span class="s2">= </span><span class="s1">MaskedRecords</span>
+
+<span class="s0">def </span><span class="s1">fromarrays</span><span class="s2">(</span>
+    <span class="s1">arraylist</span><span class="s2">,</span>
+    <span class="s1">dtype</span><span class="s2">=...,</span>
+    <span class="s1">shape</span><span class="s2">=...,</span>
+    <span class="s1">formats</span><span class="s2">=...,</span>
+    <span class="s1">names</span><span class="s2">=...,</span>
+    <span class="s1">titles</span><span class="s2">=...,</span>
+    <span class="s1">aligned</span><span class="s2">=...,</span>
+    <span class="s1">byteorder</span><span class="s2">=...,</span>
+    <span class="s1">fill_value</span><span class="s2">=...,</span>
+<span class="s2">): ...</span>
+
+<span class="s0">def </span><span class="s1">fromrecords</span><span class="s2">(</span>
+    <span class="s1">reclist</span><span class="s2">,</span>
+    <span class="s1">dtype</span><span class="s2">=...,</span>
+    <span class="s1">shape</span><span class="s2">=...,</span>
+    <span class="s1">formats</span><span class="s2">=...,</span>
+    <span class="s1">names</span><span class="s2">=...,</span>
+    <span class="s1">titles</span><span class="s2">=...,</span>
+    <span class="s1">aligned</span><span class="s2">=...,</span>
+    <span class="s1">byteorder</span><span class="s2">=...,</span>
+    <span class="s1">fill_value</span><span class="s2">=...,</span>
+    <span class="s1">mask</span><span class="s2">=...,</span>
+<span class="s2">): ...</span>
+
+<span class="s0">def </span><span class="s1">fromtextfile</span><span class="s2">(</span>
+    <span class="s1">fname</span><span class="s2">,</span>
+    <span class="s1">delimiter</span><span class="s2">=...,</span>
+    <span class="s1">commentchar</span><span class="s2">=...,</span>
+    <span class="s1">missingchar</span><span class="s2">=...,</span>
+    <span class="s1">varnames</span><span class="s2">=...,</span>
+    <span class="s1">vartypes</span><span class="s2">=...,</span>
+    <span class="s3"># NOTE: deprecated: NumPy 1.22.0, 2021-09-23</span>
+    <span class="s3"># delimitor=...,</span>
+<span class="s2">): ...</span>
+
+<span class="s0">def </span><span class="s1">addfield</span><span class="s2">(</span><span class="s1">mrecord</span><span class="s2">, </span><span class="s1">newfield</span><span class="s2">, </span><span class="s1">newfieldname</span><span class="s2">=...): ...</span>
+</pre>
+</body>
+</html>

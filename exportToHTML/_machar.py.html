@@ -1,0 +1,379 @@
+<html>
+<head>
+<title>_machar.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #cf8e6d;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_machar.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+Machine arithmetic - determine the parameters of the 
+floating-point arithmetic system 
+ 
+Author: Pearu Peterson, September 2003 
+ 
+&quot;&quot;&quot;</span>
+<span class="s1">__all__ </span><span class="s2">= [</span><span class="s3">'MachAr'</span><span class="s2">]</span>
+
+<span class="s4">from </span><span class="s2">.</span><span class="s1">fromnumeric </span><span class="s4">import </span><span class="s1">any</span>
+<span class="s4">from </span><span class="s2">.</span><span class="s1">_ufunc_config </span><span class="s4">import </span><span class="s1">errstate</span>
+<span class="s4">from </span><span class="s2">..</span><span class="s1">_utils </span><span class="s4">import </span><span class="s1">set_module</span>
+
+<span class="s5"># Need to speed this up...especially for longfloat</span>
+
+<span class="s5"># Deprecated 2021-10-20, NumPy 1.22</span>
+<span class="s4">class </span><span class="s1">MachAr</span><span class="s2">:</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Diagnosing machine parameters. 
+ 
+    Attributes 
+    ---------- 
+    ibeta : int 
+        Radix in which numbers are represented. 
+    it : int 
+        Number of base-`ibeta` digits in the floating point mantissa M. 
+    machep : int 
+        Exponent of the smallest (most negative) power of `ibeta` that, 
+        added to 1.0, gives something different from 1.0 
+    eps : float 
+        Floating-point number ``beta**machep`` (floating point precision) 
+    negep : int 
+        Exponent of the smallest power of `ibeta` that, subtracted 
+        from 1.0, gives something different from 1.0. 
+    epsneg : float 
+        Floating-point number ``beta**negep``. 
+    iexp : int 
+        Number of bits in the exponent (including its sign and bias). 
+    minexp : int 
+        Smallest (most negative) power of `ibeta` consistent with there 
+        being no leading zeros in the mantissa. 
+    xmin : float 
+        Floating-point number ``beta**minexp`` (the smallest [in 
+        magnitude] positive floating point number with full precision). 
+    maxexp : int 
+        Smallest (positive) power of `ibeta` that causes overflow. 
+    xmax : float 
+        ``(1-epsneg) * beta**maxexp`` (the largest [in magnitude] 
+        usable floating value). 
+    irnd : int 
+        In ``range(6)``, information on what kind of rounding is done 
+        in addition, and on how underflow is handled. 
+    ngrd : int 
+        Number of 'guard digits' used when truncating the product 
+        of two mantissas to fit the representation. 
+    epsilon : float 
+        Same as `eps`. 
+    tiny : float 
+        An alias for `smallest_normal`, kept for backwards compatibility. 
+    huge : float 
+        Same as `xmax`. 
+    precision : float 
+        ``- int(-log10(eps))`` 
+    resolution : float 
+        ``- 10**(-precision)`` 
+    smallest_normal : float 
+        The smallest positive floating point number with 1 as leading bit in 
+        the mantissa following IEEE-754. Same as `xmin`. 
+    smallest_subnormal : float 
+        The smallest positive floating point number with 0 as leading bit in 
+        the mantissa following IEEE-754. 
+ 
+    Parameters 
+    ---------- 
+    float_conv : function, optional 
+        Function that converts an integer or integer array to a float 
+        or float array. Default is `float`. 
+    int_conv : function, optional 
+        Function that converts a float or float array to an integer or 
+        integer array. Default is `int`. 
+    float_to_float : function, optional 
+        Function that converts a float array to float. Default is `float`. 
+        Note that this does not seem to do anything useful in the current 
+        implementation. 
+    float_to_str : function, optional 
+        Function that converts a single float to a string. Default is 
+        ``lambda v:'%24.16e' %v``. 
+    title : str, optional 
+        Title that is printed in the string representation of `MachAr`. 
+ 
+    See Also 
+    -------- 
+    finfo : Machine limits for floating point types. 
+    iinfo : Machine limits for integer types. 
+ 
+    References 
+    ---------- 
+    .. [1] Press, Teukolsky, Vetterling and Flannery, 
+           &quot;Numerical Recipes in C++,&quot; 2nd ed, 
+           Cambridge University Press, 2002, p. 31. 
+ 
+    &quot;&quot;&quot;</span>
+
+    <span class="s4">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">float_conv</span><span class="s2">=</span><span class="s1">float</span><span class="s2">,</span><span class="s1">int_conv</span><span class="s2">=</span><span class="s1">int</span><span class="s2">,</span>
+                 <span class="s1">float_to_float</span><span class="s2">=</span><span class="s1">float</span><span class="s2">,</span>
+                 <span class="s1">float_to_str</span><span class="s2">=</span><span class="s4">lambda </span><span class="s1">v</span><span class="s2">:</span><span class="s3">'%24.16e' </span><span class="s2">% </span><span class="s1">v</span><span class="s2">,</span>
+                 <span class="s1">title</span><span class="s2">=</span><span class="s3">'Python floating point number'</span><span class="s2">):</span>
+        <span class="s0">&quot;&quot;&quot; 
+ 
+        float_conv - convert integer to float (array) 
+        int_conv   - convert float (array) to integer 
+        float_to_float - convert float array to float 
+        float_to_str - convert array float to str 
+        title        - description of used floating point numbers 
+ 
+        &quot;&quot;&quot;</span>
+        <span class="s5"># We ignore all errors here because we are purposely triggering</span>
+        <span class="s5"># underflow to detect the properties of the runninng arch.</span>
+        <span class="s4">with </span><span class="s1">errstate</span><span class="s2">(</span><span class="s1">under</span><span class="s2">=</span><span class="s3">'ignore'</span><span class="s2">):</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">_do_init</span><span class="s2">(</span><span class="s1">float_conv</span><span class="s2">, </span><span class="s1">int_conv</span><span class="s2">, </span><span class="s1">float_to_float</span><span class="s2">, </span><span class="s1">float_to_str</span><span class="s2">, </span><span class="s1">title</span><span class="s2">)</span>
+
+    <span class="s4">def </span><span class="s1">_do_init</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">float_conv</span><span class="s2">, </span><span class="s1">int_conv</span><span class="s2">, </span><span class="s1">float_to_float</span><span class="s2">, </span><span class="s1">float_to_str</span><span class="s2">, </span><span class="s1">title</span><span class="s2">):</span>
+        <span class="s1">max_iterN </span><span class="s2">= </span><span class="s6">10000</span>
+        <span class="s1">msg </span><span class="s2">= </span><span class="s3">&quot;Did not converge after %d tries with %s&quot;</span>
+        <span class="s1">one </span><span class="s2">= </span><span class="s1">float_conv</span><span class="s2">(</span><span class="s6">1</span><span class="s2">)</span>
+        <span class="s1">two </span><span class="s2">= </span><span class="s1">one </span><span class="s2">+ </span><span class="s1">one</span>
+        <span class="s1">zero </span><span class="s2">= </span><span class="s1">one </span><span class="s2">- </span><span class="s1">one</span>
+
+        <span class="s5"># Do we really need to do this?  Aren't they 2 and 2.0?</span>
+        <span class="s5"># Determine ibeta and beta</span>
+        <span class="s1">a </span><span class="s2">= </span><span class="s1">one</span>
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">a </span><span class="s2">= </span><span class="s1">a </span><span class="s2">+ </span><span class="s1">a</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">a </span><span class="s2">+ </span><span class="s1">one</span>
+            <span class="s1">temp1 </span><span class="s2">= </span><span class="s1">temp </span><span class="s2">- </span><span class="s1">a</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp1 </span><span class="s2">- </span><span class="s1">one </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+                <span class="s4">break</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+        <span class="s1">b </span><span class="s2">= </span><span class="s1">one</span>
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">b </span><span class="s2">= </span><span class="s1">b </span><span class="s2">+ </span><span class="s1">b</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">a </span><span class="s2">+ </span><span class="s1">b</span>
+            <span class="s1">itemp </span><span class="s2">= </span><span class="s1">int_conv</span><span class="s2">(</span><span class="s1">temp</span><span class="s2">-</span><span class="s1">a</span><span class="s2">)</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">itemp </span><span class="s2">!= </span><span class="s6">0</span><span class="s2">):</span>
+                <span class="s4">break</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+        <span class="s1">ibeta </span><span class="s2">= </span><span class="s1">itemp</span>
+        <span class="s1">beta </span><span class="s2">= </span><span class="s1">float_conv</span><span class="s2">(</span><span class="s1">ibeta</span><span class="s2">)</span>
+
+        <span class="s5"># Determine it and irnd</span>
+        <span class="s1">it </span><span class="s2">= -</span><span class="s6">1</span>
+        <span class="s1">b </span><span class="s2">= </span><span class="s1">one</span>
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">it </span><span class="s2">= </span><span class="s1">it </span><span class="s2">+ </span><span class="s6">1</span>
+            <span class="s1">b </span><span class="s2">= </span><span class="s1">b </span><span class="s2">* </span><span class="s1">beta</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">b </span><span class="s2">+ </span><span class="s1">one</span>
+            <span class="s1">temp1 </span><span class="s2">= </span><span class="s1">temp </span><span class="s2">- </span><span class="s1">b</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp1 </span><span class="s2">- </span><span class="s1">one </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+                <span class="s4">break</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+
+        <span class="s1">betah </span><span class="s2">= </span><span class="s1">beta </span><span class="s2">/ </span><span class="s1">two</span>
+        <span class="s1">a </span><span class="s2">= </span><span class="s1">one</span>
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">a </span><span class="s2">= </span><span class="s1">a </span><span class="s2">+ </span><span class="s1">a</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">a </span><span class="s2">+ </span><span class="s1">one</span>
+            <span class="s1">temp1 </span><span class="s2">= </span><span class="s1">temp </span><span class="s2">- </span><span class="s1">a</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp1 </span><span class="s2">- </span><span class="s1">one </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+                <span class="s4">break</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+        <span class="s1">temp </span><span class="s2">= </span><span class="s1">a </span><span class="s2">+ </span><span class="s1">betah</span>
+        <span class="s1">irnd </span><span class="s2">= </span><span class="s6">0</span>
+        <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp</span><span class="s2">-</span><span class="s1">a </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+            <span class="s1">irnd </span><span class="s2">= </span><span class="s6">1</span>
+        <span class="s1">tempa </span><span class="s2">= </span><span class="s1">a </span><span class="s2">+ </span><span class="s1">beta</span>
+        <span class="s1">temp </span><span class="s2">= </span><span class="s1">tempa </span><span class="s2">+ </span><span class="s1">betah</span>
+        <span class="s4">if </span><span class="s1">irnd </span><span class="s2">== </span><span class="s6">0 </span><span class="s4">and </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp</span><span class="s2">-</span><span class="s1">tempa </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+            <span class="s1">irnd </span><span class="s2">= </span><span class="s6">2</span>
+
+        <span class="s5"># Determine negep and epsneg</span>
+        <span class="s1">negep </span><span class="s2">= </span><span class="s1">it </span><span class="s2">+ </span><span class="s6">3</span>
+        <span class="s1">betain </span><span class="s2">= </span><span class="s1">one </span><span class="s2">/ </span><span class="s1">beta</span>
+        <span class="s1">a </span><span class="s2">= </span><span class="s1">one</span>
+        <span class="s4">for </span><span class="s1">i </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">negep</span><span class="s2">):</span>
+            <span class="s1">a </span><span class="s2">= </span><span class="s1">a </span><span class="s2">* </span><span class="s1">betain</span>
+        <span class="s1">b </span><span class="s2">= </span><span class="s1">a</span>
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">one </span><span class="s2">- </span><span class="s1">a</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp</span><span class="s2">-</span><span class="s1">one </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+                <span class="s4">break</span>
+            <span class="s1">a </span><span class="s2">= </span><span class="s1">a </span><span class="s2">* </span><span class="s1">beta</span>
+            <span class="s1">negep </span><span class="s2">= </span><span class="s1">negep </span><span class="s2">- </span><span class="s6">1</span>
+            <span class="s5"># Prevent infinite loop on PPC with gcc 4.0:</span>
+            <span class="s4">if </span><span class="s1">negep </span><span class="s2">&lt; </span><span class="s6">0</span><span class="s2">:</span>
+                <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s3">&quot;could not determine machine tolerance &quot;</span>
+                                   <span class="s3">&quot;for 'negep', locals() -&gt; %s&quot; </span><span class="s2">% (</span><span class="s1">locals</span><span class="s2">()))</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+        <span class="s1">negep </span><span class="s2">= -</span><span class="s1">negep</span>
+        <span class="s1">epsneg </span><span class="s2">= </span><span class="s1">a</span>
+
+        <span class="s5"># Determine machep and eps</span>
+        <span class="s1">machep </span><span class="s2">= - </span><span class="s1">it </span><span class="s2">- </span><span class="s6">3</span>
+        <span class="s1">a </span><span class="s2">= </span><span class="s1">b</span>
+
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">one </span><span class="s2">+ </span><span class="s1">a</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp</span><span class="s2">-</span><span class="s1">one </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+                <span class="s4">break</span>
+            <span class="s1">a </span><span class="s2">= </span><span class="s1">a </span><span class="s2">* </span><span class="s1">beta</span>
+            <span class="s1">machep </span><span class="s2">= </span><span class="s1">machep </span><span class="s2">+ </span><span class="s6">1</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+        <span class="s1">eps </span><span class="s2">= </span><span class="s1">a</span>
+
+        <span class="s5"># Determine ngrd</span>
+        <span class="s1">ngrd </span><span class="s2">= </span><span class="s6">0</span>
+        <span class="s1">temp </span><span class="s2">= </span><span class="s1">one </span><span class="s2">+ </span><span class="s1">eps</span>
+        <span class="s4">if </span><span class="s1">irnd </span><span class="s2">== </span><span class="s6">0 </span><span class="s4">and </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp</span><span class="s2">*</span><span class="s1">one </span><span class="s2">- </span><span class="s1">one </span><span class="s2">!= </span><span class="s1">zero</span><span class="s2">):</span>
+            <span class="s1">ngrd </span><span class="s2">= </span><span class="s6">1</span>
+
+        <span class="s5"># Determine iexp</span>
+        <span class="s1">i </span><span class="s2">= </span><span class="s6">0</span>
+        <span class="s1">k </span><span class="s2">= </span><span class="s6">1</span>
+        <span class="s1">z </span><span class="s2">= </span><span class="s1">betain</span>
+        <span class="s1">t </span><span class="s2">= </span><span class="s1">one </span><span class="s2">+ </span><span class="s1">eps</span>
+        <span class="s1">nxres </span><span class="s2">= </span><span class="s6">0</span>
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">y </span><span class="s2">= </span><span class="s1">z</span>
+            <span class="s1">z </span><span class="s2">= </span><span class="s1">y</span><span class="s2">*</span><span class="s1">y</span>
+            <span class="s1">a </span><span class="s2">= </span><span class="s1">z</span><span class="s2">*</span><span class="s1">one  </span><span class="s5"># Check here for underflow</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">z</span><span class="s2">*</span><span class="s1">t</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">a</span><span class="s2">+</span><span class="s1">a </span><span class="s2">== </span><span class="s1">zero</span><span class="s2">) </span><span class="s4">or </span><span class="s1">any</span><span class="s2">(</span><span class="s1">abs</span><span class="s2">(</span><span class="s1">z</span><span class="s2">) &gt;= </span><span class="s1">y</span><span class="s2">):</span>
+                <span class="s4">break</span>
+            <span class="s1">temp1 </span><span class="s2">= </span><span class="s1">temp </span><span class="s2">* </span><span class="s1">betain</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp1</span><span class="s2">*</span><span class="s1">beta </span><span class="s2">== </span><span class="s1">z</span><span class="s2">):</span>
+                <span class="s4">break</span>
+            <span class="s1">i </span><span class="s2">= </span><span class="s1">i </span><span class="s2">+ </span><span class="s6">1</span>
+            <span class="s1">k </span><span class="s2">= </span><span class="s1">k </span><span class="s2">+ </span><span class="s1">k</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+        <span class="s4">if </span><span class="s1">ibeta </span><span class="s2">!= </span><span class="s6">10</span><span class="s2">:</span>
+            <span class="s1">iexp </span><span class="s2">= </span><span class="s1">i </span><span class="s2">+ </span><span class="s6">1</span>
+            <span class="s1">mx </span><span class="s2">= </span><span class="s1">k </span><span class="s2">+ </span><span class="s1">k</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s1">iexp </span><span class="s2">= </span><span class="s6">2</span>
+            <span class="s1">iz </span><span class="s2">= </span><span class="s1">ibeta</span>
+            <span class="s4">while </span><span class="s1">k </span><span class="s2">&gt;= </span><span class="s1">iz</span><span class="s2">:</span>
+                <span class="s1">iz </span><span class="s2">= </span><span class="s1">iz </span><span class="s2">* </span><span class="s1">ibeta</span>
+                <span class="s1">iexp </span><span class="s2">= </span><span class="s1">iexp </span><span class="s2">+ </span><span class="s6">1</span>
+            <span class="s1">mx </span><span class="s2">= </span><span class="s1">iz </span><span class="s2">+ </span><span class="s1">iz </span><span class="s2">- </span><span class="s6">1</span>
+
+        <span class="s5"># Determine minexp and xmin</span>
+        <span class="s4">for </span><span class="s1">_ </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">max_iterN</span><span class="s2">):</span>
+            <span class="s1">xmin </span><span class="s2">= </span><span class="s1">y</span>
+            <span class="s1">y </span><span class="s2">= </span><span class="s1">y </span><span class="s2">* </span><span class="s1">betain</span>
+            <span class="s1">a </span><span class="s2">= </span><span class="s1">y </span><span class="s2">* </span><span class="s1">one</span>
+            <span class="s1">temp </span><span class="s2">= </span><span class="s1">y </span><span class="s2">* </span><span class="s1">t</span>
+            <span class="s4">if </span><span class="s1">any</span><span class="s2">((</span><span class="s1">a </span><span class="s2">+ </span><span class="s1">a</span><span class="s2">) != </span><span class="s1">zero</span><span class="s2">) </span><span class="s4">and </span><span class="s1">any</span><span class="s2">(</span><span class="s1">abs</span><span class="s2">(</span><span class="s1">y</span><span class="s2">) &lt; </span><span class="s1">xmin</span><span class="s2">):</span>
+                <span class="s1">k </span><span class="s2">= </span><span class="s1">k </span><span class="s2">+ </span><span class="s6">1</span>
+                <span class="s1">temp1 </span><span class="s2">= </span><span class="s1">temp </span><span class="s2">* </span><span class="s1">betain</span>
+                <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp1</span><span class="s2">*</span><span class="s1">beta </span><span class="s2">== </span><span class="s1">y</span><span class="s2">) </span><span class="s4">and </span><span class="s1">any</span><span class="s2">(</span><span class="s1">temp </span><span class="s2">!= </span><span class="s1">y</span><span class="s2">):</span>
+                    <span class="s1">nxres </span><span class="s2">= </span><span class="s6">3</span>
+                    <span class="s1">xmin </span><span class="s2">= </span><span class="s1">y</span>
+                    <span class="s4">break</span>
+            <span class="s4">else</span><span class="s2">:</span>
+                <span class="s4">break</span>
+        <span class="s4">else</span><span class="s2">:</span>
+            <span class="s4">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span><span class="s1">msg </span><span class="s2">% (</span><span class="s1">_</span><span class="s2">, </span><span class="s1">one</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">))</span>
+        <span class="s1">minexp </span><span class="s2">= -</span><span class="s1">k</span>
+
+        <span class="s5"># Determine maxexp, xmax</span>
+        <span class="s4">if </span><span class="s1">mx </span><span class="s2">&lt;= </span><span class="s1">k </span><span class="s2">+ </span><span class="s1">k </span><span class="s2">- </span><span class="s6">3 </span><span class="s4">and </span><span class="s1">ibeta </span><span class="s2">!= </span><span class="s6">10</span><span class="s2">:</span>
+            <span class="s1">mx </span><span class="s2">= </span><span class="s1">mx </span><span class="s2">+ </span><span class="s1">mx</span>
+            <span class="s1">iexp </span><span class="s2">= </span><span class="s1">iexp </span><span class="s2">+ </span><span class="s6">1</span>
+        <span class="s1">maxexp </span><span class="s2">= </span><span class="s1">mx </span><span class="s2">+ </span><span class="s1">minexp</span>
+        <span class="s1">irnd </span><span class="s2">= </span><span class="s1">irnd </span><span class="s2">+ </span><span class="s1">nxres</span>
+        <span class="s4">if </span><span class="s1">irnd </span><span class="s2">&gt;= </span><span class="s6">2</span><span class="s2">:</span>
+            <span class="s1">maxexp </span><span class="s2">= </span><span class="s1">maxexp </span><span class="s2">- </span><span class="s6">2</span>
+        <span class="s1">i </span><span class="s2">= </span><span class="s1">maxexp </span><span class="s2">+ </span><span class="s1">minexp</span>
+        <span class="s4">if </span><span class="s1">ibeta </span><span class="s2">== </span><span class="s6">2 </span><span class="s4">and not </span><span class="s1">i</span><span class="s2">:</span>
+            <span class="s1">maxexp </span><span class="s2">= </span><span class="s1">maxexp </span><span class="s2">- </span><span class="s6">1</span>
+        <span class="s4">if </span><span class="s1">i </span><span class="s2">&gt; </span><span class="s6">20</span><span class="s2">:</span>
+            <span class="s1">maxexp </span><span class="s2">= </span><span class="s1">maxexp </span><span class="s2">- </span><span class="s6">1</span>
+        <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">a </span><span class="s2">!= </span><span class="s1">y</span><span class="s2">):</span>
+            <span class="s1">maxexp </span><span class="s2">= </span><span class="s1">maxexp </span><span class="s2">- </span><span class="s6">2</span>
+        <span class="s1">xmax </span><span class="s2">= </span><span class="s1">one </span><span class="s2">- </span><span class="s1">epsneg</span>
+        <span class="s4">if </span><span class="s1">any</span><span class="s2">(</span><span class="s1">xmax</span><span class="s2">*</span><span class="s1">one </span><span class="s2">!= </span><span class="s1">xmax</span><span class="s2">):</span>
+            <span class="s1">xmax </span><span class="s2">= </span><span class="s1">one </span><span class="s2">- </span><span class="s1">beta</span><span class="s2">*</span><span class="s1">epsneg</span>
+        <span class="s1">xmax </span><span class="s2">= </span><span class="s1">xmax </span><span class="s2">/ (</span><span class="s1">xmin</span><span class="s2">*</span><span class="s1">beta</span><span class="s2">*</span><span class="s1">beta</span><span class="s2">*</span><span class="s1">beta</span><span class="s2">)</span>
+        <span class="s1">i </span><span class="s2">= </span><span class="s1">maxexp </span><span class="s2">+ </span><span class="s1">minexp </span><span class="s2">+ </span><span class="s6">3</span>
+        <span class="s4">for </span><span class="s1">j </span><span class="s4">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">i</span><span class="s2">):</span>
+            <span class="s4">if </span><span class="s1">ibeta </span><span class="s2">== </span><span class="s6">2</span><span class="s2">:</span>
+                <span class="s1">xmax </span><span class="s2">= </span><span class="s1">xmax </span><span class="s2">+ </span><span class="s1">xmax</span>
+            <span class="s4">else</span><span class="s2">:</span>
+                <span class="s1">xmax </span><span class="s2">= </span><span class="s1">xmax </span><span class="s2">* </span><span class="s1">beta</span>
+
+        <span class="s1">smallest_subnormal </span><span class="s2">= </span><span class="s1">abs</span><span class="s2">(</span><span class="s1">xmin </span><span class="s2">/ </span><span class="s1">beta </span><span class="s2">** (</span><span class="s1">it</span><span class="s2">))</span>
+
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">ibeta </span><span class="s2">= </span><span class="s1">ibeta</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">it </span><span class="s2">= </span><span class="s1">it</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">negep </span><span class="s2">= </span><span class="s1">negep</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">epsneg </span><span class="s2">= </span><span class="s1">float_to_float</span><span class="s2">(</span><span class="s1">epsneg</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_str_epsneg </span><span class="s2">= </span><span class="s1">float_to_str</span><span class="s2">(</span><span class="s1">epsneg</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">machep </span><span class="s2">= </span><span class="s1">machep</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">eps </span><span class="s2">= </span><span class="s1">float_to_float</span><span class="s2">(</span><span class="s1">eps</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_str_eps </span><span class="s2">= </span><span class="s1">float_to_str</span><span class="s2">(</span><span class="s1">eps</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">ngrd </span><span class="s2">= </span><span class="s1">ngrd</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">iexp </span><span class="s2">= </span><span class="s1">iexp</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">minexp </span><span class="s2">= </span><span class="s1">minexp</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">xmin </span><span class="s2">= </span><span class="s1">float_to_float</span><span class="s2">(</span><span class="s1">xmin</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_str_xmin </span><span class="s2">= </span><span class="s1">float_to_str</span><span class="s2">(</span><span class="s1">xmin</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">maxexp </span><span class="s2">= </span><span class="s1">maxexp</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">xmax </span><span class="s2">= </span><span class="s1">float_to_float</span><span class="s2">(</span><span class="s1">xmax</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_str_xmax </span><span class="s2">= </span><span class="s1">float_to_str</span><span class="s2">(</span><span class="s1">xmax</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">irnd </span><span class="s2">= </span><span class="s1">irnd</span>
+
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">title </span><span class="s2">= </span><span class="s1">title</span>
+        <span class="s5"># Commonly used parameters</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">epsilon </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">eps</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">tiny </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">xmin</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">huge </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">xmax</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">smallest_normal </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">xmin</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_str_smallest_normal </span><span class="s2">= </span><span class="s1">float_to_str</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">xmin</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">smallest_subnormal </span><span class="s2">= </span><span class="s1">float_to_float</span><span class="s2">(</span><span class="s1">smallest_subnormal</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_str_smallest_subnormal </span><span class="s2">= </span><span class="s1">float_to_str</span><span class="s2">(</span><span class="s1">smallest_subnormal</span><span class="s2">)</span>
+
+        <span class="s4">import </span><span class="s1">math</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">precision </span><span class="s2">= </span><span class="s1">int</span><span class="s2">(-</span><span class="s1">math</span><span class="s2">.</span><span class="s1">log10</span><span class="s2">(</span><span class="s1">float_to_float</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">eps</span><span class="s2">)))</span>
+        <span class="s1">ten </span><span class="s2">= </span><span class="s1">two </span><span class="s2">+ </span><span class="s1">two </span><span class="s2">+ </span><span class="s1">two </span><span class="s2">+ </span><span class="s1">two </span><span class="s2">+ </span><span class="s1">two</span>
+        <span class="s1">resolution </span><span class="s2">= </span><span class="s1">ten </span><span class="s2">** (-</span><span class="s1">self</span><span class="s2">.</span><span class="s1">precision</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">resolution </span><span class="s2">= </span><span class="s1">float_to_float</span><span class="s2">(</span><span class="s1">resolution</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_str_resolution </span><span class="s2">= </span><span class="s1">float_to_str</span><span class="s2">(</span><span class="s1">resolution</span><span class="s2">)</span>
+
+    <span class="s4">def </span><span class="s1">__str__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">fmt </span><span class="s2">= (</span>
+           <span class="s3">'Machine parameters for %(title)s</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'---------------------------------------------------------------------</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'ibeta=%(ibeta)s it=%(it)s iexp=%(iexp)s ngrd=%(ngrd)s irnd=%(irnd)s</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'machep=%(machep)s     eps=%(_str_eps)s (beta**machep == epsilon)</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'negep =%(negep)s  epsneg=%(_str_epsneg)s (beta**epsneg)</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'minexp=%(minexp)s   xmin=%(_str_xmin)s (beta**minexp == tiny)</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'maxexp=%(maxexp)s    xmax=%(_str_xmax)s ((1-epsneg)*beta**maxexp == huge)</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'smallest_normal=%(smallest_normal)s    '</span>
+           <span class="s3">'smallest_subnormal=%(smallest_subnormal)s</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s3">'---------------------------------------------------------------------</span><span class="s4">\n</span><span class="s3">'</span>
+           <span class="s2">)</span>
+        <span class="s4">return </span><span class="s1">fmt </span><span class="s2">% </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__dict__</span>
+
+
+<span class="s4">if </span><span class="s1">__name__ </span><span class="s2">== </span><span class="s3">'__main__'</span><span class="s2">:</span>
+    <span class="s1">print</span><span class="s2">(</span><span class="s1">MachAr</span><span class="s2">())</span>
+</pre>
+</body>
+</html>

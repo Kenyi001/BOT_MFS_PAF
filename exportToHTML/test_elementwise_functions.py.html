@@ -1,0 +1,136 @@
+<html>
+<head>
+<title>test_elementwise_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_elementwise_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">inspect </span><span class="s0">import </span><span class="s1">getfullargspec</span>
+
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">assert_raises</span>
+
+<span class="s0">from </span><span class="s2">.. </span><span class="s0">import </span><span class="s1">asarray</span><span class="s2">, </span><span class="s1">_elementwise_functions</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">_elementwise_functions </span><span class="s0">import </span><span class="s1">bitwise_left_shift</span><span class="s2">, </span><span class="s1">bitwise_right_shift</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">_dtypes </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">_dtype_categories</span><span class="s2">,</span>
+    <span class="s1">_boolean_dtypes</span><span class="s2">,</span>
+    <span class="s1">_floating_dtypes</span><span class="s2">,</span>
+    <span class="s1">_integer_dtypes</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">nargs</span><span class="s2">(</span><span class="s1">func</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s1">len</span><span class="s2">(</span><span class="s1">getfullargspec</span><span class="s2">(</span><span class="s1">func</span><span class="s2">).</span><span class="s1">args</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_function_types</span><span class="s2">():</span>
+    <span class="s3"># Test that every function accepts only the required input types. We only</span>
+    <span class="s3"># test the negative cases here (error). The positive cases are tested in</span>
+    <span class="s3"># the array API test suite.</span>
+
+    <span class="s1">elementwise_function_input_types </span><span class="s2">= {</span>
+        <span class="s4">&quot;abs&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;acos&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;acosh&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;add&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;asin&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;asinh&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;atan&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;atan2&quot;</span><span class="s2">: </span><span class="s4">&quot;real floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;atanh&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;bitwise_and&quot;</span><span class="s2">: </span><span class="s4">&quot;integer or boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;bitwise_invert&quot;</span><span class="s2">: </span><span class="s4">&quot;integer or boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;bitwise_left_shift&quot;</span><span class="s2">: </span><span class="s4">&quot;integer&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;bitwise_or&quot;</span><span class="s2">: </span><span class="s4">&quot;integer or boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;bitwise_right_shift&quot;</span><span class="s2">: </span><span class="s4">&quot;integer&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;bitwise_xor&quot;</span><span class="s2">: </span><span class="s4">&quot;integer or boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;ceil&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;conj&quot;</span><span class="s2">: </span><span class="s4">&quot;complex floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;cos&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;cosh&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;divide&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;equal&quot;</span><span class="s2">: </span><span class="s4">&quot;all&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;exp&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;expm1&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;floor&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;floor_divide&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;greater&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;greater_equal&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;imag&quot;</span><span class="s2">: </span><span class="s4">&quot;complex floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;isfinite&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;isinf&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;isnan&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;less&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;less_equal&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;log&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;logaddexp&quot;</span><span class="s2">: </span><span class="s4">&quot;real floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;log10&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;log1p&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;log2&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;logical_and&quot;</span><span class="s2">: </span><span class="s4">&quot;boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;logical_not&quot;</span><span class="s2">: </span><span class="s4">&quot;boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;logical_or&quot;</span><span class="s2">: </span><span class="s4">&quot;boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;logical_xor&quot;</span><span class="s2">: </span><span class="s4">&quot;boolean&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;multiply&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;negative&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;not_equal&quot;</span><span class="s2">: </span><span class="s4">&quot;all&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;positive&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;pow&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;real&quot;</span><span class="s2">: </span><span class="s4">&quot;complex floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;remainder&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;round&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;sign&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;sin&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;sinh&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;sqrt&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;square&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;subtract&quot;</span><span class="s2">: </span><span class="s4">&quot;numeric&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;tan&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;tanh&quot;</span><span class="s2">: </span><span class="s4">&quot;floating-point&quot;</span><span class="s2">,</span>
+        <span class="s4">&quot;trunc&quot;</span><span class="s2">: </span><span class="s4">&quot;real numeric&quot;</span><span class="s2">,</span>
+    <span class="s2">}</span>
+
+    <span class="s0">def </span><span class="s1">_array_vals</span><span class="s2">():</span>
+        <span class="s0">for </span><span class="s1">d </span><span class="s0">in </span><span class="s1">_integer_dtypes</span><span class="s2">:</span>
+            <span class="s0">yield </span><span class="s1">asarray</span><span class="s2">(</span><span class="s5">1</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">d</span><span class="s2">)</span>
+        <span class="s0">for </span><span class="s1">d </span><span class="s0">in </span><span class="s1">_boolean_dtypes</span><span class="s2">:</span>
+            <span class="s0">yield </span><span class="s1">asarray</span><span class="s2">(</span><span class="s0">False</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">d</span><span class="s2">)</span>
+        <span class="s0">for </span><span class="s1">d </span><span class="s0">in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+            <span class="s0">yield </span><span class="s1">asarray</span><span class="s2">(</span><span class="s5">1.0</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">d</span><span class="s2">)</span>
+
+    <span class="s0">for </span><span class="s1">x </span><span class="s0">in </span><span class="s1">_array_vals</span><span class="s2">():</span>
+        <span class="s0">for </span><span class="s1">func_name</span><span class="s2">, </span><span class="s1">types </span><span class="s0">in </span><span class="s1">elementwise_function_input_types</span><span class="s2">.</span><span class="s1">items</span><span class="s2">():</span>
+            <span class="s1">dtypes </span><span class="s2">= </span><span class="s1">_dtype_categories</span><span class="s2">[</span><span class="s1">types</span><span class="s2">]</span>
+            <span class="s1">func </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">_elementwise_functions</span><span class="s2">, </span><span class="s1">func_name</span><span class="s2">)</span>
+            <span class="s0">if </span><span class="s1">nargs</span><span class="s2">(</span><span class="s1">func</span><span class="s2">) == </span><span class="s5">2</span><span class="s2">:</span>
+                <span class="s0">for </span><span class="s1">y </span><span class="s0">in </span><span class="s1">_array_vals</span><span class="s2">():</span>
+                    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">dtypes </span><span class="s0">or </span><span class="s1">y</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">dtypes</span><span class="s2">:</span>
+                        <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">func</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">))</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">dtypes</span><span class="s2">:</span>
+                    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">func</span><span class="s2">(</span><span class="s1">x</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">test_bitwise_shift_error</span><span class="s2">():</span>
+    <span class="s3"># bitwise shift functions should raise when the second argument is negative</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span>
+        <span class="s1">ValueError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">bitwise_left_shift</span><span class="s2">(</span><span class="s1">asarray</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]), </span><span class="s1">asarray</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, -</span><span class="s5">1</span><span class="s2">]))</span>
+    <span class="s2">)</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span>
+        <span class="s1">ValueError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">bitwise_right_shift</span><span class="s2">(</span><span class="s1">asarray</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">]), </span><span class="s1">asarray</span><span class="s2">([</span><span class="s5">1</span><span class="s2">, -</span><span class="s5">1</span><span class="s2">]))</span>
+    <span class="s2">)</span>
+</pre>
+</body>
+</html>

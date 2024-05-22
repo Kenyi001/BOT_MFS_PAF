@@ -1,0 +1,311 @@
+<html>
+<head>
+<title>context.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+context.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">subprocess</span>
+<span class="s0">import </span><span class="s1">contextlib</span>
+<span class="s0">import </span><span class="s1">functools</span>
+<span class="s0">import </span><span class="s1">tempfile</span>
+<span class="s0">import </span><span class="s1">shutil</span>
+<span class="s0">import </span><span class="s1">operator</span>
+<span class="s0">import </span><span class="s1">warnings</span>
+
+
+<span class="s2">@</span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">contextmanager</span>
+<span class="s0">def </span><span class="s1">pushd</span><span class="s2">(</span><span class="s1">dir</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    &gt;&gt;&gt; tmp_path = getfixture('tmp_path') 
+    &gt;&gt;&gt; with pushd(tmp_path): 
+    ...     assert os.getcwd() == os.fspath(tmp_path) 
+    &gt;&gt;&gt; assert os.getcwd() != os.fspath(tmp_path) 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">orig </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">getcwd</span><span class="s2">()</span>
+    <span class="s1">os</span><span class="s2">.</span><span class="s1">chdir</span><span class="s2">(</span><span class="s1">dir</span><span class="s2">)</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s0">yield </span><span class="s1">dir</span>
+    <span class="s0">finally</span><span class="s2">:</span>
+        <span class="s1">os</span><span class="s2">.</span><span class="s1">chdir</span><span class="s2">(</span><span class="s1">orig</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">contextmanager</span>
+<span class="s0">def </span><span class="s1">tarball_context</span><span class="s2">(</span><span class="s1">url</span><span class="s2">, </span><span class="s1">target_dir</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">runner</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">pushd</span><span class="s2">=</span><span class="s1">pushd</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Get a tarball, extract it, change to that directory, yield, then 
+    clean up. 
+    `runner` is the function to invoke commands. 
+    `pushd` is a context manager for changing the directory. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">target_dir </span><span class="s0">is None</span><span class="s2">:</span>
+        <span class="s1">target_dir </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">basename</span><span class="s2">(</span><span class="s1">url</span><span class="s2">).</span><span class="s1">replace</span><span class="s2">(</span><span class="s4">'.tar.gz'</span><span class="s2">, </span><span class="s4">''</span><span class="s2">).</span><span class="s1">replace</span><span class="s2">(</span><span class="s4">'.tgz'</span><span class="s2">, </span><span class="s4">''</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">runner </span><span class="s0">is None</span><span class="s2">:</span>
+        <span class="s1">runner </span><span class="s2">= </span><span class="s1">functools</span><span class="s2">.</span><span class="s1">partial</span><span class="s2">(</span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">check_call</span><span class="s2">, </span><span class="s1">shell</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s4">&quot;runner parameter is deprecated&quot;</span><span class="s2">, </span><span class="s1">DeprecationWarning</span><span class="s2">)</span>
+    <span class="s5"># In the tar command, use --strip-components=1 to strip the first path and</span>
+    <span class="s5">#  then</span>
+    <span class="s5">#  use -C to cause the files to be extracted to {target_dir}. This ensures</span>
+    <span class="s5">#  that we always know where the files were extracted.</span>
+    <span class="s1">runner</span><span class="s2">(</span><span class="s4">'mkdir {target_dir}'</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(**</span><span class="s1">vars</span><span class="s2">()))</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">getter </span><span class="s2">= </span><span class="s4">'wget {url} -O -'</span>
+        <span class="s1">extract </span><span class="s2">= </span><span class="s4">'tar x{compression} --strip-components=1 -C {target_dir}'</span>
+        <span class="s1">cmd </span><span class="s2">= </span><span class="s4">' | '</span><span class="s2">.</span><span class="s1">join</span><span class="s2">((</span><span class="s1">getter</span><span class="s2">, </span><span class="s1">extract</span><span class="s2">))</span>
+        <span class="s1">runner</span><span class="s2">(</span><span class="s1">cmd</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span><span class="s1">compression</span><span class="s2">=</span><span class="s1">infer_compression</span><span class="s2">(</span><span class="s1">url</span><span class="s2">), **</span><span class="s1">vars</span><span class="s2">()))</span>
+        <span class="s0">with </span><span class="s1">pushd</span><span class="s2">(</span><span class="s1">target_dir</span><span class="s2">):</span>
+            <span class="s0">yield </span><span class="s1">target_dir</span>
+    <span class="s0">finally</span><span class="s2">:</span>
+        <span class="s1">runner</span><span class="s2">(</span><span class="s4">'rm -Rf {target_dir}'</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(**</span><span class="s1">vars</span><span class="s2">()))</span>
+
+
+<span class="s0">def </span><span class="s1">infer_compression</span><span class="s2">(</span><span class="s1">url</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Given a URL or filename, infer the compression code for tar. 
+ 
+    &gt;&gt;&gt; infer_compression('http://foo/bar.tar.gz') 
+    'z' 
+    &gt;&gt;&gt; infer_compression('http://foo/bar.tgz') 
+    'z' 
+    &gt;&gt;&gt; infer_compression('file.bz') 
+    'j' 
+    &gt;&gt;&gt; infer_compression('file.xz') 
+    'J' 
+    &quot;&quot;&quot;</span>
+    <span class="s5"># cheat and just assume it's the last two characters</span>
+    <span class="s1">compression_indicator </span><span class="s2">= </span><span class="s1">url</span><span class="s2">[-</span><span class="s6">2</span><span class="s2">:]</span>
+    <span class="s1">mapping </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span><span class="s1">gz</span><span class="s2">=</span><span class="s4">'z'</span><span class="s2">, </span><span class="s1">bz</span><span class="s2">=</span><span class="s4">'j'</span><span class="s2">, </span><span class="s1">xz</span><span class="s2">=</span><span class="s4">'J'</span><span class="s2">)</span>
+    <span class="s5"># Assume 'z' (gzip) if no match</span>
+    <span class="s0">return </span><span class="s1">mapping</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s1">compression_indicator</span><span class="s2">, </span><span class="s4">'z'</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">contextmanager</span>
+<span class="s0">def </span><span class="s1">temp_dir</span><span class="s2">(</span><span class="s1">remover</span><span class="s2">=</span><span class="s1">shutil</span><span class="s2">.</span><span class="s1">rmtree</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Create a temporary directory context. Pass a custom remover 
+    to override the removal behavior. 
+ 
+    &gt;&gt;&gt; import pathlib 
+    &gt;&gt;&gt; with temp_dir() as the_dir: 
+    ...     assert os.path.isdir(the_dir) 
+    ...     _ = pathlib.Path(the_dir).joinpath('somefile').write_text('contents') 
+    &gt;&gt;&gt; assert not os.path.exists(the_dir) 
+    &quot;&quot;&quot;</span>
+    <span class="s1">temp_dir </span><span class="s2">= </span><span class="s1">tempfile</span><span class="s2">.</span><span class="s1">mkdtemp</span><span class="s2">()</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s0">yield </span><span class="s1">temp_dir</span>
+    <span class="s0">finally</span><span class="s2">:</span>
+        <span class="s1">remover</span><span class="s2">(</span><span class="s1">temp_dir</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">contextmanager</span>
+<span class="s0">def </span><span class="s1">repo_context</span><span class="s2">(</span><span class="s1">url</span><span class="s2">, </span><span class="s1">branch</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">quiet</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">dest_ctx</span><span class="s2">=</span><span class="s1">temp_dir</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Check out the repo indicated by url. 
+ 
+    If dest_ctx is supplied, it should be a context manager 
+    to yield the target directory for the check out. 
+    &quot;&quot;&quot;</span>
+    <span class="s1">exe </span><span class="s2">= </span><span class="s4">'git' </span><span class="s0">if </span><span class="s4">'git' </span><span class="s0">in </span><span class="s1">url </span><span class="s0">else </span><span class="s4">'hg'</span>
+    <span class="s0">with </span><span class="s1">dest_ctx</span><span class="s2">() </span><span class="s0">as </span><span class="s1">repo_dir</span><span class="s2">:</span>
+        <span class="s1">cmd </span><span class="s2">= [</span><span class="s1">exe</span><span class="s2">, </span><span class="s4">'clone'</span><span class="s2">, </span><span class="s1">url</span><span class="s2">, </span><span class="s1">repo_dir</span><span class="s2">]</span>
+        <span class="s0">if </span><span class="s1">branch</span><span class="s2">:</span>
+            <span class="s1">cmd</span><span class="s2">.</span><span class="s1">extend</span><span class="s2">([</span><span class="s4">'--branch'</span><span class="s2">, </span><span class="s1">branch</span><span class="s2">])</span>
+        <span class="s1">devnull </span><span class="s2">= </span><span class="s1">open</span><span class="s2">(</span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">devnull</span><span class="s2">, </span><span class="s4">'w'</span><span class="s2">)</span>
+        <span class="s1">stdout </span><span class="s2">= </span><span class="s1">devnull </span><span class="s0">if </span><span class="s1">quiet </span><span class="s0">else None</span>
+        <span class="s1">subprocess</span><span class="s2">.</span><span class="s1">check_call</span><span class="s2">(</span><span class="s1">cmd</span><span class="s2">, </span><span class="s1">stdout</span><span class="s2">=</span><span class="s1">stdout</span><span class="s2">)</span>
+        <span class="s0">yield </span><span class="s1">repo_dir</span>
+
+
+<span class="s2">@</span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">contextmanager</span>
+<span class="s0">def </span><span class="s1">null</span><span class="s2">():</span>
+    <span class="s3">&quot;&quot;&quot; 
+    A null context suitable to stand in for a meaningful context. 
+ 
+    &gt;&gt;&gt; with null() as value: 
+    ...     assert value is None 
+    &quot;&quot;&quot;</span>
+    <span class="s0">yield</span>
+
+
+<span class="s0">class </span><span class="s1">ExceptionTrap</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    A context manager that will catch certain exceptions and provide an 
+    indication they occurred. 
+ 
+    &gt;&gt;&gt; with ExceptionTrap() as trap: 
+    ...     raise Exception() 
+    &gt;&gt;&gt; bool(trap) 
+    True 
+ 
+    &gt;&gt;&gt; with ExceptionTrap() as trap: 
+    ...     pass 
+    &gt;&gt;&gt; bool(trap) 
+    False 
+ 
+    &gt;&gt;&gt; with ExceptionTrap(ValueError) as trap: 
+    ...     raise ValueError(&quot;1 + 1 is not 3&quot;) 
+    &gt;&gt;&gt; bool(trap) 
+    True 
+    &gt;&gt;&gt; trap.value 
+    ValueError('1 + 1 is not 3') 
+    &gt;&gt;&gt; trap.tb 
+    &lt;traceback object at ...&gt; 
+ 
+    &gt;&gt;&gt; with ExceptionTrap(ValueError) as trap: 
+    ...     raise Exception() 
+    Traceback (most recent call last): 
+    ... 
+    Exception 
+ 
+    &gt;&gt;&gt; bool(trap) 
+    False 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">exc_info </span><span class="s2">= </span><span class="s0">None</span><span class="s2">, </span><span class="s0">None</span><span class="s2">, </span><span class="s0">None</span>
+
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">exceptions</span><span class="s2">=(</span><span class="s1">Exception</span><span class="s2">,)):</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">exceptions </span><span class="s2">= </span><span class="s1">exceptions</span>
+
+    <span class="s0">def </span><span class="s1">__enter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">type</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">exc_info</span><span class="s2">[</span><span class="s6">0</span><span class="s2">]</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">value</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">exc_info</span><span class="s2">[</span><span class="s6">1</span><span class="s2">]</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">tb</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">exc_info</span><span class="s2">[</span><span class="s6">2</span><span class="s2">]</span>
+
+    <span class="s0">def </span><span class="s1">__exit__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">exc_info</span><span class="s2">):</span>
+        <span class="s1">type </span><span class="s2">= </span><span class="s1">exc_info</span><span class="s2">[</span><span class="s6">0</span><span class="s2">]</span>
+        <span class="s1">matches </span><span class="s2">= </span><span class="s1">type </span><span class="s0">and </span><span class="s1">issubclass</span><span class="s2">(</span><span class="s1">type</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">exceptions</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">matches</span><span class="s2">:</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">exc_info </span><span class="s2">= </span><span class="s1">exc_info</span>
+        <span class="s0">return </span><span class="s1">matches</span>
+
+    <span class="s0">def </span><span class="s1">__bool__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">bool</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">type</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">raises</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">func</span><span class="s2">, *, </span><span class="s1">_test</span><span class="s2">=</span><span class="s1">bool</span><span class="s2">):</span>
+        <span class="s3">&quot;&quot;&quot; 
+        Wrap func and replace the result with the truth 
+        value of the trap (True if an exception occurred). 
+ 
+        First, give the decorator an alias to support Python 3.8 
+        Syntax. 
+ 
+        &gt;&gt;&gt; raises = ExceptionTrap(ValueError).raises 
+ 
+        Now decorate a function that always fails. 
+ 
+        &gt;&gt;&gt; @raises 
+        ... def fail(): 
+        ...     raise ValueError('failed') 
+        &gt;&gt;&gt; fail() 
+        True 
+        &quot;&quot;&quot;</span>
+
+        <span class="s2">@</span><span class="s1">functools</span><span class="s2">.</span><span class="s1">wraps</span><span class="s2">(</span><span class="s1">func</span><span class="s2">)</span>
+        <span class="s0">def </span><span class="s1">wrapper</span><span class="s2">(*</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+            <span class="s0">with </span><span class="s1">ExceptionTrap</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">exceptions</span><span class="s2">) </span><span class="s0">as </span><span class="s1">trap</span><span class="s2">:</span>
+                <span class="s1">func</span><span class="s2">(*</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">_test</span><span class="s2">(</span><span class="s1">trap</span><span class="s2">)</span>
+
+        <span class="s0">return </span><span class="s1">wrapper</span>
+
+    <span class="s0">def </span><span class="s1">passes</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">func</span><span class="s2">):</span>
+        <span class="s3">&quot;&quot;&quot; 
+        Wrap func and replace the result with the truth 
+        value of the trap (True if no exception). 
+ 
+        First, give the decorator an alias to support Python 3.8 
+        Syntax. 
+ 
+        &gt;&gt;&gt; passes = ExceptionTrap(ValueError).passes 
+ 
+        Now decorate a function that always fails. 
+ 
+        &gt;&gt;&gt; @passes 
+        ... def fail(): 
+        ...     raise ValueError('failed') 
+ 
+        &gt;&gt;&gt; fail() 
+        False 
+        &quot;&quot;&quot;</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">func</span><span class="s2">, </span><span class="s1">_test</span><span class="s2">=</span><span class="s1">operator</span><span class="s2">.</span><span class="s1">not_</span><span class="s2">)</span>
+
+
+<span class="s0">class </span><span class="s1">suppress</span><span class="s2">(</span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">suppress</span><span class="s2">, </span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">ContextDecorator</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    A version of contextlib.suppress with decorator support. 
+ 
+    &gt;&gt;&gt; @suppress(KeyError) 
+    ... def key_error(): 
+    ...     {}[''] 
+    &gt;&gt;&gt; key_error() 
+    &quot;&quot;&quot;</span>
+
+
+<span class="s0">class </span><span class="s1">on_interrupt</span><span class="s2">(</span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">ContextDecorator</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Replace a KeyboardInterrupt with SystemExit(1) 
+ 
+    &gt;&gt;&gt; def do_interrupt(): 
+    ...     raise KeyboardInterrupt() 
+    &gt;&gt;&gt; on_interrupt('error')(do_interrupt)() 
+    Traceback (most recent call last): 
+    ... 
+    SystemExit: 1 
+    &gt;&gt;&gt; on_interrupt('error', code=255)(do_interrupt)() 
+    Traceback (most recent call last): 
+    ... 
+    SystemExit: 255 
+    &gt;&gt;&gt; on_interrupt('suppress')(do_interrupt)() 
+    &gt;&gt;&gt; with __import__('pytest').raises(KeyboardInterrupt): 
+    ...     on_interrupt('ignore')(do_interrupt)() 
+    &quot;&quot;&quot;</span>
+
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">action</span><span class="s2">=</span><span class="s4">'error'</span><span class="s2">,</span>
+        <span class="s5"># py3.7 compat</span>
+        <span class="s5"># /,</span>
+        <span class="s1">code</span><span class="s2">=</span><span class="s6">1</span><span class="s2">,</span>
+    <span class="s2">):</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">action </span><span class="s2">= </span><span class="s1">action</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">code </span><span class="s2">= </span><span class="s1">code</span>
+
+    <span class="s0">def </span><span class="s1">__enter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span>
+
+    <span class="s0">def </span><span class="s1">__exit__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">exctype</span><span class="s2">, </span><span class="s1">excinst</span><span class="s2">, </span><span class="s1">exctb</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">exctype </span><span class="s0">is not </span><span class="s1">KeyboardInterrupt </span><span class="s0">or </span><span class="s1">self</span><span class="s2">.</span><span class="s1">action </span><span class="s2">== </span><span class="s4">'ignore'</span><span class="s2">:</span>
+            <span class="s0">return</span>
+        <span class="s0">elif </span><span class="s1">self</span><span class="s2">.</span><span class="s1">action </span><span class="s2">== </span><span class="s4">'error'</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">SystemExit</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">code</span><span class="s2">) </span><span class="s0">from </span><span class="s1">excinst</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">action </span><span class="s2">== </span><span class="s4">'suppress'</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>qtwebkit.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qtwebkit.py</font>
+</center></td></tr></table>
+<pre><span class="s0">#############################################################################</span>
+<span class="s0">##</span>
+<span class="s0">## Copyright (C) 2014 Riverbank Computing Limited.</span>
+<span class="s0">## Copyright (C) 2006 Thorsten Marek.</span>
+<span class="s0">## All right reserved.</span>
+<span class="s0">##</span>
+<span class="s0">## This file is part of PyQt.</span>
+<span class="s0">##</span>
+<span class="s0">## You may use this file under the terms of the GPL v2 or the revised BSD</span>
+<span class="s0">## license as follows:</span>
+<span class="s0">##</span>
+<span class="s0">## &quot;Redistribution and use in source and binary forms, with or without</span>
+<span class="s0">## modification, are permitted provided that the following conditions are</span>
+<span class="s0">## met:</span>
+<span class="s0">##   * Redistributions of source code must retain the above copyright</span>
+<span class="s0">##     notice, this list of conditions and the following disclaimer.</span>
+<span class="s0">##   * Redistributions in binary form must reproduce the above copyright</span>
+<span class="s0">##     notice, this list of conditions and the following disclaimer in</span>
+<span class="s0">##     the documentation and/or other materials provided with the</span>
+<span class="s0">##     distribution.</span>
+<span class="s0">##   * Neither the name of the Riverbank Computing Limited nor the names</span>
+<span class="s0">##     of its contributors may be used to endorse or promote products</span>
+<span class="s0">##     derived from this software without specific prior written</span>
+<span class="s0">##     permission.</span>
+<span class="s0">##</span>
+<span class="s0">## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="s0">## &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="s0">## LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR</span>
+<span class="s0">## A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT</span>
+<span class="s0">## OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,</span>
+<span class="s0">## SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="s0">## LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,</span>
+<span class="s0">## DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY</span>
+<span class="s0">## THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="s0">## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="s0">## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.&quot;</span>
+<span class="s0">##</span>
+<span class="s0">#############################################################################</span>
+
+
+<span class="s0"># If pluginType is MODULE, the plugin loader will call moduleInformation.  The</span>
+<span class="s0"># variable MODULE is inserted into the local namespace by the plugin loader.</span>
+<span class="s1">pluginType </span><span class="s2">= </span><span class="s1">MODULE</span>
+
+
+<span class="s0"># moduleInformation() must return a tuple (module, widget_list).  If &quot;module&quot;</span>
+<span class="s0"># is &quot;A&quot; and any widget from this module is used, the code generator will write</span>
+<span class="s0"># &quot;import A&quot;.  If &quot;module&quot; is &quot;A[.B].C&quot;, the code generator will write</span>
+<span class="s0"># &quot;from A[.B] import C&quot;.  Each entry in &quot;widget_list&quot; must be unique.</span>
+<span class="s3">def </span><span class="s1">moduleInformation</span><span class="s2">():</span>
+    <span class="s3">return </span><span class="s4">&quot;PyQt5.QtWebKitWidgets&quot;</span><span class="s2">, (</span><span class="s4">&quot;QWebView&quot;</span><span class="s2">, )</span>
+</pre>
+</body>
+</html>

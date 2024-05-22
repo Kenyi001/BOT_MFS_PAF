@@ -1,0 +1,225 @@
+<html>
+<head>
+<title>test_describe.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_describe.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">compat</span><span class="s2">.</span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">np_version_gte1p25</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">dtypes</span><span class="s2">.</span><span class="s1">common </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">is_complex_dtype</span><span class="s2">,</span>
+    <span class="s1">is_extension_array_dtype</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">NA</span><span class="s2">,</span>
+    <span class="s1">Period</span><span class="s2">,</span>
+    <span class="s1">Series</span><span class="s2">,</span>
+    <span class="s1">Timedelta</span><span class="s2">,</span>
+    <span class="s1">Timestamp</span><span class="s2">,</span>
+    <span class="s1">date_range</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">import </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_testing </span><span class="s0">as </span><span class="s1">tm</span>
+
+
+<span class="s0">class </span><span class="s1">TestSeriesDescribe</span><span class="s2">:</span>
+    <span class="s0">def </span><span class="s1">test_describe_ints</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">, </span><span class="s3">4</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;int_data&quot;</span><span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s3">5</span><span class="s2">, </span><span class="s3">2</span><span class="s2">, </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">std</span><span class="s2">(), </span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">, </span><span class="s3">4</span><span class="s2">],</span>
+            <span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;int_data&quot;</span><span class="s2">,</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;mean&quot;</span><span class="s2">, </span><span class="s4">&quot;std&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;25%&quot;</span><span class="s2">, </span><span class="s4">&quot;50%&quot;</span><span class="s2">, </span><span class="s4">&quot;75%&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_bools</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s0">True</span><span class="s2">, </span><span class="s0">True</span><span class="s2">, </span><span class="s0">False</span><span class="s2">, </span><span class="s0">False</span><span class="s2">, </span><span class="s0">False</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;bool_data&quot;</span><span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s3">5</span><span class="s2">, </span><span class="s3">2</span><span class="s2">, </span><span class="s0">False</span><span class="s2">, </span><span class="s3">3</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;bool_data&quot;</span><span class="s2">, </span><span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;unique&quot;</span><span class="s2">, </span><span class="s4">&quot;top&quot;</span><span class="s2">, </span><span class="s4">&quot;freq&quot;</span><span class="s2">]</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_strs</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s4">&quot;a&quot;</span><span class="s2">, </span><span class="s4">&quot;a&quot;</span><span class="s2">, </span><span class="s4">&quot;b&quot;</span><span class="s2">, </span><span class="s4">&quot;c&quot;</span><span class="s2">, </span><span class="s4">&quot;d&quot;</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;str_data&quot;</span><span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s3">5</span><span class="s2">, </span><span class="s3">4</span><span class="s2">, </span><span class="s4">&quot;a&quot;</span><span class="s2">, </span><span class="s3">2</span><span class="s2">], </span><span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;str_data&quot;</span><span class="s2">, </span><span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;unique&quot;</span><span class="s2">, </span><span class="s4">&quot;top&quot;</span><span class="s2">, </span><span class="s4">&quot;freq&quot;</span><span class="s2">]</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_timedelta64</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span>
+                <span class="s1">Timedelta</span><span class="s2">(</span><span class="s4">&quot;1 days&quot;</span><span class="s2">),</span>
+                <span class="s1">Timedelta</span><span class="s2">(</span><span class="s4">&quot;2 days&quot;</span><span class="s2">),</span>
+                <span class="s1">Timedelta</span><span class="s2">(</span><span class="s4">&quot;3 days&quot;</span><span class="s2">),</span>
+                <span class="s1">Timedelta</span><span class="s2">(</span><span class="s4">&quot;4 days&quot;</span><span class="s2">),</span>
+                <span class="s1">Timedelta</span><span class="s2">(</span><span class="s4">&quot;5 days&quot;</span><span class="s2">),</span>
+            <span class="s2">],</span>
+            <span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;timedelta_data&quot;</span><span class="s2">,</span>
+        <span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s3">5</span><span class="s2">, </span><span class="s1">ser</span><span class="s2">[</span><span class="s3">2</span><span class="s2">], </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">std</span><span class="s2">(), </span><span class="s1">ser</span><span class="s2">[</span><span class="s3">0</span><span class="s2">], </span><span class="s1">ser</span><span class="s2">[</span><span class="s3">1</span><span class="s2">], </span><span class="s1">ser</span><span class="s2">[</span><span class="s3">2</span><span class="s2">], </span><span class="s1">ser</span><span class="s2">[</span><span class="s3">3</span><span class="s2">], </span><span class="s1">ser</span><span class="s2">[</span><span class="s3">4</span><span class="s2">]],</span>
+            <span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;timedelta_data&quot;</span><span class="s2">,</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;mean&quot;</span><span class="s2">, </span><span class="s4">&quot;std&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;25%&quot;</span><span class="s2">, </span><span class="s4">&quot;50%&quot;</span><span class="s2">, </span><span class="s4">&quot;75%&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_period</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s1">Period</span><span class="s2">(</span><span class="s4">&quot;2020-01&quot;</span><span class="s2">, </span><span class="s4">&quot;M&quot;</span><span class="s2">), </span><span class="s1">Period</span><span class="s2">(</span><span class="s4">&quot;2020-01&quot;</span><span class="s2">, </span><span class="s4">&quot;M&quot;</span><span class="s2">), </span><span class="s1">Period</span><span class="s2">(</span><span class="s4">&quot;2019-12&quot;</span><span class="s2">, </span><span class="s4">&quot;M&quot;</span><span class="s2">)],</span>
+            <span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;period_data&quot;</span><span class="s2">,</span>
+        <span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s3">3</span><span class="s2">, </span><span class="s3">2</span><span class="s2">, </span><span class="s1">ser</span><span class="s2">[</span><span class="s3">0</span><span class="s2">], </span><span class="s3">2</span><span class="s2">],</span>
+            <span class="s1">name</span><span class="s2">=</span><span class="s4">&quot;period_data&quot;</span><span class="s2">,</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;unique&quot;</span><span class="s2">, </span><span class="s4">&quot;top&quot;</span><span class="s2">, </span><span class="s4">&quot;freq&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_empty_object</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s5"># https://github.com/pandas-dev/pandas/issues/27183</span>
+        <span class="s1">s </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s0">None</span><span class="s2">, </span><span class="s0">None</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">object</span><span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">s</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s3">0</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">],</span>
+            <span class="s1">dtype</span><span class="s2">=</span><span class="s1">object</span><span class="s2">,</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;unique&quot;</span><span class="s2">, </span><span class="s4">&quot;top&quot;</span><span class="s2">, </span><span class="s4">&quot;freq&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">s</span><span class="s2">[:</span><span class="s3">0</span><span class="s2">].</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+        <span class="s5"># ensure NaN, not None</span>
+        <span class="s0">assert </span><span class="s1">np</span><span class="s2">.</span><span class="s1">isnan</span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[</span><span class="s3">2</span><span class="s2">])</span>
+        <span class="s0">assert </span><span class="s1">np</span><span class="s2">.</span><span class="s1">isnan</span><span class="s2">(</span><span class="s1">result</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[</span><span class="s3">3</span><span class="s2">])</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_with_tz</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">tz_naive_fixture</span><span class="s2">):</span>
+        <span class="s5"># GH 21332</span>
+        <span class="s1">tz </span><span class="s2">= </span><span class="s1">tz_naive_fixture</span>
+        <span class="s1">name </span><span class="s2">= </span><span class="s1">str</span><span class="s2">(</span><span class="s1">tz_naive_fixture</span><span class="s2">)</span>
+        <span class="s1">start </span><span class="s2">= </span><span class="s1">Timestamp</span><span class="s2">(</span><span class="s3">2018</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">1</span><span class="s2">)</span>
+        <span class="s1">end </span><span class="s2">= </span><span class="s1">Timestamp</span><span class="s2">(</span><span class="s3">2018</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">5</span><span class="s2">)</span>
+        <span class="s1">s </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">date_range</span><span class="s2">(</span><span class="s1">start</span><span class="s2">, </span><span class="s1">end</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">), </span><span class="s1">name</span><span class="s2">=</span><span class="s1">name</span><span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">s</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span>
+                <span class="s3">5</span><span class="s2">,</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s3">2018</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">3</span><span class="s2">).</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">),</span>
+                <span class="s1">start</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">),</span>
+                <span class="s1">s</span><span class="s2">[</span><span class="s3">1</span><span class="s2">],</span>
+                <span class="s1">s</span><span class="s2">[</span><span class="s3">2</span><span class="s2">],</span>
+                <span class="s1">s</span><span class="s2">[</span><span class="s3">3</span><span class="s2">],</span>
+                <span class="s1">end</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">),</span>
+            <span class="s2">],</span>
+            <span class="s1">name</span><span class="s2">=</span><span class="s1">name</span><span class="s2">,</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;mean&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;25%&quot;</span><span class="s2">, </span><span class="s4">&quot;50%&quot;</span><span class="s2">, </span><span class="s4">&quot;75%&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_with_tz_numeric</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">name </span><span class="s2">= </span><span class="s1">tz </span><span class="s2">= </span><span class="s4">&quot;CET&quot;</span>
+        <span class="s1">start </span><span class="s2">= </span><span class="s1">Timestamp</span><span class="s2">(</span><span class="s3">2018</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">1</span><span class="s2">)</span>
+        <span class="s1">end </span><span class="s2">= </span><span class="s1">Timestamp</span><span class="s2">(</span><span class="s3">2018</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">5</span><span class="s2">)</span>
+        <span class="s1">s </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">date_range</span><span class="s2">(</span><span class="s1">start</span><span class="s2">, </span><span class="s1">end</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">), </span><span class="s1">name</span><span class="s2">=</span><span class="s1">name</span><span class="s2">)</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">s</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span>
+                <span class="s3">5</span><span class="s2">,</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2018-01-03 00:00:00&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2018-01-01 00:00:00&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2018-01-02 00:00:00&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2018-01-03 00:00:00&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2018-01-04 00:00:00&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2018-01-05 00:00:00&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">),</span>
+            <span class="s2">],</span>
+            <span class="s1">name</span><span class="s2">=</span><span class="s1">name</span><span class="s2">,</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;mean&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;25%&quot;</span><span class="s2">, </span><span class="s4">&quot;50%&quot;</span><span class="s2">, </span><span class="s4">&quot;75%&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_datetime_is_numeric_includes_datetime</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">s </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">date_range</span><span class="s2">(</span><span class="s4">&quot;2012&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s3">3</span><span class="s2">))</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">s</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span>
+                <span class="s3">3</span><span class="s2">,</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2012-01-02&quot;</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2012-01-01&quot;</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2012-01-01T12:00:00&quot;</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2012-01-02&quot;</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2012-01-02T12:00:00&quot;</span><span class="s2">),</span>
+                <span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2012-01-03&quot;</span><span class="s2">),</span>
+            <span class="s2">],</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;mean&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;25%&quot;</span><span class="s2">, </span><span class="s4">&quot;50%&quot;</span><span class="s2">, </span><span class="s4">&quot;75%&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">filterwarnings</span><span class="s2">(</span><span class="s4">&quot;ignore:Casting complex values to real discards&quot;</span><span class="s2">)</span>
+    <span class="s0">def </span><span class="s1">test_numeric_result_dtype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">any_numeric_dtype</span><span class="s2">):</span>
+        <span class="s5"># GH#48340 - describe should always return float on non-complex numeric input</span>
+        <span class="s0">if </span><span class="s1">is_extension_array_dtype</span><span class="s2">(</span><span class="s1">any_numeric_dtype</span><span class="s2">):</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s4">&quot;Float64&quot;</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s4">&quot;complex128&quot; </span><span class="s0">if </span><span class="s1">is_complex_dtype</span><span class="s2">(</span><span class="s1">any_numeric_dtype</span><span class="s2">) </span><span class="s0">else None</span>
+
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">any_numeric_dtype</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">dtype </span><span class="s2">== </span><span class="s4">&quot;complex128&quot; </span><span class="s0">and </span><span class="s1">np_version_gte1p25</span><span class="s2">:</span>
+            <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span>
+                <span class="s1">TypeError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s4">r&quot;^a must be an array of real numbers$&quot;</span>
+            <span class="s2">):</span>
+                <span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+            <span class="s0">return</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span>
+                <span class="s3">2.0</span><span class="s2">,</span>
+                <span class="s3">0.5</span><span class="s2">,</span>
+                <span class="s1">ser</span><span class="s2">.</span><span class="s1">std</span><span class="s2">(),</span>
+                <span class="s3">0</span><span class="s2">,</span>
+                <span class="s3">0.25</span><span class="s2">,</span>
+                <span class="s3">0.5</span><span class="s2">,</span>
+                <span class="s3">0.75</span><span class="s2">,</span>
+                <span class="s3">1.0</span><span class="s2">,</span>
+            <span class="s2">],</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;mean&quot;</span><span class="s2">, </span><span class="s4">&quot;std&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;25%&quot;</span><span class="s2">, </span><span class="s4">&quot;50%&quot;</span><span class="s2">, </span><span class="s4">&quot;75%&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">],</span>
+            <span class="s1">dtype</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">,</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_describe_one_element_ea</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s5"># GH#52515</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s3">0.0</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;Float64&quot;</span><span class="s2">)</span>
+        <span class="s0">with </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_produces_warning</span><span class="s2">(</span><span class="s0">None</span><span class="s2">):</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">describe</span><span class="s2">()</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s2">[</span><span class="s3">1</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, </span><span class="s1">NA</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, </span><span class="s3">0</span><span class="s2">],</span>
+            <span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;Float64&quot;</span><span class="s2">,</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s4">&quot;count&quot;</span><span class="s2">, </span><span class="s4">&quot;mean&quot;</span><span class="s2">, </span><span class="s4">&quot;std&quot;</span><span class="s2">, </span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;25%&quot;</span><span class="s2">, </span><span class="s4">&quot;50%&quot;</span><span class="s2">, </span><span class="s4">&quot;75%&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<html>
+<head>
+<title>qsysinfo.sip</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qsysinfo.sip</font>
+</center></td></tr></table>
+<pre><span class="s0">// This is the SIP specification of the QSysInfo class.</span>
+<span class="s0">//</span>
+<span class="s0">// Copyright (c) 2023 Riverbank Computing Limited &lt;info@riverbankcomputing.com&gt;</span>
+<span class="s0">// </span>
+<span class="s0">// This file is part of PyQt5.</span>
+<span class="s0">// </span>
+<span class="s0">// This file may be used under the terms of the GNU General Public License</span>
+<span class="s0">// version 3.0 as published by the Free Software Foundation and appearing in</span>
+<span class="s0">// the file LICENSE included in the packaging of this file.  Please review the</span>
+<span class="s0">// following information to ensure the GNU General Public License version 3.0</span>
+<span class="s0">// requirements will be met: http://www.gnu.org/copyleft/gpl.html.</span>
+<span class="s0">// </span>
+<span class="s0">// If you do not wish to use this file under the terms of the GPL version 3.0</span>
+<span class="s0">// then you may purchase a commercial license.  For more information contact</span>
+<span class="s0">// info@riverbankcomputing.com.</span>
+<span class="s0">// </span>
+<span class="s0">// This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE</span>
+<span class="s0">// WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</span>
+
+
+<span class="s0">class QSysInfo</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;qsysinfo.h&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">public:</span>
+    <span class="s0">enum Sizes</span>
+    <span class="s0">{</span>
+        <span class="s0">WordSize,</span>
+    <span class="s0">};</span>
+
+    <span class="s0">enum Endian</span>
+    <span class="s0">{</span>
+        <span class="s0">BigEndian,</span>
+        <span class="s0">LittleEndian,</span>
+        <span class="s0">ByteOrder,</span>
+    <span class="s0">};</span>
+
+<span class="s0">%If (WS_MACX)</span>
+    <span class="s0">enum MacVersion</span>
+    <span class="s0">{</span>
+        <span class="s0">MV_Unknown,</span>
+        <span class="s0">MV_9,</span>
+        <span class="s0">MV_10_0,</span>
+        <span class="s0">MV_10_1,</span>
+        <span class="s0">MV_10_2,</span>
+        <span class="s0">MV_10_3,</span>
+        <span class="s0">MV_10_4,</span>
+        <span class="s0">MV_10_5,</span>
+        <span class="s0">MV_10_6,</span>
+        <span class="s0">MV_10_7,</span>
+        <span class="s0">MV_10_8,</span>
+<span class="s0">%If (Qt_5_1_0 -)</span>
+        <span class="s0">MV_10_9,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_4_0 -)</span>
+        <span class="s0">MV_10_10,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_5_0 -)</span>
+        <span class="s0">MV_10_11,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_8_0 -)</span>
+        <span class="s0">MV_10_12,</span>
+<span class="s0">%End</span>
+        <span class="s0">MV_CHEETAH,</span>
+        <span class="s0">MV_PUMA,</span>
+        <span class="s0">MV_JAGUAR,</span>
+        <span class="s0">MV_PANTHER,</span>
+        <span class="s0">MV_TIGER,</span>
+        <span class="s0">MV_LEOPARD,</span>
+        <span class="s0">MV_SNOWLEOPARD,</span>
+        <span class="s0">MV_LION,</span>
+        <span class="s0">MV_MOUNTAINLION,</span>
+<span class="s0">%If (Qt_5_1_0 -)</span>
+        <span class="s0">MV_MAVERICKS,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_4_0 -)</span>
+        <span class="s0">MV_YOSEMITE,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_5_0 -)</span>
+        <span class="s0">MV_ELCAPITAN,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_8_0 -)</span>
+        <span class="s0">MV_SIERRA,</span>
+<span class="s0">%End</span>
+
+<span class="s0">%If (Qt_5_2_0 -)</span>
+        <span class="s0">MV_IOS,</span>
+        <span class="s0">MV_IOS_4_3,</span>
+        <span class="s0">MV_IOS_5_0,</span>
+        <span class="s0">MV_IOS_5_1,</span>
+        <span class="s0">MV_IOS_6_0,</span>
+        <span class="s0">MV_IOS_6_1,</span>
+        <span class="s0">MV_IOS_7_0,</span>
+        <span class="s0">MV_IOS_7_1,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_4_0 -)</span>
+        <span class="s0">MV_IOS_8_0,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_5_0 -)</span>
+        <span class="s0">MV_IOS_8_1,</span>
+        <span class="s0">MV_IOS_8_2,</span>
+        <span class="s0">MV_IOS_8_3,</span>
+        <span class="s0">MV_IOS_8_4,</span>
+        <span class="s0">MV_IOS_9_0,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_8_0 -)</span>
+        <span class="s0">MV_IOS_9_1,</span>
+        <span class="s0">MV_IOS_9_2,</span>
+        <span class="s0">MV_IOS_9_3,</span>
+        <span class="s0">MV_IOS_10_0,</span>
+<span class="s0">%End</span>
+
+<span class="s0">%If (Qt_5_8_0 -)</span>
+        <span class="s0">MV_TVOS,</span>
+        <span class="s0">MV_TVOS_9_0,</span>
+        <span class="s0">MV_TVOS_9_1,</span>
+        <span class="s0">MV_TVOS_9_2,</span>
+        <span class="s0">MV_TVOS_10_0,</span>
+<span class="s0">%End</span>
+
+<span class="s0">%If (Qt_5_8_0 -)</span>
+        <span class="s0">MV_WATCHOS,</span>
+        <span class="s0">MV_WATCHOS_2_0,</span>
+        <span class="s0">MV_WATCHOS_2_1,</span>
+        <span class="s0">MV_WATCHOS_2_2,</span>
+        <span class="s0">MV_WATCHOS_3_0,</span>
+<span class="s0">%End</span>
+    <span class="s0">};</span>
+
+    <span class="s0">static const QSysInfo::MacVersion MacintoshVersion;</span>
+    <span class="s0">static QSysInfo::MacVersion macVersion();</span>
+<span class="s0">%End</span>
+
+<span class="s0">%If (WS_WIN)</span>
+    <span class="s0">enum WinVersion {</span>
+        <span class="s0">WV_32s,</span>
+        <span class="s0">WV_95,</span>
+        <span class="s0">WV_98,</span>
+        <span class="s0">WV_Me,</span>
+        <span class="s0">WV_DOS_based,</span>
+
+        <span class="s0">WV_NT,</span>
+        <span class="s0">WV_2000,</span>
+        <span class="s0">WV_XP,</span>
+        <span class="s0">WV_2003,</span>
+        <span class="s0">WV_VISTA,</span>
+        <span class="s0">WV_WINDOWS7,</span>
+        <span class="s0">WV_WINDOWS8,</span>
+<span class="s0">%If (Qt_5_2_0 -)</span>
+        <span class="s0">WV_WINDOWS8_1,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_5_0 -)</span>
+        <span class="s0">WV_WINDOWS10,</span>
+<span class="s0">%End</span>
+        <span class="s0">WV_NT_based,</span>
+
+        <span class="s0">WV_4_0,</span>
+        <span class="s0">WV_5_0,</span>
+        <span class="s0">WV_5_1,</span>
+        <span class="s0">WV_5_2,</span>
+        <span class="s0">WV_6_0,</span>
+        <span class="s0">WV_6_1,</span>
+        <span class="s0">WV_6_2,</span>
+<span class="s0">%If (Qt_5_2_0 -)</span>
+        <span class="s0">WV_6_3,</span>
+<span class="s0">%End</span>
+<span class="s0">%If (Qt_5_5_0 -)</span>
+        <span class="s0">WV_10_0,</span>
+<span class="s0">%End</span>
+
+        <span class="s0">WV_CE,</span>
+        <span class="s0">WV_CENET,</span>
+        <span class="s0">WV_CE_5,</span>
+        <span class="s0">WV_CE_6,</span>
+        <span class="s0">WV_CE_based</span>
+    <span class="s0">};</span>
+
+    <span class="s0">static const QSysInfo::WinVersion WindowsVersion;</span>
+    <span class="s0">static QSysInfo::WinVersion windowsVersion();</span>
+<span class="s0">%End</span>
+
+<span class="s0">%If (Qt_5_4_0 -)</span>
+    <span class="s0">static QString buildAbi();</span>
+    <span class="s0">static QString buildCpuArchitecture();</span>
+    <span class="s0">static QString currentCpuArchitecture();</span>
+    <span class="s0">static QString kernelType();</span>
+    <span class="s0">static QString kernelVersion();</span>
+    <span class="s0">static QString prettyProductName();</span>
+    <span class="s0">static QString productType();</span>
+    <span class="s0">static QString productVersion();</span>
+<span class="s0">%End</span>
+
+<span class="s0">%If (Qt_5_6_0 -)</span>
+    <span class="s0">static QString machineHostName();</span>
+<span class="s0">%End</span>
+<span class="s0">};</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,706 @@
+<html>
+<head>
+<title>cpuinfo.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #cf8e6d;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+cpuinfo.py</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env python3</span>
+<span class="s2">&quot;&quot;&quot; 
+cpuinfo 
+ 
+Copyright 2002 Pearu Peterson all rights reserved, 
+Pearu Peterson &lt;pearu@cens.ioc.ee&gt; 
+Permission to use, modify, and distribute this software is given under the 
+terms of the NumPy (BSD style) license.  See LICENSE.txt that came with 
+this distribution for specifics. 
+ 
+NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK. 
+Pearu Peterson 
+ 
+&quot;&quot;&quot;</span>
+<span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">'cpu'</span><span class="s3">]</span>
+
+<span class="s5">import </span><span class="s1">os</span>
+<span class="s5">import </span><span class="s1">platform</span>
+<span class="s5">import </span><span class="s1">re</span>
+<span class="s5">import </span><span class="s1">sys</span>
+<span class="s5">import </span><span class="s1">types</span>
+<span class="s5">import </span><span class="s1">warnings</span>
+
+<span class="s5">from </span><span class="s1">subprocess </span><span class="s5">import </span><span class="s1">getstatusoutput</span>
+
+
+<span class="s5">def </span><span class="s1">getoutput</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">successful_status</span><span class="s3">=(</span><span class="s6">0</span><span class="s3">,), </span><span class="s1">stacklevel</span><span class="s3">=</span><span class="s6">1</span><span class="s3">):</span>
+    <span class="s5">try</span><span class="s3">:</span>
+        <span class="s1">status</span><span class="s3">, </span><span class="s1">output </span><span class="s3">= </span><span class="s1">getstatusoutput</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">)</span>
+    <span class="s5">except </span><span class="s1">OSError </span><span class="s5">as </span><span class="s1">e</span><span class="s3">:</span>
+        <span class="s1">warnings</span><span class="s3">.</span><span class="s1">warn</span><span class="s3">(</span><span class="s1">str</span><span class="s3">(</span><span class="s1">e</span><span class="s3">), </span><span class="s1">UserWarning</span><span class="s3">, </span><span class="s1">stacklevel</span><span class="s3">=</span><span class="s1">stacklevel</span><span class="s3">)</span>
+        <span class="s5">return False</span><span class="s3">, </span><span class="s4">&quot;&quot;</span>
+    <span class="s5">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">WIFEXITED</span><span class="s3">(</span><span class="s1">status</span><span class="s3">) </span><span class="s5">and </span><span class="s1">os</span><span class="s3">.</span><span class="s1">WEXITSTATUS</span><span class="s3">(</span><span class="s1">status</span><span class="s3">) </span><span class="s5">in </span><span class="s1">successful_status</span><span class="s3">:</span>
+        <span class="s5">return True</span><span class="s3">, </span><span class="s1">output</span>
+    <span class="s5">return False</span><span class="s3">, </span><span class="s1">output</span>
+
+<span class="s5">def </span><span class="s1">command_info</span><span class="s3">(</span><span class="s1">successful_status</span><span class="s3">=(</span><span class="s6">0</span><span class="s3">,), </span><span class="s1">stacklevel</span><span class="s3">=</span><span class="s6">1</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">):</span>
+    <span class="s1">info </span><span class="s3">= {}</span>
+    <span class="s5">for </span><span class="s1">key </span><span class="s5">in </span><span class="s1">kw</span><span class="s3">:</span>
+        <span class="s1">ok</span><span class="s3">, </span><span class="s1">output </span><span class="s3">= </span><span class="s1">getoutput</span><span class="s3">(</span><span class="s1">kw</span><span class="s3">[</span><span class="s1">key</span><span class="s3">], </span><span class="s1">successful_status</span><span class="s3">=</span><span class="s1">successful_status</span><span class="s3">,</span>
+                               <span class="s1">stacklevel</span><span class="s3">=</span><span class="s1">stacklevel</span><span class="s3">+</span><span class="s6">1</span><span class="s3">)</span>
+        <span class="s5">if </span><span class="s1">ok</span><span class="s3">:</span>
+            <span class="s1">info</span><span class="s3">[</span><span class="s1">key</span><span class="s3">] = </span><span class="s1">output</span><span class="s3">.</span><span class="s1">strip</span><span class="s3">()</span>
+    <span class="s5">return </span><span class="s1">info</span>
+
+<span class="s5">def </span><span class="s1">command_by_line</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">successful_status</span><span class="s3">=(</span><span class="s6">0</span><span class="s3">,), </span><span class="s1">stacklevel</span><span class="s3">=</span><span class="s6">1</span><span class="s3">):</span>
+    <span class="s1">ok</span><span class="s3">, </span><span class="s1">output </span><span class="s3">= </span><span class="s1">getoutput</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">successful_status</span><span class="s3">=</span><span class="s1">successful_status</span><span class="s3">,</span>
+                           <span class="s1">stacklevel</span><span class="s3">=</span><span class="s1">stacklevel</span><span class="s3">+</span><span class="s6">1</span><span class="s3">)</span>
+    <span class="s5">if not </span><span class="s1">ok</span><span class="s3">:</span>
+        <span class="s5">return</span>
+    <span class="s5">for </span><span class="s1">line </span><span class="s5">in </span><span class="s1">output</span><span class="s3">.</span><span class="s1">splitlines</span><span class="s3">():</span>
+        <span class="s5">yield </span><span class="s1">line</span><span class="s3">.</span><span class="s1">strip</span><span class="s3">()</span>
+
+<span class="s5">def </span><span class="s1">key_value_from_command</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">sep</span><span class="s3">, </span><span class="s1">successful_status</span><span class="s3">=(</span><span class="s6">0</span><span class="s3">,),</span>
+                           <span class="s1">stacklevel</span><span class="s3">=</span><span class="s6">1</span><span class="s3">):</span>
+    <span class="s1">d </span><span class="s3">= {}</span>
+    <span class="s5">for </span><span class="s1">line </span><span class="s5">in </span><span class="s1">command_by_line</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">successful_status</span><span class="s3">=</span><span class="s1">successful_status</span><span class="s3">,</span>
+                                <span class="s1">stacklevel</span><span class="s3">=</span><span class="s1">stacklevel</span><span class="s3">+</span><span class="s6">1</span><span class="s3">):</span>
+        <span class="s1">l </span><span class="s3">= [</span><span class="s1">s</span><span class="s3">.</span><span class="s1">strip</span><span class="s3">() </span><span class="s5">for </span><span class="s1">s </span><span class="s5">in </span><span class="s1">line</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s1">sep</span><span class="s3">, </span><span class="s6">1</span><span class="s3">)]</span>
+        <span class="s5">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">l</span><span class="s3">) == </span><span class="s6">2</span><span class="s3">:</span>
+            <span class="s1">d</span><span class="s3">[</span><span class="s1">l</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]] = </span><span class="s1">l</span><span class="s3">[</span><span class="s6">1</span><span class="s3">]</span>
+    <span class="s5">return </span><span class="s1">d</span>
+
+<span class="s5">class </span><span class="s1">CPUInfoBase</span><span class="s3">:</span>
+    <span class="s2">&quot;&quot;&quot;Holds CPU information and provides methods for requiring 
+    the availability of various CPU features. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s5">def </span><span class="s1">_try_call</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">func</span><span class="s3">):</span>
+        <span class="s5">try</span><span class="s3">:</span>
+            <span class="s5">return </span><span class="s1">func</span><span class="s3">()</span>
+        <span class="s5">except </span><span class="s1">Exception</span><span class="s3">:</span>
+            <span class="s5">pass</span>
+
+    <span class="s5">def </span><span class="s1">__getattr__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">name</span><span class="s3">):</span>
+        <span class="s5">if not </span><span class="s1">name</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'_'</span><span class="s3">):</span>
+            <span class="s5">if </span><span class="s1">hasattr</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s4">'_'</span><span class="s3">+</span><span class="s1">name</span><span class="s3">):</span>
+                <span class="s1">attr </span><span class="s3">= </span><span class="s1">getattr</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s4">'_'</span><span class="s3">+</span><span class="s1">name</span><span class="s3">)</span>
+                <span class="s5">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">attr</span><span class="s3">, </span><span class="s1">types</span><span class="s3">.</span><span class="s1">MethodType</span><span class="s3">):</span>
+                    <span class="s5">return lambda </span><span class="s1">func</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_try_call</span><span class="s3">,</span><span class="s1">attr</span><span class="s3">=</span><span class="s1">attr </span><span class="s3">: </span><span class="s1">func</span><span class="s3">(</span><span class="s1">attr</span><span class="s3">)</span>
+            <span class="s5">else</span><span class="s3">:</span>
+                <span class="s5">return lambda </span><span class="s3">: </span><span class="s5">None</span>
+        <span class="s5">raise </span><span class="s1">AttributeError</span><span class="s3">(</span><span class="s1">name</span><span class="s3">)</span>
+
+    <span class="s5">def </span><span class="s1">_getNCPUs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s6">1</span>
+
+    <span class="s5">def </span><span class="s1">__get_nbits</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">abits </span><span class="s3">= </span><span class="s1">platform</span><span class="s3">.</span><span class="s1">architecture</span><span class="s3">()[</span><span class="s6">0</span><span class="s3">]</span>
+        <span class="s1">nbits </span><span class="s3">= </span><span class="s1">re</span><span class="s3">.</span><span class="s1">compile</span><span class="s3">(</span><span class="s4">r'(\d+)bit'</span><span class="s3">).</span><span class="s1">search</span><span class="s3">(</span><span class="s1">abits</span><span class="s3">).</span><span class="s1">group</span><span class="s3">(</span><span class="s6">1</span><span class="s3">)</span>
+        <span class="s5">return </span><span class="s1">nbits</span>
+
+    <span class="s5">def </span><span class="s1">_is_32bit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__get_nbits</span><span class="s3">() == </span><span class="s4">'32'</span>
+
+    <span class="s5">def </span><span class="s1">_is_64bit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__get_nbits</span><span class="s3">() == </span><span class="s4">'64'</span>
+
+<span class="s5">class </span><span class="s1">LinuxCPUInfo</span><span class="s3">(</span><span class="s1">CPUInfoBase</span><span class="s3">):</span>
+
+    <span class="s1">info </span><span class="s3">= </span><span class="s5">None</span>
+
+    <span class="s5">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info </span><span class="s5">is not None</span><span class="s3">:</span>
+            <span class="s5">return</span>
+        <span class="s1">info </span><span class="s3">= [ {} ]</span>
+        <span class="s1">ok</span><span class="s3">, </span><span class="s1">output </span><span class="s3">= </span><span class="s1">getoutput</span><span class="s3">(</span><span class="s4">'uname -m'</span><span class="s3">)</span>
+        <span class="s5">if </span><span class="s1">ok</span><span class="s3">:</span>
+            <span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'uname_m'</span><span class="s3">] = </span><span class="s1">output</span><span class="s3">.</span><span class="s1">strip</span><span class="s3">()</span>
+        <span class="s5">try</span><span class="s3">:</span>
+            <span class="s1">fo </span><span class="s3">= </span><span class="s1">open</span><span class="s3">(</span><span class="s4">'/proc/cpuinfo'</span><span class="s3">)</span>
+        <span class="s5">except </span><span class="s1">OSError </span><span class="s5">as </span><span class="s1">e</span><span class="s3">:</span>
+            <span class="s1">warnings</span><span class="s3">.</span><span class="s1">warn</span><span class="s3">(</span><span class="s1">str</span><span class="s3">(</span><span class="s1">e</span><span class="s3">), </span><span class="s1">UserWarning</span><span class="s3">, </span><span class="s1">stacklevel</span><span class="s3">=</span><span class="s6">2</span><span class="s3">)</span>
+        <span class="s5">else</span><span class="s3">:</span>
+            <span class="s5">for </span><span class="s1">line </span><span class="s5">in </span><span class="s1">fo</span><span class="s3">:</span>
+                <span class="s1">name_value </span><span class="s3">= [</span><span class="s1">s</span><span class="s3">.</span><span class="s1">strip</span><span class="s3">() </span><span class="s5">for </span><span class="s1">s </span><span class="s5">in </span><span class="s1">line</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s4">':'</span><span class="s3">, </span><span class="s6">1</span><span class="s3">)]</span>
+                <span class="s5">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">name_value</span><span class="s3">) != </span><span class="s6">2</span><span class="s3">:</span>
+                    <span class="s5">continue</span>
+                <span class="s1">name</span><span class="s3">, </span><span class="s1">value </span><span class="s3">= </span><span class="s1">name_value</span>
+                <span class="s5">if not </span><span class="s1">info </span><span class="s5">or </span><span class="s1">name </span><span class="s5">in </span><span class="s1">info</span><span class="s3">[-</span><span class="s6">1</span><span class="s3">]: </span><span class="s0"># next processor</span>
+                    <span class="s1">info</span><span class="s3">.</span><span class="s1">append</span><span class="s3">({})</span>
+                <span class="s1">info</span><span class="s3">[-</span><span class="s6">1</span><span class="s3">][</span><span class="s1">name</span><span class="s3">] = </span><span class="s1">value</span>
+            <span class="s1">fo</span><span class="s3">.</span><span class="s1">close</span><span class="s3">()</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">info </span><span class="s3">= </span><span class="s1">info</span>
+
+    <span class="s5">def </span><span class="s1">_not_impl</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">pass</span>
+
+    <span class="s0"># Athlon</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMD</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'vendor_id'</span><span class="s3">]==</span><span class="s4">'AuthenticAMD'</span>
+
+    <span class="s5">def </span><span class="s1">_is_AthlonK6_2</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model'</span><span class="s3">] == </span><span class="s4">'2'</span>
+
+    <span class="s5">def </span><span class="s1">_is_AthlonK6_3</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model'</span><span class="s3">] == </span><span class="s4">'3'</span>
+
+    <span class="s5">def </span><span class="s1">_is_AthlonK6</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?AMD-K6'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_AthlonK7</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?AMD-K7'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_AthlonMP</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Athlon\(tm\) MP\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMD64</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'family'</span><span class="s3">] == </span><span class="s4">'15'</span>
+
+    <span class="s5">def </span><span class="s1">_is_Athlon64</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Athlon\(tm\) 64\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_AthlonHX</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Athlon HX\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_Opteron</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Opteron\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_Hammer</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Hammer\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s0"># Alpha</span>
+
+    <span class="s5">def </span><span class="s1">_is_Alpha</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu'</span><span class="s3">]==</span><span class="s4">'Alpha'</span>
+
+    <span class="s5">def </span><span class="s1">_is_EV4</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Alpha</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu model'</span><span class="s3">] == </span><span class="s4">'EV4'</span>
+
+    <span class="s5">def </span><span class="s1">_is_EV5</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Alpha</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu model'</span><span class="s3">] == </span><span class="s4">'EV5'</span>
+
+    <span class="s5">def </span><span class="s1">_is_EV56</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Alpha</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu model'</span><span class="s3">] == </span><span class="s4">'EV56'</span>
+
+    <span class="s5">def </span><span class="s1">_is_PCA56</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Alpha</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu model'</span><span class="s3">] == </span><span class="s4">'PCA56'</span>
+
+    <span class="s0"># Intel</span>
+
+    <span class="s0">#XXX</span>
+    <span class="s1">_is_i386 </span><span class="s3">= </span><span class="s1">_not_impl</span>
+
+    <span class="s5">def </span><span class="s1">_is_Intel</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'vendor_id'</span><span class="s3">]==</span><span class="s4">'GenuineIntel'</span>
+
+    <span class="s5">def </span><span class="s1">_is_i486</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu'</span><span class="s3">]==</span><span class="s4">'i486'</span>
+
+    <span class="s5">def </span><span class="s1">_is_i586</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu family'</span><span class="s3">] == </span><span class="s4">'5'</span>
+
+    <span class="s5">def </span><span class="s1">_is_i686</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu family'</span><span class="s3">] == </span><span class="s4">'6'</span>
+
+    <span class="s5">def </span><span class="s1">_is_Celeron</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Celeron'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_Pentium</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Pentium'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumII</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Pentium.*?II\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumPro</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?PentiumPro\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumMMX</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Pentium.*?MMX\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumIII</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Pentium.*?III\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumIV</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Pentium.*?(IV|4)\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumM</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Pentium.*?M\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_Prescott</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_PentiumIV</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">has_sse3</span><span class="s3">()</span>
+
+    <span class="s5">def </span><span class="s1">_is_Nocona</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">()</span>
+                <span class="s5">and </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu family'</span><span class="s3">] == </span><span class="s4">'6'</span>
+                     <span class="s5">or </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'cpu family'</span><span class="s3">] == </span><span class="s4">'15'</span><span class="s3">)</span>
+                <span class="s5">and </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">has_sse3</span><span class="s3">() </span><span class="s5">and not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">has_ssse3</span><span class="s3">())</span>
+                <span class="s5">and </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\blm\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span><span class="s3">)</span>
+
+    <span class="s5">def </span><span class="s1">_is_Core2</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_64bit</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and</span>
+                <span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Core\(TM\)2\b'</span><span class="s3">,</span>
+                         <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">]) </span><span class="s5">is not None</span><span class="s3">)</span>
+
+    <span class="s5">def </span><span class="s1">_is_Itanium</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?Itanium\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'family'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_XEON</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?XEON\b'</span><span class="s3">,</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'model name'</span><span class="s3">], </span><span class="s1">re</span><span class="s3">.</span><span class="s1">IGNORECASE</span><span class="s3">) </span><span class="s5">is not None</span>
+
+    <span class="s1">_is_Xeon </span><span class="s3">= </span><span class="s1">_is_XEON</span>
+
+    <span class="s0"># Varia</span>
+
+    <span class="s5">def </span><span class="s1">_is_singleCPU</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">) == </span><span class="s6">1</span>
+
+    <span class="s5">def </span><span class="s1">_getNCPUs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">)</span>
+
+    <span class="s5">def </span><span class="s1">_has_fdiv_bug</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'fdiv_bug'</span><span class="s3">]==</span><span class="s4">'yes'</span>
+
+    <span class="s5">def </span><span class="s1">_has_f00f_bug</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'f00f_bug'</span><span class="s3">]==</span><span class="s4">'yes'</span>
+
+    <span class="s5">def </span><span class="s1">_has_mmx</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\bmmx\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_has_sse</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\bsse\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_has_sse2</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\bsse2\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_has_sse3</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\bpni\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_has_ssse3</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\bssse3\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_has_3dnow</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\b3dnow\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_has_3dnowext</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*?\b3dnowext\b'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'flags'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+<span class="s5">class </span><span class="s1">IRIXCPUInfo</span><span class="s3">(</span><span class="s1">CPUInfoBase</span><span class="s3">):</span>
+    <span class="s1">info </span><span class="s3">= </span><span class="s5">None</span>
+
+    <span class="s5">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info </span><span class="s5">is not None</span><span class="s3">:</span>
+            <span class="s5">return</span>
+        <span class="s1">info </span><span class="s3">= </span><span class="s1">key_value_from_command</span><span class="s3">(</span><span class="s4">'sysconf'</span><span class="s3">, </span><span class="s1">sep</span><span class="s3">=</span><span class="s4">' '</span><span class="s3">,</span>
+                                      <span class="s1">successful_status</span><span class="s3">=(</span><span class="s6">0</span><span class="s3">, </span><span class="s6">1</span><span class="s3">))</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">info </span><span class="s3">= </span><span class="s1">info</span>
+
+    <span class="s5">def </span><span class="s1">_not_impl</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">pass</span>
+
+    <span class="s5">def </span><span class="s1">_is_singleCPU</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s4">'NUM_PROCESSORS'</span><span class="s3">) == </span><span class="s4">'1'</span>
+
+    <span class="s5">def </span><span class="s1">_getNCPUs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">int</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s4">'NUM_PROCESSORS'</span><span class="s3">, </span><span class="s6">1</span><span class="s3">))</span>
+
+    <span class="s5">def </span><span class="s1">__cputype</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">n</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s4">'PROCESSORS'</span><span class="s3">).</span><span class="s1">split</span><span class="s3">()[</span><span class="s6">0</span><span class="s3">].</span><span class="s1">lower</span><span class="s3">() == </span><span class="s4">'r%s' </span><span class="s3">% (</span><span class="s1">n</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r2000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">2000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r3000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">3000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r3900</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">3900</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r4000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">4000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r4100</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">4100</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r4300</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">4300</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r4400</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">4400</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r4600</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">4600</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r4650</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">4650</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r5000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">5000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r6000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">6000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r8000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">8000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r10000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">10000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_r12000</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s6">12000</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_rorion</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__cputype</span><span class="s3">(</span><span class="s4">'orion'</span><span class="s3">)</span>
+
+    <span class="s5">def </span><span class="s1">get_ip</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">try</span><span class="s3">: </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s4">'MACHINE'</span><span class="s3">)</span>
+        <span class="s5">except </span><span class="s1">Exception</span><span class="s3">: </span><span class="s5">pass</span>
+    <span class="s5">def </span><span class="s1">__machine</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">n</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s4">'MACHINE'</span><span class="s3">).</span><span class="s1">lower</span><span class="s3">() == </span><span class="s4">'ip%s' </span><span class="s3">% (</span><span class="s1">n</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP19</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">19</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP20</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">20</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP21</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">21</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP22</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">22</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP22_4k</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">22</span><span class="s3">) </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_r4000</span><span class="s3">()</span>
+    <span class="s5">def </span><span class="s1">_is_IP22_5k</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">22</span><span class="s3">)  </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_r5000</span><span class="s3">()</span>
+    <span class="s5">def </span><span class="s1">_is_IP24</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">24</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP25</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">25</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP26</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">26</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP27</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">27</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP28</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">28</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP30</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">30</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP32</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">32</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_IP32_5k</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">32</span><span class="s3">) </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_r5000</span><span class="s3">()</span>
+    <span class="s5">def </span><span class="s1">_is_IP32_10k</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">32</span><span class="s3">) </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_r10000</span><span class="s3">()</span>
+
+
+<span class="s5">class </span><span class="s1">DarwinCPUInfo</span><span class="s3">(</span><span class="s1">CPUInfoBase</span><span class="s3">):</span>
+    <span class="s1">info </span><span class="s3">= </span><span class="s5">None</span>
+
+    <span class="s5">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info </span><span class="s5">is not None</span><span class="s3">:</span>
+            <span class="s5">return</span>
+        <span class="s1">info </span><span class="s3">= </span><span class="s1">command_info</span><span class="s3">(</span><span class="s1">arch</span><span class="s3">=</span><span class="s4">'arch'</span><span class="s3">,</span>
+                            <span class="s1">machine</span><span class="s3">=</span><span class="s4">'machine'</span><span class="s3">)</span>
+        <span class="s1">info</span><span class="s3">[</span><span class="s4">'sysctl_hw'</span><span class="s3">] = </span><span class="s1">key_value_from_command</span><span class="s3">(</span><span class="s4">'sysctl hw'</span><span class="s3">, </span><span class="s1">sep</span><span class="s3">=</span><span class="s4">'='</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">info </span><span class="s3">= </span><span class="s1">info</span>
+
+    <span class="s5">def </span><span class="s1">_not_impl</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">pass</span>
+
+    <span class="s5">def </span><span class="s1">_getNCPUs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">int</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'sysctl_hw'</span><span class="s3">].</span><span class="s1">get</span><span class="s3">(</span><span class="s4">'hw.ncpu'</span><span class="s3">, </span><span class="s6">1</span><span class="s3">))</span>
+
+    <span class="s5">def </span><span class="s1">_is_Power_Macintosh</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'sysctl_hw'</span><span class="s3">][</span><span class="s4">'hw.machine'</span><span class="s3">]==</span><span class="s4">'Power Macintosh'</span>
+
+    <span class="s5">def </span><span class="s1">_is_i386</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'arch'</span><span class="s3">]==</span><span class="s4">'i386'</span>
+    <span class="s5">def </span><span class="s1">_is_ppc</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'arch'</span><span class="s3">]==</span><span class="s4">'ppc'</span>
+
+    <span class="s5">def </span><span class="s1">__machine</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">n</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'machine'</span><span class="s3">] == </span><span class="s4">'ppc%s'</span><span class="s3">%</span><span class="s1">n</span>
+    <span class="s5">def </span><span class="s1">_is_ppc601</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">601</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc602</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">602</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc603</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">603</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc603e</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s4">'603e'</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc604</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">604</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc604e</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s4">'604e'</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc620</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">620</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc630</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">630</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc740</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">740</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc7400</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">7400</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc7450</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">7450</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc750</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">750</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc403</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">403</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc505</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">505</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc801</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">801</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc821</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">821</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc823</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">823</span><span class="s3">)</span>
+    <span class="s5">def </span><span class="s1">_is_ppc860</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__machine</span><span class="s3">(</span><span class="s6">860</span><span class="s3">)</span>
+
+
+<span class="s5">class </span><span class="s1">SunOSCPUInfo</span><span class="s3">(</span><span class="s1">CPUInfoBase</span><span class="s3">):</span>
+
+    <span class="s1">info </span><span class="s3">= </span><span class="s5">None</span>
+
+    <span class="s5">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info </span><span class="s5">is not None</span><span class="s3">:</span>
+            <span class="s5">return</span>
+        <span class="s1">info </span><span class="s3">= </span><span class="s1">command_info</span><span class="s3">(</span><span class="s1">arch</span><span class="s3">=</span><span class="s4">'arch'</span><span class="s3">,</span>
+                            <span class="s1">mach</span><span class="s3">=</span><span class="s4">'mach'</span><span class="s3">,</span>
+                            <span class="s1">uname_i</span><span class="s3">=</span><span class="s4">'uname_i'</span><span class="s3">,</span>
+                            <span class="s1">isainfo_b</span><span class="s3">=</span><span class="s4">'isainfo -b'</span><span class="s3">,</span>
+                            <span class="s1">isainfo_n</span><span class="s3">=</span><span class="s4">'isainfo -n'</span><span class="s3">,</span>
+                            <span class="s3">)</span>
+        <span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_X'</span><span class="s3">] = </span><span class="s1">key_value_from_command</span><span class="s3">(</span><span class="s4">'uname -X'</span><span class="s3">, </span><span class="s1">sep</span><span class="s3">=</span><span class="s4">'='</span><span class="s3">)</span>
+        <span class="s5">for </span><span class="s1">line </span><span class="s5">in </span><span class="s1">command_by_line</span><span class="s3">(</span><span class="s4">'psrinfo -v 0'</span><span class="s3">):</span>
+            <span class="s1">m </span><span class="s3">= </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'\s*The (?P&lt;p&gt;[\w\d]+) processor operates at'</span><span class="s3">, </span><span class="s1">line</span><span class="s3">)</span>
+            <span class="s5">if </span><span class="s1">m</span><span class="s3">:</span>
+                <span class="s1">info</span><span class="s3">[</span><span class="s4">'processor'</span><span class="s3">] = </span><span class="s1">m</span><span class="s3">.</span><span class="s1">group</span><span class="s3">(</span><span class="s4">'p'</span><span class="s3">)</span>
+                <span class="s5">break</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">info </span><span class="s3">= </span><span class="s1">info</span>
+
+    <span class="s5">def </span><span class="s1">_not_impl</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">pass</span>
+
+    <span class="s5">def </span><span class="s1">_is_i386</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'isainfo_n'</span><span class="s3">]==</span><span class="s4">'i386'</span>
+    <span class="s5">def </span><span class="s1">_is_sparc</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'isainfo_n'</span><span class="s3">]==</span><span class="s4">'sparc'</span>
+    <span class="s5">def </span><span class="s1">_is_sparcv9</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'isainfo_n'</span><span class="s3">]==</span><span class="s4">'sparcv9'</span>
+
+    <span class="s5">def </span><span class="s1">_getNCPUs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">int</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_X'</span><span class="s3">].</span><span class="s1">get</span><span class="s3">(</span><span class="s4">'NumCPU'</span><span class="s3">, </span><span class="s6">1</span><span class="s3">))</span>
+
+    <span class="s5">def </span><span class="s1">_is_sun4</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'arch'</span><span class="s3">]==</span><span class="s4">'sun4'</span>
+
+    <span class="s5">def </span><span class="s1">_is_SUNW</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'SUNW'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_sparcstation5</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*SPARCstation-5'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra1</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-1'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra250</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-250'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra2</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-2'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra30</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-30'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra4</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-4'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra5_10</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-5_10'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra5</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-5'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra60</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-60'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra80</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-80'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultraenterprice</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-Enterprise'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultraenterprice10k</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra-Enterprise-10000'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_sunfire</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Sun-Fire'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+    <span class="s5">def </span><span class="s1">_is_ultra</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">re</span><span class="s3">.</span><span class="s1">match</span><span class="s3">(</span><span class="s4">r'.*Ultra'</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'uname_i'</span><span class="s3">]) </span><span class="s5">is not None</span>
+
+    <span class="s5">def </span><span class="s1">_is_cpusparcv7</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'processor'</span><span class="s3">]==</span><span class="s4">'sparcv7'</span>
+    <span class="s5">def </span><span class="s1">_is_cpusparcv8</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'processor'</span><span class="s3">]==</span><span class="s4">'sparcv8'</span>
+    <span class="s5">def </span><span class="s1">_is_cpusparcv9</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s4">'processor'</span><span class="s3">]==</span><span class="s4">'sparcv9'</span>
+
+<span class="s5">class </span><span class="s1">Win32CPUInfo</span><span class="s3">(</span><span class="s1">CPUInfoBase</span><span class="s3">):</span>
+
+    <span class="s1">info </span><span class="s3">= </span><span class="s5">None</span>
+    <span class="s1">pkey </span><span class="s3">= </span><span class="s4">r&quot;HARDWARE\DESCRIPTION\System\CentralProcessor&quot;</span>
+    <span class="s0"># XXX: what does the value of</span>
+    <span class="s0">#   HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\CentralProcessor\0</span>
+    <span class="s0"># mean?</span>
+
+    <span class="s5">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info </span><span class="s5">is not None</span><span class="s3">:</span>
+            <span class="s5">return</span>
+        <span class="s1">info </span><span class="s3">= []</span>
+        <span class="s5">try</span><span class="s3">:</span>
+            <span class="s0">#XXX: Bad style to use so long `try:...except:...`. Fix it!</span>
+            <span class="s5">import </span><span class="s1">winreg</span>
+
+            <span class="s1">prgx </span><span class="s3">= </span><span class="s1">re</span><span class="s3">.</span><span class="s1">compile</span><span class="s3">(</span><span class="s4">r&quot;family\s+(?P&lt;FML&gt;\d+)\s+model\s+(?P&lt;MDL&gt;\d+)&quot;</span>
+                              <span class="s4">r&quot;\s+stepping\s+(?P&lt;STP&gt;\d+)&quot;</span><span class="s3">, </span><span class="s1">re</span><span class="s3">.</span><span class="s1">IGNORECASE</span><span class="s3">)</span>
+            <span class="s1">chnd</span><span class="s3">=</span><span class="s1">winreg</span><span class="s3">.</span><span class="s1">OpenKey</span><span class="s3">(</span><span class="s1">winreg</span><span class="s3">.</span><span class="s1">HKEY_LOCAL_MACHINE</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">pkey</span><span class="s3">)</span>
+            <span class="s1">pnum</span><span class="s3">=</span><span class="s6">0</span>
+            <span class="s5">while True</span><span class="s3">:</span>
+                <span class="s5">try</span><span class="s3">:</span>
+                    <span class="s1">proc</span><span class="s3">=</span><span class="s1">winreg</span><span class="s3">.</span><span class="s1">EnumKey</span><span class="s3">(</span><span class="s1">chnd</span><span class="s3">, </span><span class="s1">pnum</span><span class="s3">)</span>
+                <span class="s5">except </span><span class="s1">winreg</span><span class="s3">.</span><span class="s1">error</span><span class="s3">:</span>
+                    <span class="s5">break</span>
+                <span class="s5">else</span><span class="s3">:</span>
+                    <span class="s1">pnum</span><span class="s3">+=</span><span class="s6">1</span>
+                    <span class="s1">info</span><span class="s3">.</span><span class="s1">append</span><span class="s3">({</span><span class="s4">&quot;Processor&quot;</span><span class="s3">:</span><span class="s1">proc</span><span class="s3">})</span>
+                    <span class="s1">phnd</span><span class="s3">=</span><span class="s1">winreg</span><span class="s3">.</span><span class="s1">OpenKey</span><span class="s3">(</span><span class="s1">chnd</span><span class="s3">, </span><span class="s1">proc</span><span class="s3">)</span>
+                    <span class="s1">pidx</span><span class="s3">=</span><span class="s6">0</span>
+                    <span class="s5">while True</span><span class="s3">:</span>
+                        <span class="s5">try</span><span class="s3">:</span>
+                            <span class="s1">name</span><span class="s3">, </span><span class="s1">value</span><span class="s3">, </span><span class="s1">vtpe</span><span class="s3">=</span><span class="s1">winreg</span><span class="s3">.</span><span class="s1">EnumValue</span><span class="s3">(</span><span class="s1">phnd</span><span class="s3">, </span><span class="s1">pidx</span><span class="s3">)</span>
+                        <span class="s5">except </span><span class="s1">winreg</span><span class="s3">.</span><span class="s1">error</span><span class="s3">:</span>
+                            <span class="s5">break</span>
+                        <span class="s5">else</span><span class="s3">:</span>
+                            <span class="s1">pidx</span><span class="s3">=</span><span class="s1">pidx</span><span class="s3">+</span><span class="s6">1</span>
+                            <span class="s1">info</span><span class="s3">[-</span><span class="s6">1</span><span class="s3">][</span><span class="s1">name</span><span class="s3">]=</span><span class="s1">value</span>
+                            <span class="s5">if </span><span class="s1">name</span><span class="s3">==</span><span class="s4">&quot;Identifier&quot;</span><span class="s3">:</span>
+                                <span class="s1">srch</span><span class="s3">=</span><span class="s1">prgx</span><span class="s3">.</span><span class="s1">search</span><span class="s3">(</span><span class="s1">value</span><span class="s3">)</span>
+                                <span class="s5">if </span><span class="s1">srch</span><span class="s3">:</span>
+                                    <span class="s1">info</span><span class="s3">[-</span><span class="s6">1</span><span class="s3">][</span><span class="s4">&quot;Family&quot;</span><span class="s3">]=</span><span class="s1">int</span><span class="s3">(</span><span class="s1">srch</span><span class="s3">.</span><span class="s1">group</span><span class="s3">(</span><span class="s4">&quot;FML&quot;</span><span class="s3">))</span>
+                                    <span class="s1">info</span><span class="s3">[-</span><span class="s6">1</span><span class="s3">][</span><span class="s4">&quot;Model&quot;</span><span class="s3">]=</span><span class="s1">int</span><span class="s3">(</span><span class="s1">srch</span><span class="s3">.</span><span class="s1">group</span><span class="s3">(</span><span class="s4">&quot;MDL&quot;</span><span class="s3">))</span>
+                                    <span class="s1">info</span><span class="s3">[-</span><span class="s6">1</span><span class="s3">][</span><span class="s4">&quot;Stepping&quot;</span><span class="s3">]=</span><span class="s1">int</span><span class="s3">(</span><span class="s1">srch</span><span class="s3">.</span><span class="s1">group</span><span class="s3">(</span><span class="s4">&quot;STP&quot;</span><span class="s3">))</span>
+        <span class="s5">except </span><span class="s1">Exception </span><span class="s5">as </span><span class="s1">e</span><span class="s3">:</span>
+            <span class="s1">print</span><span class="s3">(</span><span class="s1">e</span><span class="s3">, </span><span class="s4">'(ignoring)'</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">info </span><span class="s3">= </span><span class="s1">info</span>
+
+    <span class="s5">def </span><span class="s1">_not_impl</span><span class="s3">(</span><span class="s1">self</span><span class="s3">): </span><span class="s5">pass</span>
+
+    <span class="s0"># Athlon</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMD</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'VendorIdentifier'</span><span class="s3">]==</span><span class="s4">'AuthenticAMD'</span>
+
+    <span class="s5">def </span><span class="s1">_is_Am486</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">4</span>
+
+    <span class="s5">def </span><span class="s1">_is_Am5x86</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">4</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMDK5</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">0</span><span class="s3">, </span><span class="s6">1</span><span class="s3">, </span><span class="s6">2</span><span class="s3">, </span><span class="s6">3</span><span class="s3">]</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMDK6</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">6</span><span class="s3">, </span><span class="s6">7</span><span class="s3">]</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMDK6_2</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">]==</span><span class="s6">8</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMDK6_3</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">]==</span><span class="s6">9</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMDK7</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] == </span><span class="s6">6</span>
+
+    <span class="s0"># To reliably distinguish between the different types of AMD64 chips</span>
+    <span class="s0"># (Athlon64, Operton, Athlon64 X2, Semperon, Turion 64, etc.) would</span>
+    <span class="s0"># require looking at the 'brand' from cpuid</span>
+
+    <span class="s5">def </span><span class="s1">_is_AMD64</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] == </span><span class="s6">15</span>
+
+    <span class="s0"># Intel</span>
+
+    <span class="s5">def </span><span class="s1">_is_Intel</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'VendorIdentifier'</span><span class="s3">]==</span><span class="s4">'GenuineIntel'</span>
+
+    <span class="s5">def </span><span class="s1">_is_i386</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">3</span>
+
+    <span class="s5">def </span><span class="s1">_is_i486</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">4</span>
+
+    <span class="s5">def </span><span class="s1">_is_i586</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5</span>
+
+    <span class="s5">def </span><span class="s1">_is_i686</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">6</span>
+
+    <span class="s5">def </span><span class="s1">_is_Pentium</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumMMX</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">]==</span><span class="s6">4</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumPro</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">6 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">]==</span><span class="s6">1</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumII</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">6 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">3</span><span class="s3">, </span><span class="s6">5</span><span class="s3">, </span><span class="s6">6</span><span class="s3">]</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumIII</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">6 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">7</span><span class="s3">, </span><span class="s6">8</span><span class="s3">, </span><span class="s6">9</span><span class="s3">, </span><span class="s6">10</span><span class="s3">, </span><span class="s6">11</span><span class="s3">]</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumIV</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">15</span>
+
+    <span class="s5">def </span><span class="s1">_is_PentiumM</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] == </span><span class="s6">6 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">9</span><span class="s3">, </span><span class="s6">13</span><span class="s3">, </span><span class="s6">14</span><span class="s3">]</span>
+
+    <span class="s5">def </span><span class="s1">_is_Core2</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] == </span><span class="s6">6 </span><span class="s1">\</span>
+               <span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">15</span><span class="s3">, </span><span class="s6">16</span><span class="s3">, </span><span class="s6">17</span><span class="s3">]</span>
+
+    <span class="s0"># Varia</span>
+
+    <span class="s5">def </span><span class="s1">_is_singleCPU</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">) == </span><span class="s6">1</span>
+
+    <span class="s5">def </span><span class="s1">_getNCPUs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">)</span>
+
+    <span class="s5">def </span><span class="s1">_has_mmx</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">():</span>
+            <span class="s5">return </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">5 </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">]==</span><span class="s6">4</span><span class="s3">) </span><span class="s1">\</span>
+                   <span class="s5">or </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">6</span><span class="s3">, </span><span class="s6">15</span><span class="s3">])</span>
+        <span class="s5">elif </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">():</span>
+            <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">5</span><span class="s3">, </span><span class="s6">6</span><span class="s3">, </span><span class="s6">15</span><span class="s3">]</span>
+        <span class="s5">else</span><span class="s3">:</span>
+            <span class="s5">return False</span>
+
+    <span class="s5">def </span><span class="s1">_has_sse</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">():</span>
+            <span class="s5">return </span><span class="s3">((</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">6 </span><span class="s5">and</span>
+                     <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">7</span><span class="s3">, </span><span class="s6">8</span><span class="s3">, </span><span class="s6">9</span><span class="s3">, </span><span class="s6">10</span><span class="s3">, </span><span class="s6">11</span><span class="s3">])</span>
+                     <span class="s5">or </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">15</span><span class="s3">)</span>
+        <span class="s5">elif </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">():</span>
+            <span class="s5">return </span><span class="s3">((</span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">6 </span><span class="s5">and</span>
+                     <span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Model'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">6</span><span class="s3">, </span><span class="s6">7</span><span class="s3">, </span><span class="s6">8</span><span class="s3">, </span><span class="s6">10</span><span class="s3">])</span>
+                     <span class="s5">or </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">]==</span><span class="s6">15</span><span class="s3">)</span>
+        <span class="s5">else</span><span class="s3">:</span>
+            <span class="s5">return False</span>
+
+    <span class="s5">def </span><span class="s1">_has_sse2</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Intel</span><span class="s3">():</span>
+            <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Pentium4</span><span class="s3">() </span><span class="s5">or </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_PentiumM</span><span class="s3">() </span><span class="s1">\</span>
+                   <span class="s5">or </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_Core2</span><span class="s3">()</span>
+        <span class="s5">elif </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">():</span>
+            <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD64</span><span class="s3">()</span>
+        <span class="s5">else</span><span class="s3">:</span>
+            <span class="s5">return False</span>
+
+    <span class="s5">def </span><span class="s1">_has_3dnow</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">5</span><span class="s3">, </span><span class="s6">6</span><span class="s3">, </span><span class="s6">15</span><span class="s3">]</span>
+
+    <span class="s5">def </span><span class="s1">_has_3dnowext</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_AMD</span><span class="s3">() </span><span class="s5">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">info</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s4">'Family'</span><span class="s3">] </span><span class="s5">in </span><span class="s3">[</span><span class="s6">6</span><span class="s3">, </span><span class="s6">15</span><span class="s3">]</span>
+
+<span class="s5">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'linux'</span><span class="s3">): </span><span class="s0"># variations: linux2,linux-i386 (any others?)</span>
+    <span class="s1">cpuinfo </span><span class="s3">= </span><span class="s1">LinuxCPUInfo</span>
+<span class="s5">elif </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'irix'</span><span class="s3">):</span>
+    <span class="s1">cpuinfo </span><span class="s3">= </span><span class="s1">IRIXCPUInfo</span>
+<span class="s5">elif </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s4">'darwin'</span><span class="s3">:</span>
+    <span class="s1">cpuinfo </span><span class="s3">= </span><span class="s1">DarwinCPUInfo</span>
+<span class="s5">elif </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'sunos'</span><span class="s3">):</span>
+    <span class="s1">cpuinfo </span><span class="s3">= </span><span class="s1">SunOSCPUInfo</span>
+<span class="s5">elif </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'win32'</span><span class="s3">):</span>
+    <span class="s1">cpuinfo </span><span class="s3">= </span><span class="s1">Win32CPUInfo</span>
+<span class="s5">elif </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'cygwin'</span><span class="s3">):</span>
+    <span class="s1">cpuinfo </span><span class="s3">= </span><span class="s1">LinuxCPUInfo</span>
+<span class="s0">#XXX: other OS's. Eg. use _winreg on Win32. Or os.uname on unices.</span>
+<span class="s5">else</span><span class="s3">:</span>
+    <span class="s1">cpuinfo </span><span class="s3">= </span><span class="s1">CPUInfoBase</span>
+
+<span class="s1">cpu </span><span class="s3">= </span><span class="s1">cpuinfo</span><span class="s3">()</span>
+
+<span class="s0">#if __name__ == &quot;__main__&quot;:</span>
+<span class="s0">#</span>
+<span class="s0">#    cpu.is_blaa()</span>
+<span class="s0">#    cpu.is_Intel()</span>
+<span class="s0">#    cpu.is_Alpha()</span>
+<span class="s0">#</span>
+<span class="s0">#    print('CPU information:'),</span>
+<span class="s0">#    for name in dir(cpuinfo):</span>
+<span class="s0">#        if name[0]=='_' and name[1]!='_':</span>
+<span class="s0">#            r = getattr(cpu,name[1:])()</span>
+<span class="s0">#            if r:</span>
+<span class="s0">#                if r!=1:</span>
+<span class="s0">#                    print('%s=%s' %(name[1:],r))</span>
+<span class="s0">#                else:</span>
+<span class="s0">#                    print(name[1:]),</span>
+<span class="s0">#    print()</span>
+</pre>
+</body>
+</html>

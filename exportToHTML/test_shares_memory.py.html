@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>test_shares_memory.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_shares_memory.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">import </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_testing </span><span class="s0">as </span><span class="s1">tm</span>
+
+
+<span class="s0">def </span><span class="s1">test_shares_memory_interval</span><span class="s2">():</span>
+    <span class="s1">obj </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">interval_range</span><span class="s2">(</span><span class="s3">1</span><span class="s2">, </span><span class="s3">5</span><span class="s2">)</span>
+
+    <span class="s0">assert </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">shares_memory</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">)</span>
+    <span class="s0">assert </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">shares_memory</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">_data</span><span class="s2">)</span>
+    <span class="s0">assert </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">shares_memory</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">[::-</span><span class="s3">1</span><span class="s2">])</span>
+    <span class="s0">assert </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">shares_memory</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">[:</span><span class="s3">2</span><span class="s2">])</span>
+
+    <span class="s0">assert not </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">shares_memory</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">obj</span><span class="s2">.</span><span class="s1">_data</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">())</span>
+</pre>
+</body>
+</html>

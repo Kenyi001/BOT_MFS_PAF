@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>extension_connection.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.s6 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+extension_connection.py</font>
+</center></td></tr></table>
+<pre><span class="s0"># Licensed to the Software Freedom Conservancy (SFC) under one</span>
+<span class="s0"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="s0"># distributed with this work for additional information</span>
+<span class="s0"># regarding copyright ownership.  The SFC licenses this file</span>
+<span class="s0"># to you under the Apache License, Version 2.0 (the</span>
+<span class="s0"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="s0"># with the License.  You may obtain a copy of the License at</span>
+<span class="s0">#</span>
+<span class="s0">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="s0">#</span>
+<span class="s0"># Unless required by applicable law or agreed to in writing,</span>
+<span class="s0"># software distributed under the License is distributed on an</span>
+<span class="s0"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="s0"># KIND, either express or implied.  See the License for the</span>
+<span class="s0"># specific language governing permissions and limitations</span>
+<span class="s0"># under the License.</span>
+
+<span class="s2">import </span><span class="s1">logging</span>
+<span class="s2">import </span><span class="s1">time</span>
+
+<span class="s2">from </span><span class="s1">selenium</span><span class="s3">.</span><span class="s1">webdriver</span><span class="s3">.</span><span class="s1">common </span><span class="s2">import </span><span class="s1">utils</span>
+<span class="s2">from </span><span class="s1">selenium</span><span class="s3">.</span><span class="s1">webdriver</span><span class="s3">.</span><span class="s1">common</span><span class="s3">.</span><span class="s1">desired_capabilities </span><span class="s2">import </span><span class="s1">DesiredCapabilities</span>
+<span class="s2">from </span><span class="s1">selenium</span><span class="s3">.</span><span class="s1">webdriver</span><span class="s3">.</span><span class="s1">firefox</span><span class="s3">.</span><span class="s1">firefox_binary </span><span class="s2">import </span><span class="s1">FirefoxBinary</span>
+<span class="s2">from </span><span class="s1">selenium</span><span class="s3">.</span><span class="s1">webdriver</span><span class="s3">.</span><span class="s1">remote</span><span class="s3">.</span><span class="s1">command </span><span class="s2">import </span><span class="s1">Command</span>
+<span class="s2">from </span><span class="s1">selenium</span><span class="s3">.</span><span class="s1">webdriver</span><span class="s3">.</span><span class="s1">remote</span><span class="s3">.</span><span class="s1">remote_connection </span><span class="s2">import </span><span class="s1">RemoteConnection</span>
+
+<span class="s1">LOGGER </span><span class="s3">= </span><span class="s1">logging</span><span class="s3">.</span><span class="s1">getLogger</span><span class="s3">(</span><span class="s1">__name__</span><span class="s3">)</span>
+<span class="s1">PORT </span><span class="s3">= </span><span class="s4">0</span>
+<span class="s1">HOST </span><span class="s3">= </span><span class="s2">None</span>
+<span class="s1">_URL </span><span class="s3">= </span><span class="s5">&quot;&quot;</span>
+
+
+<span class="s2">class </span><span class="s1">ExtensionConnection</span><span class="s3">(</span><span class="s1">RemoteConnection</span><span class="s3">):</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">host</span><span class="s3">, </span><span class="s1">firefox_profile</span><span class="s3">, </span><span class="s1">firefox_binary</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">timeout</span><span class="s3">=</span><span class="s4">30</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">profile </span><span class="s3">= </span><span class="s1">firefox_profile</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">binary </span><span class="s3">= </span><span class="s1">firefox_binary</span>
+        <span class="s1">HOST </span><span class="s3">= </span><span class="s1">host</span>
+        <span class="s1">timeout </span><span class="s3">= </span><span class="s1">int</span><span class="s3">(</span><span class="s1">timeout</span><span class="s3">)</span>
+
+        <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">binary</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">binary </span><span class="s3">= </span><span class="s1">FirefoxBinary</span><span class="s3">()</span>
+
+        <span class="s2">if not </span><span class="s1">HOST</span><span class="s3">:</span>
+            <span class="s1">HOST </span><span class="s3">= </span><span class="s5">&quot;127.0.0.1&quot;</span>
+
+        <span class="s1">PORT </span><span class="s3">= </span><span class="s1">utils</span><span class="s3">.</span><span class="s1">free_port</span><span class="s3">()</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">profile</span><span class="s3">.</span><span class="s1">port </span><span class="s3">= </span><span class="s1">PORT</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">profile</span><span class="s3">.</span><span class="s1">update_preferences</span><span class="s3">()</span>
+
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">profile</span><span class="s3">.</span><span class="s1">add_extension</span><span class="s3">()</span>
+
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">binary</span><span class="s3">.</span><span class="s1">launch_browser</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">profile</span><span class="s3">, </span><span class="s1">timeout</span><span class="s3">=</span><span class="s1">timeout</span><span class="s3">)</span>
+        <span class="s1">_URL </span><span class="s3">= </span><span class="s5">f&quot;http://</span><span class="s2">{</span><span class="s1">HOST</span><span class="s2">}</span><span class="s5">:</span><span class="s2">{</span><span class="s1">PORT</span><span class="s2">}</span><span class="s5">/hub&quot;</span>
+        <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">_URL</span><span class="s3">, </span><span class="s1">keep_alive</span><span class="s3">=</span><span class="s2">True</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">quit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">sessionId</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">execute</span><span class="s3">(</span><span class="s1">Command</span><span class="s3">.</span><span class="s1">QUIT</span><span class="s3">, {</span><span class="s5">&quot;sessionId&quot;</span><span class="s3">: </span><span class="s1">sessionId</span><span class="s3">})</span>
+        <span class="s2">while </span><span class="s1">self</span><span class="s3">.</span><span class="s1">is_connectable</span><span class="s3">():</span>
+            <span class="s1">LOGGER</span><span class="s3">.</span><span class="s1">info</span><span class="s3">(</span><span class="s5">&quot;waiting to quit&quot;</span><span class="s3">)</span>
+            <span class="s1">time</span><span class="s3">.</span><span class="s1">sleep</span><span class="s3">(</span><span class="s4">1</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">connect</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Connects to the extension and retrieves the session id.&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">execute</span><span class="s3">(</span><span class="s1">Command</span><span class="s3">.</span><span class="s1">NEW_SESSION</span><span class="s3">, {</span><span class="s5">&quot;desiredCapabilities&quot;</span><span class="s3">: </span><span class="s1">DesiredCapabilities</span><span class="s3">.</span><span class="s1">FIREFOX</span><span class="s3">})</span>
+
+    <span class="s3">@</span><span class="s1">classmethod</span>
+    <span class="s2">def </span><span class="s1">connect_and_quit</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Connects to an running browser and quit immediately.&quot;&quot;&quot;</span>
+        <span class="s1">cls</span><span class="s3">.</span><span class="s1">_request</span><span class="s3">(</span><span class="s5">f&quot;</span><span class="s2">{</span><span class="s1">_URL</span><span class="s2">}</span><span class="s5">/extensions/firefox/quit&quot;</span><span class="s3">)</span>
+
+    <span class="s3">@</span><span class="s1">classmethod</span>
+    <span class="s2">def </span><span class="s1">is_connectable</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Tries to connect to the extension but do not retrieve context.&quot;&quot;&quot;</span>
+        <span class="s1">utils</span><span class="s3">.</span><span class="s1">is_connectable</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">.</span><span class="s1">profile</span><span class="s3">.</span><span class="s1">port</span><span class="s3">)</span>
+
+
+<span class="s2">class </span><span class="s1">ExtensionConnectionError</span><span class="s3">(</span><span class="s1">Exception</span><span class="s3">):</span>
+    <span class="s6">&quot;&quot;&quot;An internal error occurred int the extension. 
+ 
+    Might be caused by bad input or bugs in webdriver 
+    &quot;&quot;&quot;</span>
+
+    <span class="s2">pass</span>
+</pre>
+</body>
+</html>

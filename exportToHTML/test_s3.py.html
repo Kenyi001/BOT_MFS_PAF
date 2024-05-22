@@ -1,0 +1,71 @@
+<html>
+<head>
+<title>test_s3.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #a5c261;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_s3.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">io </span><span class="s0">import </span><span class="s1">BytesIO</span>
+
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s1">read_csv</span>
+
+
+<span class="s0">def </span><span class="s1">test_streaming_s3_objects</span><span class="s2">():</span>
+    <span class="s3"># GH17135</span>
+    <span class="s3"># botocore gained iteration support in 1.10.47, can now be used in read_*</span>
+    <span class="s1">pytest</span><span class="s2">.</span><span class="s1">importorskip</span><span class="s2">(</span><span class="s4">&quot;botocore&quot;</span><span class="s2">, </span><span class="s1">minversion</span><span class="s2">=</span><span class="s4">&quot;1.10.47&quot;</span><span class="s2">)</span>
+    <span class="s0">from </span><span class="s1">botocore</span><span class="s2">.</span><span class="s1">response </span><span class="s0">import </span><span class="s1">StreamingBody</span>
+
+    <span class="s1">data </span><span class="s2">= [</span><span class="s5">b&quot;foo,bar,baz</span><span class="s0">\n</span><span class="s5">1,2,3</span><span class="s0">\n</span><span class="s5">4,5,6</span><span class="s0">\n</span><span class="s5">&quot;</span><span class="s2">, </span><span class="s5">b&quot;just,the,header</span><span class="s0">\n</span><span class="s5">&quot;</span><span class="s2">]</span>
+    <span class="s0">for </span><span class="s1">el </span><span class="s0">in </span><span class="s1">data</span><span class="s2">:</span>
+        <span class="s1">body </span><span class="s2">= </span><span class="s1">StreamingBody</span><span class="s2">(</span><span class="s1">BytesIO</span><span class="s2">(</span><span class="s1">el</span><span class="s2">), </span><span class="s1">content_length</span><span class="s2">=</span><span class="s1">len</span><span class="s2">(</span><span class="s1">el</span><span class="s2">))</span>
+        <span class="s1">read_csv</span><span class="s2">(</span><span class="s1">body</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">single_cpu</span>
+<span class="s0">def </span><span class="s1">test_read_without_creds_from_pub_bucket</span><span class="s2">(</span><span class="s1">s3_public_bucket_with_data</span><span class="s2">, </span><span class="s1">s3so</span><span class="s2">):</span>
+    <span class="s3"># GH 34626</span>
+    <span class="s1">pytest</span><span class="s2">.</span><span class="s1">importorskip</span><span class="s2">(</span><span class="s4">&quot;s3fs&quot;</span><span class="s2">)</span>
+    <span class="s1">result </span><span class="s2">= </span><span class="s1">read_csv</span><span class="s2">(</span>
+        <span class="s4">f&quot;s3://</span><span class="s0">{</span><span class="s1">s3_public_bucket_with_data</span><span class="s2">.</span><span class="s1">name</span><span class="s0">}</span><span class="s4">/tips.csv&quot;</span><span class="s2">,</span>
+        <span class="s1">nrows</span><span class="s2">=</span><span class="s6">3</span><span class="s2">,</span>
+        <span class="s1">storage_options</span><span class="s2">=</span><span class="s1">s3so</span><span class="s2">,</span>
+    <span class="s2">)</span>
+    <span class="s0">assert </span><span class="s1">len</span><span class="s2">(</span><span class="s1">result</span><span class="s2">) == </span><span class="s6">3</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">single_cpu</span>
+<span class="s0">def </span><span class="s1">test_read_with_creds_from_pub_bucket</span><span class="s2">(</span><span class="s1">s3_public_bucket_with_data</span><span class="s2">, </span><span class="s1">monkeypatch</span><span class="s2">, </span><span class="s1">s3so</span><span class="s2">):</span>
+    <span class="s3"># Ensure we can read from a public bucket with credentials</span>
+    <span class="s3"># GH 34626</span>
+
+    <span class="s3"># temporary workaround as moto fails for botocore &gt;= 1.11 otherwise,</span>
+    <span class="s3"># see https://github.com/spulec/moto/issues/1924 &amp; 1952</span>
+    <span class="s1">pytest</span><span class="s2">.</span><span class="s1">importorskip</span><span class="s2">(</span><span class="s4">&quot;s3fs&quot;</span><span class="s2">)</span>
+    <span class="s1">monkeypatch</span><span class="s2">.</span><span class="s1">setenv</span><span class="s2">(</span><span class="s4">&quot;AWS_ACCESS_KEY_ID&quot;</span><span class="s2">, </span><span class="s4">&quot;foobar_key&quot;</span><span class="s2">)</span>
+    <span class="s1">monkeypatch</span><span class="s2">.</span><span class="s1">setenv</span><span class="s2">(</span><span class="s4">&quot;AWS_SECRET_ACCESS_KEY&quot;</span><span class="s2">, </span><span class="s4">&quot;foobar_secret&quot;</span><span class="s2">)</span>
+    <span class="s1">df </span><span class="s2">= </span><span class="s1">read_csv</span><span class="s2">(</span>
+        <span class="s4">f&quot;s3://</span><span class="s0">{</span><span class="s1">s3_public_bucket_with_data</span><span class="s2">.</span><span class="s1">name</span><span class="s0">}</span><span class="s4">/tips.csv&quot;</span><span class="s2">,</span>
+        <span class="s1">nrows</span><span class="s2">=</span><span class="s6">5</span><span class="s2">,</span>
+        <span class="s1">header</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">storage_options</span><span class="s2">=</span><span class="s1">s3so</span><span class="s2">,</span>
+    <span class="s2">)</span>
+    <span class="s0">assert </span><span class="s1">len</span><span class="s2">(</span><span class="s1">df</span><span class="s2">) == </span><span class="s6">5</span>
+</pre>
+</body>
+</html>

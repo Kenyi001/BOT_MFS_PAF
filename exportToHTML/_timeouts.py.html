@@ -1,0 +1,175 @@
+<html>
+<head>
+<title>_timeouts.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_timeouts.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">import </span><span class="s1">math</span>
+<span class="s0">from </span><span class="s1">contextlib </span><span class="s0">import </span><span class="s1">AbstractContextManager</span><span class="s2">, </span><span class="s1">contextmanager</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">TYPE_CHECKING</span>
+
+<span class="s0">import </span><span class="s1">trio</span>
+
+
+<span class="s0">def </span><span class="s1">move_on_at</span><span class="s2">(</span><span class="s1">deadline</span><span class="s2">: </span><span class="s1">float</span><span class="s2">) </span><span class="s1">-&gt; trio</span><span class="s2">.</span><span class="s1">CancelScope</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot;Use as a context manager to create a cancel scope with the given 
+    absolute deadline. 
+ 
+    Args: 
+      deadline (float): The deadline. 
+ 
+    Raises: 
+      ValueError: if deadline is NaN. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">math</span><span class="s2">.</span><span class="s1">isnan</span><span class="s2">(</span><span class="s1">deadline</span><span class="s2">):</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;deadline must not be NaN&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">CancelScope</span><span class="s2">(</span><span class="s1">deadline</span><span class="s2">=</span><span class="s1">deadline</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">move_on_after</span><span class="s2">(</span><span class="s1">seconds</span><span class="s2">: </span><span class="s1">float</span><span class="s2">) </span><span class="s1">-&gt; trio</span><span class="s2">.</span><span class="s1">CancelScope</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot;Use as a context manager to create a cancel scope whose deadline is 
+    set to now + *seconds*. 
+ 
+    Args: 
+      seconds (float): The timeout. 
+ 
+    Raises: 
+      ValueError: if timeout is less than zero or NaN. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">seconds </span><span class="s2">&lt; </span><span class="s5">0</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;timeout must be non-negative&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">move_on_at</span><span class="s2">(</span><span class="s1">trio</span><span class="s2">.</span><span class="s1">current_time</span><span class="s2">() + </span><span class="s1">seconds</span><span class="s2">)</span>
+
+
+<span class="s0">async def </span><span class="s1">sleep_forever</span><span class="s2">() </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot;Pause execution of the current task forever (or until cancelled). 
+ 
+    Equivalent to calling ``await sleep(math.inf)``. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">lowlevel</span><span class="s2">.</span><span class="s1">wait_task_rescheduled</span><span class="s2">(</span><span class="s0">lambda </span><span class="s1">_</span><span class="s2">: </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">lowlevel</span><span class="s2">.</span><span class="s1">Abort</span><span class="s2">.</span><span class="s1">SUCCEEDED</span><span class="s2">)</span>
+
+
+<span class="s0">async def </span><span class="s1">sleep_until</span><span class="s2">(</span><span class="s1">deadline</span><span class="s2">: </span><span class="s1">float</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot;Pause execution of the current task until the given time. 
+ 
+    The difference between :func:`sleep` and :func:`sleep_until` is that the 
+    former takes a relative time and the latter takes an absolute time 
+    according to Trio's internal clock (as returned by :func:`current_time`). 
+ 
+    Args: 
+        deadline (float): The time at which we should wake up again. May be in 
+            the past, in which case this function executes a checkpoint but 
+            does not block. 
+ 
+    Raises: 
+      ValueError: if deadline is NaN. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">with </span><span class="s1">move_on_at</span><span class="s2">(</span><span class="s1">deadline</span><span class="s2">):</span>
+        <span class="s0">await </span><span class="s1">sleep_forever</span><span class="s2">()</span>
+
+
+<span class="s0">async def </span><span class="s1">sleep</span><span class="s2">(</span><span class="s1">seconds</span><span class="s2">: </span><span class="s1">float</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot;Pause execution of the current task for the given number of seconds. 
+ 
+    Args: 
+        seconds (float): The number of seconds to sleep. May be zero to 
+            insert a checkpoint without actually blocking. 
+ 
+    Raises: 
+        ValueError: if *seconds* is negative or NaN. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">seconds </span><span class="s2">&lt; </span><span class="s5">0</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;duration must be non-negative&quot;</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">seconds </span><span class="s2">== </span><span class="s5">0</span><span class="s2">:</span>
+        <span class="s0">await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">lowlevel</span><span class="s2">.</span><span class="s1">checkpoint</span><span class="s2">()</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s0">await </span><span class="s1">sleep_until</span><span class="s2">(</span><span class="s1">trio</span><span class="s2">.</span><span class="s1">current_time</span><span class="s2">() + </span><span class="s1">seconds</span><span class="s2">)</span>
+
+
+<span class="s0">class </span><span class="s1">TooSlowError</span><span class="s2">(</span><span class="s1">Exception</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot;Raised by :func:`fail_after` and :func:`fail_at` if the timeout 
+    expires. 
+ 
+    &quot;&quot;&quot;</span>
+
+
+<span class="s6"># workaround for PyCharm not being able to infer return type from @contextmanager</span>
+<span class="s6"># see https://youtrack.jetbrains.com/issue/PY-36444/PyCharm-doesnt-infer-types-when-using-contextlib.contextmanager-decorator</span>
+<span class="s0">def </span><span class="s1">fail_at</span><span class="s2">(</span><span class="s1">deadline</span><span class="s2">: </span><span class="s1">float</span><span class="s2">) </span><span class="s1">-&gt; AbstractContextManager</span><span class="s2">[</span><span class="s1">trio</span><span class="s2">.</span><span class="s1">CancelScope</span><span class="s2">]:  </span><span class="s6"># type: ignore[misc]</span>
+    <span class="s3">&quot;&quot;&quot;Creates a cancel scope with the given deadline, and raises an error if it 
+    is actually cancelled. 
+ 
+    This function and :func:`move_on_at` are similar in that both create a 
+    cancel scope with a given absolute deadline, and if the deadline expires 
+    then both will cause :exc:`Cancelled` to be raised within the scope. The 
+    difference is that when the :exc:`Cancelled` exception reaches 
+    :func:`move_on_at`, it's caught and discarded. When it reaches 
+    :func:`fail_at`, then it's caught and :exc:`TooSlowError` is raised in its 
+    place. 
+ 
+    Args: 
+      deadline (float): The deadline. 
+ 
+    Raises: 
+      TooSlowError: if a :exc:`Cancelled` exception is raised in this scope 
+        and caught by the context manager. 
+      ValueError: if deadline is NaN. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">with </span><span class="s1">move_on_at</span><span class="s2">(</span><span class="s1">deadline</span><span class="s2">) </span><span class="s0">as </span><span class="s1">scope</span><span class="s2">:</span>
+        <span class="s0">yield </span><span class="s1">scope</span>
+    <span class="s0">if </span><span class="s1">scope</span><span class="s2">.</span><span class="s1">cancelled_caught</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TooSlowError</span>
+
+
+<span class="s0">if not </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+    <span class="s1">fail_at </span><span class="s2">= </span><span class="s1">contextmanager</span><span class="s2">(</span><span class="s1">fail_at</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">fail_after</span><span class="s2">(</span><span class="s1">seconds</span><span class="s2">: </span><span class="s1">float</span><span class="s2">) </span><span class="s1">-&gt; AbstractContextManager</span><span class="s2">[</span><span class="s1">trio</span><span class="s2">.</span><span class="s1">CancelScope</span><span class="s2">]:</span>
+    <span class="s3">&quot;&quot;&quot;Creates a cancel scope with the given timeout, and raises an error if 
+    it is actually cancelled. 
+ 
+    This function and :func:`move_on_after` are similar in that both create a 
+    cancel scope with a given timeout, and if the timeout expires then both 
+    will cause :exc:`Cancelled` to be raised within the scope. The difference 
+    is that when the :exc:`Cancelled` exception reaches :func:`move_on_after`, 
+    it's caught and discarded. When it reaches :func:`fail_after`, then it's 
+    caught and :exc:`TooSlowError` is raised in its place. 
+ 
+    Args: 
+      seconds (float): The timeout. 
+ 
+    Raises: 
+      TooSlowError: if a :exc:`Cancelled` exception is raised in this scope 
+        and caught by the context manager. 
+      ValueError: if *seconds* is less than zero or NaN. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">seconds </span><span class="s2">&lt; </span><span class="s5">0</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;timeout must be non-negative&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">fail_at</span><span class="s2">(</span><span class="s1">trio</span><span class="s2">.</span><span class="s1">current_time</span><span class="s2">() + </span><span class="s1">seconds</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>test_resolution.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_resolution.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+
+
+<span class="s0">class </span><span class="s1">TestResolution</span><span class="s2">:</span>
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span>
+        <span class="s3">&quot;freq,expected&quot;</span><span class="s2">,</span>
+        <span class="s2">[</span>
+            <span class="s2">(</span><span class="s3">&quot;A&quot;</span><span class="s2">, </span><span class="s3">&quot;year&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;Q&quot;</span><span class="s2">, </span><span class="s3">&quot;quarter&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;M&quot;</span><span class="s2">, </span><span class="s3">&quot;month&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;D&quot;</span><span class="s2">, </span><span class="s3">&quot;day&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;H&quot;</span><span class="s2">, </span><span class="s3">&quot;hour&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;T&quot;</span><span class="s2">, </span><span class="s3">&quot;minute&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;S&quot;</span><span class="s2">, </span><span class="s3">&quot;second&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;L&quot;</span><span class="s2">, </span><span class="s3">&quot;millisecond&quot;</span><span class="s2">),</span>
+            <span class="s2">(</span><span class="s3">&quot;U&quot;</span><span class="s2">, </span><span class="s3">&quot;microsecond&quot;</span><span class="s2">),</span>
+        <span class="s2">],</span>
+    <span class="s2">)</span>
+    <span class="s0">def </span><span class="s1">test_resolution</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">):</span>
+        <span class="s1">idx </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">period_range</span><span class="s2">(</span><span class="s1">start</span><span class="s2">=</span><span class="s3">&quot;2013-04-01&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s4">30</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s1">freq</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">idx</span><span class="s2">.</span><span class="s1">resolution </span><span class="s2">== </span><span class="s1">expected</span>
+</pre>
+</body>
+</html>

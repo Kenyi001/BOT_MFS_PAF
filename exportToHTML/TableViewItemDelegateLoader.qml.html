@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>TableViewItemDelegateLoader.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #2aacb8;}
+.s5 { color: #bcbec4;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+TableViewItemDelegateLoader.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2016 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Controls module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">//</span>
+<span class="s2">//  W A R N I N G</span>
+<span class="s2">//  -------------</span>
+<span class="s2">//</span>
+<span class="s2">// This file is not part of the Qt API.  It exists purely as an</span>
+<span class="s2">// implementation detail.  This file may change from version to</span>
+<span class="s2">// version without notice, or even be removed.</span>
+<span class="s2">//</span>
+<span class="s2">// We mean it.</span>
+<span class="s2">//</span>
+
+<span class="s3">import </span><span class="s1">QtQuick </span><span class="s4">2.5</span>
+<span class="s3">import </span><span class="s1">QtQuick</span><span class="s5">.</span><span class="s1">Controls </span><span class="s4">1.4</span>
+<span class="s3">import </span><span class="s1">QtQuick</span><span class="s5">.</span><span class="s1">Controls</span><span class="s5">.</span><span class="s1">Styles </span><span class="s4">1.4</span>
+
+<span class="s2">/*! 
+    \qmltype TableViewItemDelegateLoader 
+    \internal 
+    \qmlabstract 
+    \inqmlmodule QtQuick.Controls.Private 
+*/</span>
+
+<span class="s1">Loader </span><span class="s5">{</span>
+    <span class="s1">id</span><span class="s5">: </span><span class="s1">itemDelegateLoader</span>
+
+    <span class="s1">width</span><span class="s5">: </span><span class="s1">__column </span><span class="s5">? </span><span class="s1">__column</span><span class="s5">.</span><span class="s1">width </span><span class="s5">: </span><span class="s4">0</span>
+    <span class="s1">height</span><span class="s5">: </span><span class="s1">parent </span><span class="s5">? </span><span class="s1">parent</span><span class="s5">.</span><span class="s1">height </span><span class="s5">: </span><span class="s4">0</span>
+    <span class="s1">visible</span><span class="s5">: </span><span class="s1">__column </span><span class="s5">? </span><span class="s1">__column</span><span class="s5">.</span><span class="s1">visible </span><span class="s5">: </span><span class="s3">false</span>
+
+    <span class="s1">property bool isValid</span><span class="s5">: </span><span class="s3">false</span>
+    <span class="s1">sourceComponent</span><span class="s5">: (</span><span class="s1">__model </span><span class="s5">=== </span><span class="s1">undefined </span><span class="s5">|| !</span><span class="s1">isValid</span><span class="s5">) ? </span><span class="s3">null</span>
+                     <span class="s5">: </span><span class="s1">__column </span><span class="s5">&amp;&amp; </span><span class="s1">__column</span><span class="s5">.</span><span class="s1">delegate </span><span class="s5">? </span><span class="s1">__column</span><span class="s5">.</span><span class="s1">delegate </span><span class="s5">: </span><span class="s1">__itemDelegate</span>
+
+    <span class="s2">// All these properties are internal</span>
+    <span class="s1">property int __index</span><span class="s5">: </span><span class="s1">index</span>
+    <span class="s1">property Item __rowItem</span><span class="s5">: </span><span class="s3">null</span>
+    <span class="s1">property </span><span class="s3">var </span><span class="s1">__model</span><span class="s5">: </span><span class="s1">__rowItem </span><span class="s5">? </span><span class="s1">__rowItem</span><span class="s5">.</span><span class="s1">itemModel </span><span class="s5">: </span><span class="s1">undefined</span>
+    <span class="s1">property </span><span class="s3">var </span><span class="s1">__modelData</span><span class="s5">: </span><span class="s1">__rowItem </span><span class="s5">? </span><span class="s1">__rowItem</span><span class="s5">.</span><span class="s1">itemModelData </span><span class="s5">: </span><span class="s1">undefined</span>
+    <span class="s1">property TableViewColumn __column</span><span class="s5">: </span><span class="s3">null</span>
+    <span class="s1">property Component __itemDelegate</span><span class="s5">: </span><span class="s3">null</span>
+    <span class="s1">property </span><span class="s3">var </span><span class="s1">__mouseArea</span><span class="s5">: </span><span class="s3">null</span>
+    <span class="s1">property </span><span class="s3">var </span><span class="s1">__style</span><span class="s5">: </span><span class="s3">null</span>
+
+    <span class="s2">// These properties are exposed to the item delegate</span>
+    <span class="s1">readonly property </span><span class="s3">var </span><span class="s1">model</span><span class="s5">: </span><span class="s1">__model</span>
+    <span class="s1">readonly property </span><span class="s3">var </span><span class="s1">modelData</span><span class="s5">: </span><span class="s1">__modelData</span>
+
+    <span class="s1">property QtObject styleData</span><span class="s5">: </span><span class="s1">QtObject </span><span class="s5">{</span>
+        <span class="s1">readonly property int row</span><span class="s5">: </span><span class="s1">__rowItem </span><span class="s5">? </span><span class="s1">__rowItem</span><span class="s5">.</span><span class="s1">rowIndex </span><span class="s5">: -</span><span class="s4">1</span>
+        <span class="s1">readonly property int column</span><span class="s5">: </span><span class="s1">__index</span>
+        <span class="s1">readonly property int elideMode</span><span class="s5">: </span><span class="s1">__column </span><span class="s5">? </span><span class="s1">__column</span><span class="s5">.</span><span class="s1">elideMode </span><span class="s5">: </span><span class="s1">Text</span><span class="s5">.</span><span class="s1">ElideLeft</span>
+        <span class="s1">readonly property int textAlignment</span><span class="s5">: </span><span class="s1">__column </span><span class="s5">? </span><span class="s1">__column</span><span class="s5">.</span><span class="s1">horizontalAlignment </span><span class="s5">: </span><span class="s1">Text</span><span class="s5">.</span><span class="s1">AlignLeft</span>
+        <span class="s1">readonly property bool selected</span><span class="s5">: </span><span class="s1">__rowItem </span><span class="s5">? </span><span class="s1">__rowItem</span><span class="s5">.</span><span class="s1">itemSelected </span><span class="s5">: </span><span class="s3">false</span>
+        <span class="s1">readonly property bool hasActiveFocus</span><span class="s5">: </span><span class="s1">__rowItem </span><span class="s5">? </span><span class="s1">__rowItem</span><span class="s5">.</span><span class="s1">activeFocus </span><span class="s5">: </span><span class="s3">false</span>
+        <span class="s1">readonly property bool pressed</span><span class="s5">: </span><span class="s1">__mouseArea </span><span class="s5">&amp;&amp; </span><span class="s1">row </span><span class="s5">=== </span><span class="s1">__mouseArea</span><span class="s5">.</span><span class="s1">pressedRow </span><span class="s5">&amp;&amp; </span><span class="s1">column </span><span class="s5">=== </span><span class="s1">__mouseArea</span><span class="s5">.</span><span class="s1">pressedColumn</span>
+        <span class="s1">readonly property color textColor</span><span class="s5">: </span><span class="s1">__rowItem </span><span class="s5">? </span><span class="s1">__rowItem</span><span class="s5">.</span><span class="s1">itemTextColor </span><span class="s5">: </span><span class="s6">&quot;black&quot;</span>
+        <span class="s1">readonly property string role</span><span class="s5">: </span><span class="s1">__column </span><span class="s5">? </span><span class="s1">__column</span><span class="s5">.</span><span class="s1">role </span><span class="s5">: </span><span class="s6">&quot;&quot;</span>
+        <span class="s1">readonly property </span><span class="s3">var </span><span class="s1">value</span><span class="s5">: </span><span class="s1">model </span><span class="s5">&amp;&amp; </span><span class="s1">model</span><span class="s5">.</span><span class="s1">hasOwnProperty</span><span class="s5">(</span><span class="s1">role</span><span class="s5">) ? </span><span class="s1">model</span><span class="s5">[</span><span class="s1">role</span><span class="s5">] </span><span class="s2">// Qml ListModel and QAbstractItemModel</span>
+                                     <span class="s5">: </span><span class="s1">modelData </span><span class="s5">&amp;&amp; </span><span class="s1">modelData</span><span class="s5">.</span><span class="s1">hasOwnProperty</span><span class="s5">(</span><span class="s1">role</span><span class="s5">) ? </span><span class="s1">modelData</span><span class="s5">[</span><span class="s1">role</span><span class="s5">] </span><span class="s2">// QObjectList / QObject</span>
+                                     <span class="s5">: </span><span class="s1">modelData </span><span class="s5">!= </span><span class="s1">undefined </span><span class="s5">? </span><span class="s1">modelData </span><span class="s5">: </span><span class="s6">&quot;&quot; </span><span class="s2">// Models without role</span>
+        <span class="s1">onRowChanged</span><span class="s5">: </span><span class="s3">if </span><span class="s5">(</span><span class="s1">row </span><span class="s5">!== -</span><span class="s4">1</span><span class="s5">) </span><span class="s1">itemDelegateLoader</span><span class="s5">.</span><span class="s1">isValid </span><span class="s5">= </span><span class="s3">true</span>
+    <span class="s5">}</span>
+<span class="s5">}</span>
+</pre>
+</body>
+</html>

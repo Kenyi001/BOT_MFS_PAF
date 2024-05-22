@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>cpu_vxe.c</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #2aacb8;}
+.s3 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+cpu_vxe.c</font>
+</center></td></tr></table>
+<pre><span class="s0">#if </span><span class="s1">(__VEC__ &lt; </span><span class="s2">10302</span><span class="s1">) || (__ARCH__ &lt; </span><span class="s2">12</span><span class="s1">)</span>
+    <span class="s0">#error </span><span class="s1">VXE not supported</span>
+<span class="s0">#endif</span>
+
+<span class="s0">#include </span><span class="s1">&lt;vecintrin.h&gt;</span>
+<span class="s0">int </span><span class="s1">main(</span><span class="s0">int </span><span class="s1">argc, </span><span class="s0">char </span><span class="s1">**argv)</span>
+<span class="s1">{</span>
+    <span class="s1">__vector </span><span class="s0">float </span><span class="s1">x = vec_nabs(vec_xl(argc, (</span><span class="s0">float</span><span class="s1">*)argv));</span>
+    <span class="s1">__vector </span><span class="s0">float </span><span class="s1">y = vec_load_len((</span><span class="s0">float</span><span class="s1">*)argv, (</span><span class="s0">unsigned int</span><span class="s1">)argc);</span>
+    
+    <span class="s1">x = vec_round(vec_ceil(x) + vec_floor(y));</span>
+    <span class="s1">__vector </span><span class="s0">bool int </span><span class="s1">m = vec_cmpge(x, y);</span>
+    <span class="s1">x = vec_sel(x, y, m);</span>
+
+    <span class="s3">// need to test the existence of intrin &quot;vflls&quot; since vec_doublee</span>
+    <span class="s3">// is vec_doublee maps to wrong intrin &quot;vfll&quot;.</span>
+    <span class="s3">// see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100871</span>
+<span class="s0">#if </span><span class="s1">defined(__GNUC__) &amp;&amp; !defined(__clang__)</span>
+    <span class="s1">__vector </span><span class="s0">long long </span><span class="s1">i = vec_signed(__builtin_s390_vflls(x));</span>
+<span class="s0">#else</span>
+    <span class="s1">__vector </span><span class="s0">long long </span><span class="s1">i = vec_signed(vec_doublee(x));</span>
+<span class="s0">#endif</span>
+
+    <span class="s0">return </span><span class="s1">(</span><span class="s0">int</span><span class="s1">)vec_extract(i, </span><span class="s2">0</span><span class="s1">);</span>
+<span class="s1">}</span>
+</pre>
+</body>
+</html>

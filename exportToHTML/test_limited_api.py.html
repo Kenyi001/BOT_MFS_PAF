@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>test_limited_api.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_limited_api.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">shutil</span>
+<span class="s0">import </span><span class="s1">subprocess</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">sysconfig</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">IS_WASM</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">skipif</span><span class="s2">(</span><span class="s1">IS_WASM</span><span class="s2">, </span><span class="s1">reason</span><span class="s2">=</span><span class="s3">&quot;Can't start subprocess&quot;</span><span class="s2">)</span>
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">xfail</span><span class="s2">(</span>
+    <span class="s1">sysconfig</span><span class="s2">.</span><span class="s1">get_config_var</span><span class="s2">(</span><span class="s3">&quot;Py_DEBUG&quot;</span><span class="s2">),</span>
+    <span class="s1">reason</span><span class="s2">=(</span>
+        <span class="s3">&quot;Py_LIMITED_API is incompatible with Py_DEBUG, Py_TRACE_REFS, &quot;</span>
+        <span class="s3">&quot;and Py_REF_DEBUG&quot;</span>
+    <span class="s2">),</span>
+<span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_limited_api</span><span class="s2">(</span><span class="s1">tmp_path</span><span class="s2">):</span>
+    <span class="s4">&quot;&quot;&quot;Test building a third-party C extension with the limited API.&quot;&quot;&quot;</span>
+    <span class="s5"># Based in part on test_cython from random.tests.test_extending</span>
+
+    <span class="s1">here </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">__file__</span><span class="s2">)</span>
+    <span class="s1">ext_dir </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">here</span><span class="s2">, </span><span class="s3">&quot;examples&quot;</span><span class="s2">, </span><span class="s3">&quot;limited_api&quot;</span><span class="s2">)</span>
+
+    <span class="s1">cytest </span><span class="s2">= </span><span class="s1">str</span><span class="s2">(</span><span class="s1">tmp_path </span><span class="s2">/ </span><span class="s3">&quot;limited_api&quot;</span><span class="s2">)</span>
+
+    <span class="s1">shutil</span><span class="s2">.</span><span class="s1">copytree</span><span class="s2">(</span><span class="s1">ext_dir</span><span class="s2">, </span><span class="s1">cytest</span><span class="s2">)</span>
+    <span class="s5"># build the examples and &quot;install&quot; them into a temporary directory</span>
+
+    <span class="s1">install_log </span><span class="s2">= </span><span class="s1">str</span><span class="s2">(</span><span class="s1">tmp_path </span><span class="s2">/ </span><span class="s3">&quot;tmp_install_log.txt&quot;</span><span class="s2">)</span>
+    <span class="s1">subprocess</span><span class="s2">.</span><span class="s1">check_output</span><span class="s2">(</span>
+        <span class="s2">[</span>
+            <span class="s1">sys</span><span class="s2">.</span><span class="s1">executable</span><span class="s2">,</span>
+            <span class="s3">&quot;setup.py&quot;</span><span class="s2">,</span>
+            <span class="s3">&quot;build&quot;</span><span class="s2">,</span>
+            <span class="s3">&quot;install&quot;</span><span class="s2">,</span>
+            <span class="s3">&quot;--prefix&quot;</span><span class="s2">, </span><span class="s1">str</span><span class="s2">(</span><span class="s1">tmp_path </span><span class="s2">/ </span><span class="s3">&quot;installdir&quot;</span><span class="s2">),</span>
+            <span class="s3">&quot;--single-version-externally-managed&quot;</span><span class="s2">,</span>
+            <span class="s3">&quot;--record&quot;</span><span class="s2">,</span>
+            <span class="s1">install_log</span><span class="s2">,</span>
+        <span class="s2">],</span>
+        <span class="s1">cwd</span><span class="s2">=</span><span class="s1">cytest</span><span class="s2">,</span>
+    <span class="s2">)</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<html>
+<head>
+<title>c_distributions.pxd</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+c_distributions.pxd</font>
+</center></td></tr></table>
+<pre><span class="s0">#!python</span>
+<span class="s0">#cython: wraparound=False, nonecheck=False, boundscheck=False, cdivision=True, language_level=3</span>
+<span class="s2">from </span><span class="s1">numpy </span><span class="s2">cimport </span><span class="s1">npy_intp</span>
+
+<span class="s2">from </span><span class="s1">libc</span><span class="s3">.</span><span class="s1">stdint </span><span class="s2">cimport </span><span class="s3">(</span><span class="s1">uint64_t</span><span class="s3">, </span><span class="s1">int32_t</span><span class="s3">, </span><span class="s1">int64_t</span><span class="s3">)</span>
+<span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">random </span><span class="s2">cimport </span><span class="s1">bitgen_t</span>
+
+<span class="s2">cdef </span><span class="s1">extern </span><span class="s2">from </span><span class="s4">&quot;numpy/random/distributions.h&quot;</span><span class="s3">:</span>
+
+    <span class="s1">struct s_binomial_t</span><span class="s3">:</span>
+        <span class="s1">int has_binomial</span>
+        <span class="s1">double psave</span>
+        <span class="s1">int64_t nsave</span>
+        <span class="s1">double r</span>
+        <span class="s1">double q</span>
+        <span class="s1">double fm</span>
+        <span class="s1">int64_t m</span>
+        <span class="s1">double p1</span>
+        <span class="s1">double xm</span>
+        <span class="s1">double xl</span>
+        <span class="s1">double xr</span>
+        <span class="s1">double c</span>
+        <span class="s1">double laml</span>
+        <span class="s1">double lamr</span>
+        <span class="s1">double p2</span>
+        <span class="s1">double p3</span>
+        <span class="s1">double p4</span>
+
+    <span class="s2">ctypedef </span><span class="s1">s_binomial_t binomial_t</span>
+
+    <span class="s1">float random_standard_uniform_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_standard_uniform</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_uniform_fill</span><span class="s3">(</span><span class="s1">bitgen_t</span><span class="s3">* </span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp cnt</span><span class="s3">, </span><span class="s1">double </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_uniform_fill_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp cnt</span><span class="s3">, </span><span class="s1">float </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    
+    <span class="s1">double random_standard_exponential</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">float random_standard_exponential_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_exponential_fill</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp cnt</span><span class="s3">, </span><span class="s1">double </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_exponential_fill_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp cnt</span><span class="s3">, </span><span class="s1">float </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_exponential_inv_fill</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp cnt</span><span class="s3">, </span><span class="s1">double </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_exponential_inv_fill_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp cnt</span><span class="s3">, </span><span class="s1">float </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    
+    <span class="s1">double random_standard_normal</span><span class="s3">(</span><span class="s1">bitgen_t</span><span class="s3">* </span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">float random_standard_normal_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_normal_fill</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp count</span><span class="s3">, </span><span class="s1">double </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_normal_fill_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp count</span><span class="s3">, </span><span class="s1">float </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_standard_gamma</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double shape</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">float random_standard_gamma_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">float shape</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">float random_standard_uniform_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_standard_uniform_fill_f</span><span class="s3">(</span><span class="s1">bitgen_t</span><span class="s3">* </span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">npy_intp cnt</span><span class="s3">, </span><span class="s1">float </span><span class="s3">*</span><span class="s1">out</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">float random_standard_normal_f</span><span class="s3">(</span><span class="s1">bitgen_t</span><span class="s3">* </span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">float random_standard_gamma_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">float shape</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">int64_t random_positive_int64</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int32_t random_positive_int32</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_positive_int</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">uint64_t random_uint</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">double random_normal</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double loc</span><span class="s3">, </span><span class="s1">double scale</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">double random_gamma</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double shape</span><span class="s3">, </span><span class="s1">double scale</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">float random_gamma_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">float shape</span><span class="s3">, </span><span class="s1">float scale</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">double random_exponential</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double scale</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_uniform</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double lower</span><span class="s3">, </span><span class="s1">double range</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_beta</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double a</span><span class="s3">, </span><span class="s1">double b</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_chisquare</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double df</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double dfnum</span><span class="s3">, </span><span class="s1">double dfden</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_standard_cauchy</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_pareto</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double a</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_weibull</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double a</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_power</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double a</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_laplace</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double loc</span><span class="s3">, </span><span class="s1">double scale</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_gumbel</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double loc</span><span class="s3">, </span><span class="s1">double scale</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_logistic</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double loc</span><span class="s3">, </span><span class="s1">double scale</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_lognormal</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double mean</span><span class="s3">, </span><span class="s1">double sigma</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_rayleigh</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double mode</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_standard_t</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double df</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_noncentral_chisquare</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double df</span><span class="s3">,</span>
+                                       <span class="s1">double nonc</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_noncentral_f</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double dfnum</span><span class="s3">,</span>
+                               <span class="s1">double dfden</span><span class="s3">, </span><span class="s1">double nonc</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_wald</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double mean</span><span class="s3">, </span><span class="s1">double scale</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_vonmises</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double mu</span><span class="s3">, </span><span class="s1">double kappa</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">double random_triangular</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double left</span><span class="s3">, </span><span class="s1">double mode</span><span class="s3">,</span>
+                             <span class="s1">double right</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">int64_t random_poisson</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double lam</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_negative_binomial</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double n</span><span class="s3">, </span><span class="s1">double p</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_binomial</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double p</span><span class="s3">, </span><span class="s1">int64_t n</span><span class="s3">, </span><span class="s1">binomial_t </span><span class="s3">*</span><span class="s1">binomial</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_logseries</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double p</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_geometric_search</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double p</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_geometric_inversion</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double p</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_geometric</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double p</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_zipf</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">double a</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">int64_t random_hypergeometric</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">int64_t good</span><span class="s3">, </span><span class="s1">int64_t bad</span><span class="s3">,</span>
+                                    <span class="s1">int64_t sample</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">uint64_t random_interval</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">uint64_t max</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s0"># Generate random uint64 numbers in closed interval [off, off + rng].</span>
+    <span class="s1">uint64_t random_bounded_uint64</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">,</span>
+                                   <span class="s1">uint64_t off</span><span class="s3">, </span><span class="s1">uint64_t rng</span><span class="s3">,</span>
+                                   <span class="s1">uint64_t mask</span><span class="s3">, </span><span class="s1">bint use_masked</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">void random_multinomial</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">, </span><span class="s1">int64_t n</span><span class="s3">, </span><span class="s1">int64_t </span><span class="s3">*</span><span class="s1">mnix</span><span class="s3">,</span>
+                            <span class="s1">double </span><span class="s3">*</span><span class="s1">pix</span><span class="s3">, </span><span class="s1">npy_intp d</span><span class="s3">, </span><span class="s1">binomial_t </span><span class="s3">*</span><span class="s1">binomial</span><span class="s3">) </span><span class="s1">nogil</span>
+
+    <span class="s1">int random_multivariate_hypergeometric_count</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">,</span>
+                          <span class="s1">int64_t total</span><span class="s3">,</span>
+                          <span class="s1">size_t num_colors</span><span class="s3">, </span><span class="s1">int64_t </span><span class="s3">*</span><span class="s1">colors</span><span class="s3">,</span>
+                          <span class="s1">int64_t nsample</span><span class="s3">,</span>
+                          <span class="s1">size_t num_variates</span><span class="s3">, </span><span class="s1">int64_t </span><span class="s3">*</span><span class="s1">variates</span><span class="s3">) </span><span class="s1">nogil</span>
+    <span class="s1">void random_multivariate_hypergeometric_marginals</span><span class="s3">(</span><span class="s1">bitgen_t </span><span class="s3">*</span><span class="s1">bitgen_state</span><span class="s3">,</span>
+                               <span class="s1">int64_t total</span><span class="s3">,</span>
+                               <span class="s1">size_t num_colors</span><span class="s3">, </span><span class="s1">int64_t </span><span class="s3">*</span><span class="s1">colors</span><span class="s3">,</span>
+                               <span class="s1">int64_t nsample</span><span class="s3">,</span>
+                               <span class="s1">size_t num_variates</span><span class="s3">, </span><span class="s1">int64_t </span><span class="s3">*</span><span class="s1">variates</span><span class="s3">) </span><span class="s1">nogil</span>
+
+</pre>
+</body>
+</html>

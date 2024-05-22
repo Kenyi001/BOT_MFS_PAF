@@ -1,0 +1,1354 @@
+<html>
+<head>
+<title>array_manager.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+array_manager.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+Experimental manager based on storing a collection of 1D arrays 
+&quot;&quot;&quot;</span>
+<span class="s2">from </span><span class="s1">__future__ </span><span class="s2">import </span><span class="s1">annotations</span>
+
+<span class="s2">import </span><span class="s1">itertools</span>
+<span class="s2">from </span><span class="s1">typing </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">TYPE_CHECKING</span><span class="s3">,</span>
+    <span class="s1">Callable</span><span class="s3">,</span>
+    <span class="s1">Literal</span><span class="s3">,</span>
+<span class="s3">)</span>
+
+<span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">_libs </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">NaT</span><span class="s3">,</span>
+    <span class="s1">lib</span><span class="s3">,</span>
+<span class="s3">)</span>
+
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">.</span><span class="s1">astype </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">astype_array</span><span class="s3">,</span>
+    <span class="s1">astype_array_safe</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">.</span><span class="s1">cast </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">ensure_dtype_can_hold_na</span><span class="s3">,</span>
+    <span class="s1">find_common_type</span><span class="s3">,</span>
+    <span class="s1">infer_dtype_from_scalar</span><span class="s3">,</span>
+    <span class="s1">np_find_common_type</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">.</span><span class="s1">common </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">ensure_platform_int</span><span class="s3">,</span>
+    <span class="s1">is_datetime64_ns_dtype</span><span class="s3">,</span>
+    <span class="s1">is_integer</span><span class="s3">,</span>
+    <span class="s1">is_numeric_dtype</span><span class="s3">,</span>
+    <span class="s1">is_object_dtype</span><span class="s3">,</span>
+    <span class="s1">is_timedelta64_ns_dtype</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">.</span><span class="s1">dtypes </span><span class="s2">import </span><span class="s1">ExtensionDtype</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">.</span><span class="s1">generic </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">ABCDataFrame</span><span class="s3">,</span>
+    <span class="s1">ABCSeries</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">.</span><span class="s1">missing </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">array_equals</span><span class="s3">,</span>
+    <span class="s1">isna</span><span class="s3">,</span>
+    <span class="s1">na_value_for_dtype</span><span class="s3">,</span>
+<span class="s3">)</span>
+
+<span class="s2">import </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">algorithms </span><span class="s2">as </span><span class="s1">algos</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">array_algos</span><span class="s3">.</span><span class="s1">quantile </span><span class="s2">import </span><span class="s1">quantile_compat</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">array_algos</span><span class="s3">.</span><span class="s1">take </span><span class="s2">import </span><span class="s1">take_1d</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">arrays </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">DatetimeArray</span><span class="s3">,</span>
+    <span class="s1">ExtensionArray</span><span class="s3">,</span>
+    <span class="s1">NumpyExtensionArray</span><span class="s3">,</span>
+    <span class="s1">TimedeltaArray</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">construction </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">ensure_wrapped_if_datetimelike</span><span class="s3">,</span>
+    <span class="s1">extract_array</span><span class="s3">,</span>
+    <span class="s1">sanitize_array</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">indexers </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">maybe_convert_indices</span><span class="s3">,</span>
+    <span class="s1">validate_indices</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">indexes</span><span class="s3">.</span><span class="s1">api </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">Index</span><span class="s3">,</span>
+    <span class="s1">ensure_index</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">internals</span><span class="s3">.</span><span class="s1">base </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">DataManager</span><span class="s3">,</span>
+    <span class="s1">SingleDataManager</span><span class="s3">,</span>
+    <span class="s1">ensure_np_dtype</span><span class="s3">,</span>
+    <span class="s1">interleaved_dtype</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">internals</span><span class="s3">.</span><span class="s1">blocks </span><span class="s2">import </span><span class="s3">(</span>
+    <span class="s1">BlockPlacement</span><span class="s3">,</span>
+    <span class="s1">ensure_block_shape</span><span class="s3">,</span>
+    <span class="s1">external_values</span><span class="s3">,</span>
+    <span class="s1">extract_pandas_array</span><span class="s3">,</span>
+    <span class="s1">maybe_coerce_values</span><span class="s3">,</span>
+    <span class="s1">new_block</span><span class="s3">,</span>
+    <span class="s1">to_native_types</span><span class="s3">,</span>
+<span class="s3">)</span>
+<span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">internals</span><span class="s3">.</span><span class="s1">managers </span><span class="s2">import </span><span class="s1">make_na_array</span>
+
+<span class="s2">if </span><span class="s1">TYPE_CHECKING</span><span class="s3">:</span>
+    <span class="s2">from </span><span class="s1">collections</span><span class="s3">.</span><span class="s1">abc </span><span class="s2">import </span><span class="s1">Hashable</span>
+
+    <span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">_typing </span><span class="s2">import </span><span class="s3">(</span>
+        <span class="s1">ArrayLike</span><span class="s3">,</span>
+        <span class="s1">AxisInt</span><span class="s3">,</span>
+        <span class="s1">DtypeObj</span><span class="s3">,</span>
+        <span class="s1">QuantileInterpolation</span><span class="s3">,</span>
+        <span class="s1">Self</span><span class="s3">,</span>
+        <span class="s1">npt</span><span class="s3">,</span>
+    <span class="s3">)</span>
+
+
+<span class="s2">class </span><span class="s1">BaseArrayManager</span><span class="s3">(</span><span class="s1">DataManager</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Core internal data structure to implement DataFrame and Series. 
+ 
+    Alternative to the BlockManager, storing a list of 1D arrays instead of 
+    Blocks. 
+ 
+    This is *not* a public API class 
+ 
+    Parameters 
+    ---------- 
+    arrays : Sequence of arrays 
+    axes : Sequence of Index 
+    verify_integrity : bool, default True 
+ 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">__slots__ </span><span class="s3">= [</span>
+        <span class="s4">&quot;_axes&quot;</span><span class="s3">,  </span><span class="s5"># private attribute, because 'axes' has different order, see below</span>
+        <span class="s4">&quot;arrays&quot;</span><span class="s3">,</span>
+    <span class="s3">]</span>
+
+    <span class="s1">arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">| </span><span class="s1">ExtensionArray</span><span class="s3">]</span>
+    <span class="s1">_axes</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">]</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">| </span><span class="s1">ExtensionArray</span><span class="s3">],</span>
+        <span class="s1">axes</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">],</span>
+        <span class="s1">verify_integrity</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">True</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s2">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">def </span><span class="s1">make_empty</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">axes</span><span class="s3">=</span><span class="s2">None</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot;Return an empty ArrayManager with the items axis of len 0 (no columns)&quot;&quot;&quot;</span>
+        <span class="s2">if </span><span class="s1">axes </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s1">axes </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">:], </span><span class="s1">Index</span><span class="s3">([])]</span>
+
+        <span class="s1">arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">| </span><span class="s1">ExtensionArray</span><span class="s3">] = []</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">arrays</span><span class="s3">, </span><span class="s1">axes</span><span class="s3">)</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">items</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; Index</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[-</span><span class="s6">1</span><span class="s3">]</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s5"># error: Signature of &quot;axes&quot; incompatible with supertype &quot;DataManager&quot;</span>
+    <span class="s2">def </span><span class="s1">axes</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">]:  </span><span class="s5"># type: ignore[override]</span>
+        <span class="s5"># mypy doesn't work to override attribute with property</span>
+        <span class="s5"># see https://github.com/python/mypy/issues/4125</span>
+        <span class="s0">&quot;&quot;&quot;Axes is BlockManager-compatible order (columns, rows)&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s3">[</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">], </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]]</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">shape_proper</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; tuple</span><span class="s3">[</span><span class="s1">int</span><span class="s3">, ...]:</span>
+        <span class="s5"># this returns (n_rows, n_columns)</span>
+        <span class="s2">return </span><span class="s1">tuple</span><span class="s3">(</span><span class="s1">len</span><span class="s3">(</span><span class="s1">ax</span><span class="s3">) </span><span class="s2">for </span><span class="s1">ax </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+
+    <span class="s3">@</span><span class="s1">staticmethod</span>
+    <span class="s2">def </span><span class="s1">_normalize_axis</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">: </span><span class="s1">AxisInt</span><span class="s3">) </span><span class="s1">-&gt; int</span><span class="s3">:</span>
+        <span class="s5"># switch axis</span>
+        <span class="s1">axis </span><span class="s3">= </span><span class="s6">1 </span><span class="s2">if </span><span class="s1">axis </span><span class="s3">== </span><span class="s6">0 </span><span class="s2">else </span><span class="s6">0</span>
+        <span class="s2">return </span><span class="s1">axis</span>
+
+    <span class="s2">def </span><span class="s1">set_axis</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">: </span><span class="s1">AxisInt</span><span class="s3">, </span><span class="s1">new_labels</span><span class="s3">: </span><span class="s1">Index</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s5"># Caller is responsible for ensuring we have an Index object.</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_validate_set_axis</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">, </span><span class="s1">new_labels</span><span class="s3">)</span>
+        <span class="s1">axis </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_normalize_axis</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">] = </span><span class="s1">new_labels</span>
+
+    <span class="s2">def </span><span class="s1">get_dtypes</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; npt</span><span class="s3">.</span><span class="s1">NDArray</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">object_</span><span class="s3">]:</span>
+        <span class="s2">return </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">([</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">], </span><span class="s1">dtype</span><span class="s3">=</span><span class="s4">&quot;object&quot;</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">add_references</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">mgr</span><span class="s3">: </span><span class="s1">BaseArrayManager</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Only implemented on the BlockManager level 
+        &quot;&quot;&quot;</span>
+        <span class="s2">return</span>
+
+    <span class="s2">def </span><span class="s1">__getstate__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span>
+
+    <span class="s2">def </span><span class="s1">__setstate__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">state</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= </span><span class="s1">state</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= </span><span class="s1">state</span><span class="s3">[</span><span class="s6">1</span><span class="s3">]</span>
+
+    <span class="s2">def </span><span class="s1">__repr__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; str</span><span class="s3">:</span>
+        <span class="s1">output </span><span class="s3">= </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">).</span><span class="s1">__name__</span>
+        <span class="s1">output </span><span class="s3">+= </span><span class="s4">f&quot;</span><span class="s2">\n</span><span class="s4">Index: </span><span class="s2">{</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span><span class="s2">}</span><span class="s4">&quot;</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+            <span class="s1">output </span><span class="s3">+= </span><span class="s4">f&quot;</span><span class="s2">\n</span><span class="s4">Columns: </span><span class="s2">{</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">]</span><span class="s2">}</span><span class="s4">&quot;</span>
+        <span class="s1">output </span><span class="s3">+= </span><span class="s4">f&quot;</span><span class="s2">\n{</span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">)</span><span class="s2">} </span><span class="s4">arrays:&quot;</span>
+        <span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">:</span>
+            <span class="s1">output </span><span class="s3">+= </span><span class="s4">f&quot;</span><span class="s2">\n{</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype</span><span class="s2">}</span><span class="s4">&quot;</span>
+        <span class="s2">return </span><span class="s1">output</span>
+
+    <span class="s2">def </span><span class="s1">apply</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">f</span><span class="s3">,</span>
+        <span class="s1">align_keys</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">str</span><span class="s3">] | </span><span class="s2">None </span><span class="s3">= </span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s3">**</span><span class="s1">kwargs</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Iterate over the arrays, collect and create a new ArrayManager. 
+ 
+        Parameters 
+        ---------- 
+        f : str or callable 
+            Name of the Array method to apply. 
+        align_keys: List[str] or None, default None 
+        **kwargs 
+            Keywords to pass to `f` 
+ 
+        Returns 
+        ------- 
+        ArrayManager 
+        &quot;&quot;&quot;</span>
+        <span class="s2">assert </span><span class="s4">&quot;filter&quot; </span><span class="s2">not in </span><span class="s1">kwargs</span>
+
+        <span class="s1">align_keys </span><span class="s3">= </span><span class="s1">align_keys </span><span class="s2">or </span><span class="s3">[]</span>
+        <span class="s1">result_arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">ArrayLike</span><span class="s3">] = []</span>
+        <span class="s5"># fillna: Series/DataFrame is responsible for making sure value is aligned</span>
+
+        <span class="s1">aligned_args </span><span class="s3">= {</span><span class="s1">k</span><span class="s3">: </span><span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] </span><span class="s2">for </span><span class="s1">k </span><span class="s2">in </span><span class="s1">align_keys</span><span class="s3">}</span>
+
+        <span class="s2">if </span><span class="s1">f </span><span class="s3">== </span><span class="s4">&quot;apply&quot;</span><span class="s3">:</span>
+            <span class="s1">f </span><span class="s3">= </span><span class="s1">kwargs</span><span class="s3">.</span><span class="s1">pop</span><span class="s3">(</span><span class="s4">&quot;func&quot;</span><span class="s3">)</span>
+
+        <span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">):</span>
+            <span class="s2">if </span><span class="s1">aligned_args</span><span class="s3">:</span>
+                <span class="s2">for </span><span class="s1">k</span><span class="s3">, </span><span class="s1">obj </span><span class="s2">in </span><span class="s1">aligned_args</span><span class="s3">.</span><span class="s1">items</span><span class="s3">():</span>
+                    <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">obj</span><span class="s3">, (</span><span class="s1">ABCSeries</span><span class="s3">, </span><span class="s1">ABCDataFrame</span><span class="s3">)):</span>
+                        <span class="s5"># The caller is responsible for ensuring that</span>
+                        <span class="s5">#  obj.axes[-1].equals(self.items)</span>
+                        <span class="s2">if </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">1</span><span class="s3">:</span>
+                            <span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] = </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">iloc</span><span class="s3">[</span><span class="s1">i</span><span class="s3">]</span>
+                        <span class="s2">else</span><span class="s3">:</span>
+                            <span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] = </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">iloc</span><span class="s3">[:, </span><span class="s1">i</span><span class="s3">].</span><span class="s1">_values</span>
+                    <span class="s2">else</span><span class="s3">:</span>
+                        <span class="s5"># otherwise we have an array-like</span>
+                        <span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] = </span><span class="s1">obj</span><span class="s3">[</span><span class="s1">i</span><span class="s3">]</span>
+
+            <span class="s2">if </span><span class="s1">callable</span><span class="s3">(</span><span class="s1">f</span><span class="s3">):</span>
+                <span class="s1">applied </span><span class="s3">= </span><span class="s1">f</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, **</span><span class="s1">kwargs</span><span class="s3">)</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s1">applied </span><span class="s3">= </span><span class="s1">getattr</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">f</span><span class="s3">)(**</span><span class="s1">kwargs</span><span class="s3">)</span>
+
+            <span class="s1">result_arrays</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">applied</span><span class="s3">)</span>
+
+        <span class="s1">new_axes </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">result_arrays</span><span class="s3">, </span><span class="s1">new_axes</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">apply_with_block</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">f</span><span class="s3">, </span><span class="s1">align_keys</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, **</span><span class="s1">kwargs</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s5"># switch axis to follow BlockManager logic</span>
+        <span class="s1">swap_axis </span><span class="s3">= </span><span class="s2">True</span>
+        <span class="s2">if </span><span class="s1">f </span><span class="s3">== </span><span class="s4">&quot;interpolate&quot;</span><span class="s3">:</span>
+            <span class="s1">swap_axis </span><span class="s3">= </span><span class="s2">False</span>
+        <span class="s2">if </span><span class="s1">swap_axis </span><span class="s2">and </span><span class="s4">&quot;axis&quot; </span><span class="s2">in </span><span class="s1">kwargs </span><span class="s2">and </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+            <span class="s1">kwargs</span><span class="s3">[</span><span class="s4">&quot;axis&quot;</span><span class="s3">] = </span><span class="s6">1 </span><span class="s2">if </span><span class="s1">kwargs</span><span class="s3">[</span><span class="s4">&quot;axis&quot;</span><span class="s3">] == </span><span class="s6">0 </span><span class="s2">else </span><span class="s6">0</span>
+
+        <span class="s1">align_keys </span><span class="s3">= </span><span class="s1">align_keys </span><span class="s2">or </span><span class="s3">[]</span>
+        <span class="s1">aligned_args </span><span class="s3">= {</span><span class="s1">k</span><span class="s3">: </span><span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] </span><span class="s2">for </span><span class="s1">k </span><span class="s2">in </span><span class="s1">align_keys</span><span class="s3">}</span>
+
+        <span class="s1">result_arrays </span><span class="s3">= []</span>
+
+        <span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">):</span>
+            <span class="s2">if </span><span class="s1">aligned_args</span><span class="s3">:</span>
+                <span class="s2">for </span><span class="s1">k</span><span class="s3">, </span><span class="s1">obj </span><span class="s2">in </span><span class="s1">aligned_args</span><span class="s3">.</span><span class="s1">items</span><span class="s3">():</span>
+                    <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">obj</span><span class="s3">, (</span><span class="s1">ABCSeries</span><span class="s3">, </span><span class="s1">ABCDataFrame</span><span class="s3">)):</span>
+                        <span class="s5"># The caller is responsible for ensuring that</span>
+                        <span class="s5">#  obj.axes[-1].equals(self.items)</span>
+                        <span class="s2">if </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">1</span><span class="s3">:</span>
+                            <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+                                <span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] = </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">iloc</span><span class="s3">[</span><span class="s1">slice</span><span class="s3">(</span><span class="s1">i</span><span class="s3">, </span><span class="s1">i </span><span class="s3">+ </span><span class="s6">1</span><span class="s3">)].</span><span class="s1">_values</span>
+                            <span class="s2">else</span><span class="s3">:</span>
+                                <span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] = </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">iloc</span><span class="s3">[:].</span><span class="s1">_values</span>
+                        <span class="s2">else</span><span class="s3">:</span>
+                            <span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] = </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">iloc</span><span class="s3">[:, [</span><span class="s1">i</span><span class="s3">]].</span><span class="s1">_values</span>
+                    <span class="s2">else</span><span class="s3">:</span>
+                        <span class="s5"># otherwise we have an ndarray</span>
+                        <span class="s2">if </span><span class="s1">obj</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+                            <span class="s1">kwargs</span><span class="s3">[</span><span class="s1">k</span><span class="s3">] = </span><span class="s1">obj</span><span class="s3">[[</span><span class="s1">i</span><span class="s3">]]</span>
+
+            <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">) </span><span class="s2">and not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">):</span>
+                <span class="s5"># i.e. TimedeltaArray, DatetimeArray with tz=None. Need to</span>
+                <span class="s5">#  convert for the Block constructors.</span>
+                <span class="s1">arr </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">asarray</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">maybe_coerce_values</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+            <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+                <span class="s1">arr </span><span class="s3">= </span><span class="s1">ensure_block_shape</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s6">2</span><span class="s3">)</span>
+                <span class="s1">bp </span><span class="s3">= </span><span class="s1">BlockPlacement</span><span class="s3">(</span><span class="s1">slice</span><span class="s3">(</span><span class="s6">0</span><span class="s3">, </span><span class="s6">1</span><span class="s3">, </span><span class="s6">1</span><span class="s3">))</span>
+                <span class="s1">block </span><span class="s3">= </span><span class="s1">new_block</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">placement</span><span class="s3">=</span><span class="s1">bp</span><span class="s3">, </span><span class="s1">ndim</span><span class="s3">=</span><span class="s6">2</span><span class="s3">)</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s1">bp </span><span class="s3">= </span><span class="s1">BlockPlacement</span><span class="s3">(</span><span class="s1">slice</span><span class="s3">(</span><span class="s6">0</span><span class="s3">, </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">), </span><span class="s6">1</span><span class="s3">))</span>
+                <span class="s1">block </span><span class="s3">= </span><span class="s1">new_block</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">placement</span><span class="s3">=</span><span class="s1">bp</span><span class="s3">, </span><span class="s1">ndim</span><span class="s3">=</span><span class="s6">1</span><span class="s3">)</span>
+
+            <span class="s1">applied </span><span class="s3">= </span><span class="s1">getattr</span><span class="s3">(</span><span class="s1">block</span><span class="s3">, </span><span class="s1">f</span><span class="s3">)(**</span><span class="s1">kwargs</span><span class="s3">)</span>
+            <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">applied</span><span class="s3">, </span><span class="s1">list</span><span class="s3">):</span>
+                <span class="s1">applied </span><span class="s3">= </span><span class="s1">applied</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">applied</span><span class="s3">.</span><span class="s1">values</span>
+            <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2 </span><span class="s2">and </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+                <span class="s5"># 2D for np.ndarray or DatetimeArray/TimedeltaArray</span>
+                <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">) == </span><span class="s6">1</span>
+                <span class="s5"># error: No overload variant of &quot;__getitem__&quot; of &quot;ExtensionArray&quot;</span>
+                <span class="s5"># matches argument type &quot;Tuple[int, slice]&quot;</span>
+                <span class="s1">arr </span><span class="s3">= </span><span class="s1">arr</span><span class="s3">[</span><span class="s6">0</span><span class="s3">, :]  </span><span class="s5"># type: ignore[call-overload]</span>
+            <span class="s1">result_arrays</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">result_arrays</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">setitem</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">value</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">apply_with_block</span><span class="s3">(</span><span class="s4">&quot;setitem&quot;</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">=</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">value</span><span class="s3">=</span><span class="s1">value</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">diff</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">n</span><span class="s3">: </span><span class="s1">int</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s2">assert </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2  </span><span class="s5"># caller ensures</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">apply</span><span class="s3">(</span><span class="s1">algos</span><span class="s3">.</span><span class="s1">diff</span><span class="s3">, </span><span class="s1">n</span><span class="s3">=</span><span class="s1">n</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">astype</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">copy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">| </span><span class="s2">None </span><span class="s3">= </span><span class="s2">False</span><span class="s3">, </span><span class="s1">errors</span><span class="s3">: </span><span class="s1">str </span><span class="s3">= </span><span class="s4">&quot;raise&quot;</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s2">if </span><span class="s1">copy </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s1">copy </span><span class="s3">= </span><span class="s2">True</span>
+
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">apply</span><span class="s3">(</span><span class="s1">astype_array_safe</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">copy</span><span class="s3">=</span><span class="s1">copy</span><span class="s3">, </span><span class="s1">errors</span><span class="s3">=</span><span class="s1">errors</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">convert</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">copy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">| </span><span class="s2">None</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s2">if </span><span class="s1">copy </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s1">copy </span><span class="s3">= </span><span class="s2">True</span>
+
+        <span class="s2">def </span><span class="s1">_convert</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">):</span>
+            <span class="s2">if </span><span class="s1">is_object_dtype</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">):</span>
+                <span class="s5"># extract NumpyExtensionArray for tests that patch</span>
+                <span class="s5">#  NumpyExtensionArray._typ</span>
+                <span class="s1">arr </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">asarray</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+                <span class="s1">result </span><span class="s3">= </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">maybe_convert_objects</span><span class="s3">(</span>
+                    <span class="s1">arr</span><span class="s3">,</span>
+                    <span class="s1">convert_non_numeric</span><span class="s3">=</span><span class="s2">True</span><span class="s3">,</span>
+                <span class="s3">)</span>
+                <span class="s2">if </span><span class="s1">result </span><span class="s2">is </span><span class="s1">arr </span><span class="s2">and </span><span class="s1">copy</span><span class="s3">:</span>
+                    <span class="s2">return </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">()</span>
+                <span class="s2">return </span><span class="s1">result</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s2">return </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">() </span><span class="s2">if </span><span class="s1">copy </span><span class="s2">else </span><span class="s1">arr</span>
+
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">apply</span><span class="s3">(</span><span class="s1">_convert</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">to_native_types</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, **</span><span class="s1">kwargs</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">apply</span><span class="s3">(</span><span class="s1">to_native_types</span><span class="s3">, **</span><span class="s1">kwargs</span><span class="s3">)</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">any_extension_types</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; bool</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot;Whether any of the blocks in this manager are extension blocks&quot;&quot;&quot;</span>
+        <span class="s2">return False  </span><span class="s5"># any(block.is_extension for block in self.blocks)</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">is_view</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; bool</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot;return a boolean if we are a single block and are a view&quot;&quot;&quot;</span>
+        <span class="s5"># TODO what is this used for?</span>
+        <span class="s2">return False</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">is_single_block</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; bool</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">) == </span><span class="s6">1</span>
+
+    <span class="s2">def </span><span class="s1">_get_data_subset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">predicate</span><span class="s3">: </span><span class="s1">Callable</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s1">indices </span><span class="s3">= [</span><span class="s1">i </span><span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">) </span><span class="s2">if </span><span class="s1">predicate</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)]</span>
+        <span class="s1">arrays </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">i</span><span class="s3">] </span><span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">indices</span><span class="s3">]</span>
+        <span class="s5"># TODO copy?</span>
+        <span class="s5"># Note: using Index.take ensures we can retain e.g. DatetimeIndex.freq,</span>
+        <span class="s5">#  see test_describe_datetime_columns</span>
+        <span class="s1">taker </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">(</span><span class="s1">indices</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s4">&quot;intp&quot;</span><span class="s3">)</span>
+        <span class="s1">new_cols </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">].</span><span class="s1">take</span><span class="s3">(</span><span class="s1">taker</span><span class="s3">)</span>
+        <span class="s1">new_axes </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">], </span><span class="s1">new_cols</span><span class="s3">]</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">arrays</span><span class="s3">, </span><span class="s1">new_axes</span><span class="s3">, </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">get_bool_data</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">copy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Select columns that are bool-dtype and object-dtype columns that are all-bool. 
+ 
+        Parameters 
+        ---------- 
+        copy : bool, default False 
+            Whether to copy the blocks 
+        &quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_get_data_subset</span><span class="s3">(</span><span class="s2">lambda </span><span class="s1">x</span><span class="s3">: </span><span class="s1">x</span><span class="s3">.</span><span class="s1">dtype </span><span class="s3">== </span><span class="s1">np</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">(</span><span class="s1">bool</span><span class="s3">))</span>
+
+    <span class="s2">def </span><span class="s1">get_numeric_data</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">copy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Select columns that have a numeric dtype. 
+ 
+        Parameters 
+        ---------- 
+        copy : bool, default False 
+            Whether to copy the blocks 
+        &quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_get_data_subset</span><span class="s3">(</span>
+            <span class="s2">lambda </span><span class="s1">arr</span><span class="s3">: </span><span class="s1">is_numeric_dtype</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">)</span>
+            <span class="s2">or </span><span class="s1">getattr</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">, </span><span class="s4">&quot;_is_numeric&quot;</span><span class="s3">, </span><span class="s2">False</span><span class="s3">)</span>
+        <span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">copy</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">deep</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">| </span><span class="s1">Literal</span><span class="s3">[</span><span class="s4">&quot;all&quot;</span><span class="s3">] | </span><span class="s2">None </span><span class="s3">= </span><span class="s2">True</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Make deep or shallow copy of ArrayManager 
+ 
+        Parameters 
+        ---------- 
+        deep : bool or string, default True 
+            If False, return shallow copy (do not copy data) 
+            If 'all', copy data and a deep copy of the index 
+ 
+        Returns 
+        ------- 
+        BlockManager 
+        &quot;&quot;&quot;</span>
+        <span class="s2">if </span><span class="s1">deep </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s5"># ArrayManager does not yet support CoW, so deep=None always means</span>
+            <span class="s5"># deep=True for now</span>
+            <span class="s1">deep </span><span class="s3">= </span><span class="s2">True</span>
+
+        <span class="s5"># this preserves the notion of view copying of axes</span>
+        <span class="s2">if </span><span class="s1">deep</span><span class="s3">:</span>
+            <span class="s5"># hit in e.g. tests.io.json.test_pandas</span>
+
+            <span class="s2">def </span><span class="s1">copy_func</span><span class="s3">(</span><span class="s1">ax</span><span class="s3">):</span>
+                <span class="s2">return </span><span class="s1">ax</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">(</span><span class="s1">deep</span><span class="s3">=</span><span class="s2">True</span><span class="s3">) </span><span class="s2">if </span><span class="s1">deep </span><span class="s3">== </span><span class="s4">&quot;all&quot; </span><span class="s2">else </span><span class="s1">ax</span><span class="s3">.</span><span class="s1">view</span><span class="s3">()</span>
+
+            <span class="s1">new_axes </span><span class="s3">= [</span><span class="s1">copy_func</span><span class="s3">(</span><span class="s1">ax</span><span class="s3">) </span><span class="s2">for </span><span class="s1">ax </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">]</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">new_axes </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">deep</span><span class="s3">:</span>
+            <span class="s1">new_arrays </span><span class="s3">= [</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">() </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">]</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">new_arrays </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">new_arrays</span><span class="s3">, </span><span class="s1">new_axes</span><span class="s3">, </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">reindex_indexer</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">new_axis</span><span class="s3">,</span>
+        <span class="s1">indexer</span><span class="s3">,</span>
+        <span class="s1">axis</span><span class="s3">: </span><span class="s1">AxisInt</span><span class="s3">,</span>
+        <span class="s1">fill_value</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s1">allow_dups</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+        <span class="s1">copy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">| </span><span class="s2">None </span><span class="s3">= </span><span class="s2">True</span><span class="s3">,</span>
+        <span class="s5"># ignored keywords</span>
+        <span class="s1">only_slice</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+        <span class="s5"># ArrayManager specific keywords</span>
+        <span class="s1">use_na_proxy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s1">axis </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_normalize_axis</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_reindex_indexer</span><span class="s3">(</span>
+            <span class="s1">new_axis</span><span class="s3">,</span>
+            <span class="s1">indexer</span><span class="s3">,</span>
+            <span class="s1">axis</span><span class="s3">,</span>
+            <span class="s1">fill_value</span><span class="s3">,</span>
+            <span class="s1">allow_dups</span><span class="s3">,</span>
+            <span class="s1">copy</span><span class="s3">,</span>
+            <span class="s1">use_na_proxy</span><span class="s3">,</span>
+        <span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">_reindex_indexer</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">new_axis</span><span class="s3">,</span>
+        <span class="s1">indexer</span><span class="s3">: </span><span class="s1">npt</span><span class="s3">.</span><span class="s1">NDArray</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">intp</span><span class="s3">] | </span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s1">axis</span><span class="s3">: </span><span class="s1">AxisInt</span><span class="s3">,</span>
+        <span class="s1">fill_value</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s1">allow_dups</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+        <span class="s1">copy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">| </span><span class="s2">None </span><span class="s3">= </span><span class="s2">True</span><span class="s3">,</span>
+        <span class="s1">use_na_proxy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Parameters 
+        ---------- 
+        new_axis : Index 
+        indexer : ndarray[intp] or None 
+        axis : int 
+        fill_value : object, default None 
+        allow_dups : bool, default False 
+        copy : bool, default True 
+ 
+ 
+        pandas-indexer with -1's only. 
+        &quot;&quot;&quot;</span>
+        <span class="s2">if </span><span class="s1">copy </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s5"># ArrayManager does not yet support CoW, so deep=None always means</span>
+            <span class="s5"># deep=True for now</span>
+            <span class="s1">copy </span><span class="s3">= </span><span class="s2">True</span>
+
+        <span class="s2">if </span><span class="s1">indexer </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s1">new_axis </span><span class="s2">is </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">] </span><span class="s2">and not </span><span class="s1">copy</span><span class="s3">:</span>
+                <span class="s2">return </span><span class="s1">self</span>
+
+            <span class="s1">result </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">(</span><span class="s1">deep</span><span class="s3">=</span><span class="s1">copy</span><span class="s3">)</span>
+            <span class="s1">result</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+            <span class="s1">result</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">] = </span><span class="s1">new_axis</span>
+            <span class="s2">return </span><span class="s1">result</span>
+
+        <span class="s5"># some axes don't allow reindexing with dups</span>
+        <span class="s2">if not </span><span class="s1">allow_dups</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">].</span><span class="s1">_validate_can_reindex</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">axis </span><span class="s3">&gt;= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">IndexError</span><span class="s3">(</span><span class="s4">&quot;Requested axis not found in manager&quot;</span><span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">axis </span><span class="s3">== </span><span class="s6">1</span><span class="s3">:</span>
+            <span class="s1">new_arrays </span><span class="s3">= []</span>
+            <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">indexer</span><span class="s3">:</span>
+                <span class="s2">if </span><span class="s1">i </span><span class="s3">== -</span><span class="s6">1</span><span class="s3">:</span>
+                    <span class="s1">arr </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_make_na_array</span><span class="s3">(</span>
+                        <span class="s1">fill_value</span><span class="s3">=</span><span class="s1">fill_value</span><span class="s3">, </span><span class="s1">use_na_proxy</span><span class="s3">=</span><span class="s1">use_na_proxy</span>
+                    <span class="s3">)</span>
+                <span class="s2">else</span><span class="s3">:</span>
+                    <span class="s1">arr </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">i</span><span class="s3">]</span>
+                    <span class="s2">if </span><span class="s1">copy</span><span class="s3">:</span>
+                        <span class="s1">arr </span><span class="s3">= </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">()</span>
+                <span class="s1">new_arrays</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">validate_indices</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]))</span>
+            <span class="s1">indexer </span><span class="s3">= </span><span class="s1">ensure_platform_int</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">)</span>
+            <span class="s1">mask </span><span class="s3">= </span><span class="s1">indexer </span><span class="s3">== -</span><span class="s6">1</span>
+            <span class="s1">needs_masking </span><span class="s3">= </span><span class="s1">mask</span><span class="s3">.</span><span class="s1">any</span><span class="s3">()</span>
+            <span class="s1">new_arrays </span><span class="s3">= [</span>
+                <span class="s1">take_1d</span><span class="s3">(</span>
+                    <span class="s1">arr</span><span class="s3">,</span>
+                    <span class="s1">indexer</span><span class="s3">,</span>
+                    <span class="s1">allow_fill</span><span class="s3">=</span><span class="s1">needs_masking</span><span class="s3">,</span>
+                    <span class="s1">fill_value</span><span class="s3">=</span><span class="s1">fill_value</span><span class="s3">,</span>
+                    <span class="s1">mask</span><span class="s3">=</span><span class="s1">mask</span><span class="s3">,</span>
+                    <span class="s5"># if fill_value is not None else blk.fill_value</span>
+                <span class="s3">)</span>
+                <span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span>
+            <span class="s3">]</span>
+
+        <span class="s1">new_axes </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+        <span class="s1">new_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">] = </span><span class="s1">new_axis</span>
+
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">new_arrays</span><span class="s3">, </span><span class="s1">new_axes</span><span class="s3">, </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">take</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">indexer</span><span class="s3">: </span><span class="s1">npt</span><span class="s3">.</span><span class="s1">NDArray</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">intp</span><span class="s3">],</span>
+        <span class="s1">axis</span><span class="s3">: </span><span class="s1">AxisInt </span><span class="s3">= </span><span class="s6">1</span><span class="s3">,</span>
+        <span class="s1">verify</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">True</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Take items along any axis. 
+        &quot;&quot;&quot;</span>
+        <span class="s2">assert </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">), </span><span class="s1">type</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">)</span>
+        <span class="s2">assert </span><span class="s1">indexer</span><span class="s3">.</span><span class="s1">dtype </span><span class="s3">== </span><span class="s1">np</span><span class="s3">.</span><span class="s1">intp</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">.</span><span class="s1">dtype</span>
+
+        <span class="s1">axis </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_normalize_axis</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">)</span>
+
+        <span class="s2">if not </span><span class="s1">indexer</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">1</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s4">&quot;indexer should be 1-dimensional&quot;</span><span class="s3">)</span>
+
+        <span class="s1">n </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape_proper</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">]</span>
+        <span class="s1">indexer </span><span class="s3">= </span><span class="s1">maybe_convert_indices</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">n</span><span class="s3">, </span><span class="s1">verify</span><span class="s3">=</span><span class="s1">verify</span><span class="s3">)</span>
+
+        <span class="s1">new_labels </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">].</span><span class="s1">take</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_reindex_indexer</span><span class="s3">(</span>
+            <span class="s1">new_axis</span><span class="s3">=</span><span class="s1">new_labels</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">=</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">=</span><span class="s1">axis</span><span class="s3">, </span><span class="s1">allow_dups</span><span class="s3">=</span><span class="s2">True</span>
+        <span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">_make_na_array</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">fill_value</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">use_na_proxy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">use_na_proxy</span><span class="s3">:</span>
+            <span class="s2">assert </span><span class="s1">fill_value </span><span class="s2">is None</span>
+            <span class="s2">return </span><span class="s1">NullArrayProxy</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape_proper</span><span class="s3">[</span><span class="s6">0</span><span class="s3">])</span>
+
+        <span class="s2">if </span><span class="s1">fill_value </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s1">fill_value </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">nan</span>
+
+        <span class="s1">dtype</span><span class="s3">, </span><span class="s1">fill_value </span><span class="s3">= </span><span class="s1">infer_dtype_from_scalar</span><span class="s3">(</span><span class="s1">fill_value</span><span class="s3">)</span>
+        <span class="s1">array_values </span><span class="s3">= </span><span class="s1">make_na_array</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape_proper</span><span class="s3">[:</span><span class="s6">1</span><span class="s3">], </span><span class="s1">fill_value</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">array_values</span>
+
+    <span class="s2">def </span><span class="s1">_equal_values</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">other</span><span class="s3">) </span><span class="s1">-&gt; bool</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Used in .equals defined in base class. Only check the column values 
+        assuming shape and indexes have already been checked. 
+        &quot;&quot;&quot;</span>
+        <span class="s2">for </span><span class="s1">left</span><span class="s3">, </span><span class="s1">right </span><span class="s2">in </span><span class="s1">zip</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">, </span><span class="s1">other</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">):</span>
+            <span class="s2">if not </span><span class="s1">array_equals</span><span class="s3">(</span><span class="s1">left</span><span class="s3">, </span><span class="s1">right</span><span class="s3">):</span>
+                <span class="s2">return False</span>
+        <span class="s2">return True</span>
+
+    <span class="s5"># TODO</span>
+    <span class="s5"># to_dict</span>
+
+
+<span class="s2">class </span><span class="s1">ArrayManager</span><span class="s3">(</span><span class="s1">BaseArrayManager</span><span class="s3">):</span>
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">ndim</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; Literal</span><span class="s3">[</span><span class="s6">2</span><span class="s3">]:</span>
+        <span class="s2">return </span><span class="s6">2</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">| </span><span class="s1">ExtensionArray</span><span class="s3">],</span>
+        <span class="s1">axes</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">],</span>
+        <span class="s1">verify_integrity</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">True</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s5"># Note: we are storing the axes in &quot;_axes&quot; in the (row, columns) order</span>
+        <span class="s5"># which contrasts the order how it is stored in BlockManager</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= </span><span class="s1">axes</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= </span><span class="s1">arrays</span>
+
+        <span class="s2">if </span><span class="s1">verify_integrity</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= [</span><span class="s1">ensure_index</span><span class="s3">(</span><span class="s1">ax</span><span class="s3">) </span><span class="s2">for </span><span class="s1">ax </span><span class="s2">in </span><span class="s1">axes</span><span class="s3">]</span>
+            <span class="s1">arrays </span><span class="s3">= [</span><span class="s1">extract_pandas_array</span><span class="s3">(</span><span class="s1">x</span><span class="s3">, </span><span class="s2">None</span><span class="s3">, </span><span class="s6">1</span><span class="s3">)[</span><span class="s6">0</span><span class="s3">] </span><span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s1">arrays</span><span class="s3">]</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= [</span><span class="s1">maybe_coerce_values</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">) </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">arrays</span><span class="s3">]</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_verify_integrity</span><span class="s3">()</span>
+
+    <span class="s2">def </span><span class="s1">_verify_integrity</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s1">n_rows</span><span class="s3">, </span><span class="s1">n_columns </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape_proper</span>
+        <span class="s2">if not </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">) == </span><span class="s1">n_columns</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+                <span class="s4">&quot;Number of passed arrays must equal the size of the column Index: &quot;</span>
+                <span class="s4">f&quot;</span><span class="s2">{</span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">)</span><span class="s2">} </span><span class="s4">arrays vs </span><span class="s2">{</span><span class="s1">n_columns</span><span class="s2">} </span><span class="s4">columns.&quot;</span>
+            <span class="s3">)</span>
+        <span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">:</span>
+            <span class="s2">if not </span><span class="s1">len</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">) == </span><span class="s1">n_rows</span><span class="s3">:</span>
+                <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+                    <span class="s4">&quot;Passed arrays should have the same length as the rows Index: &quot;</span>
+                    <span class="s4">f&quot;</span><span class="s2">{</span><span class="s1">len</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span><span class="s2">} </span><span class="s4">vs </span><span class="s2">{</span><span class="s1">n_rows</span><span class="s2">} </span><span class="s4">rows&quot;</span>
+                <span class="s3">)</span>
+            <span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, (</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ExtensionArray</span><span class="s3">)):</span>
+                <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+                    <span class="s4">&quot;Passed arrays should be np.ndarray or ExtensionArray instances, &quot;</span>
+                    <span class="s4">f&quot;got </span><span class="s2">{</span><span class="s1">type</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span><span class="s2">} </span><span class="s4">instead&quot;</span>
+                <span class="s3">)</span>
+            <span class="s2">if not </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">1</span><span class="s3">:</span>
+                <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+                    <span class="s4">&quot;Passed arrays should be 1-dimensional, got array with &quot;</span>
+                    <span class="s4">f&quot;</span><span class="s2">{</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">ndim</span><span class="s2">} </span><span class="s4">dimensions instead.&quot;</span>
+                <span class="s3">)</span>
+
+    <span class="s5"># --------------------------------------------------------------------</span>
+    <span class="s5"># Indexing</span>
+
+    <span class="s2">def </span><span class="s1">fast_xs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">loc</span><span class="s3">: </span><span class="s1">int</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Return the array corresponding to `frame.iloc[loc]`. 
+ 
+        Parameters 
+        ---------- 
+        loc : int 
+ 
+        Returns 
+        ------- 
+        np.ndarray or ExtensionArray 
+        &quot;&quot;&quot;</span>
+        <span class="s1">dtype </span><span class="s3">= </span><span class="s1">interleaved_dtype</span><span class="s3">([</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">])</span>
+
+        <span class="s1">values </span><span class="s3">= [</span><span class="s1">arr</span><span class="s3">[</span><span class="s1">loc</span><span class="s3">] </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">]</span>
+        <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">ExtensionDtype</span><span class="s3">):</span>
+            <span class="s1">result </span><span class="s3">= </span><span class="s1">dtype</span><span class="s3">.</span><span class="s1">construct_array_type</span><span class="s3">().</span><span class="s1">_from_sequence</span><span class="s3">(</span><span class="s1">values</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">)</span>
+        <span class="s5"># for datetime64/timedelta64, the np.ndarray constructor cannot handle pd.NaT</span>
+        <span class="s2">elif </span><span class="s1">is_datetime64_ns_dtype</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">):</span>
+            <span class="s1">result </span><span class="s3">= </span><span class="s1">DatetimeArray</span><span class="s3">.</span><span class="s1">_from_sequence</span><span class="s3">(</span><span class="s1">values</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">).</span><span class="s1">_ndarray</span>
+        <span class="s2">elif </span><span class="s1">is_timedelta64_ns_dtype</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">):</span>
+            <span class="s1">result </span><span class="s3">= </span><span class="s1">TimedeltaArray</span><span class="s3">.</span><span class="s1">_from_sequence</span><span class="s3">(</span><span class="s1">values</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">).</span><span class="s1">_ndarray</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">result </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">(</span><span class="s1">values</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">SingleArrayManager</span><span class="s3">([</span><span class="s1">result</span><span class="s3">], [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">]])</span>
+
+    <span class="s2">def </span><span class="s1">get_slice</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">slobj</span><span class="s3">: </span><span class="s1">slice</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">: </span><span class="s1">AxisInt </span><span class="s3">= </span><span class="s6">0</span><span class="s3">) </span><span class="s1">-&gt; ArrayManager</span><span class="s3">:</span>
+        <span class="s1">axis </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_normalize_axis</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">axis </span><span class="s3">== </span><span class="s6">0</span><span class="s3">:</span>
+            <span class="s1">arrays </span><span class="s3">= [</span><span class="s1">arr</span><span class="s3">[</span><span class="s1">slobj</span><span class="s3">] </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">]</span>
+        <span class="s2">elif </span><span class="s1">axis </span><span class="s3">== </span><span class="s6">1</span><span class="s3">:</span>
+            <span class="s1">arrays </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">slobj</span><span class="s3">]</span>
+
+        <span class="s1">new_axes </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+        <span class="s1">new_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">] = </span><span class="s1">new_axes</span><span class="s3">[</span><span class="s1">axis</span><span class="s3">].</span><span class="s1">_getitem_slice</span><span class="s3">(</span><span class="s1">slobj</span><span class="s3">)</span>
+
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">arrays</span><span class="s3">, </span><span class="s1">new_axes</span><span class="s3">, </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">iget</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">i</span><span class="s3">: </span><span class="s1">int</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Return the data as a SingleArrayManager. 
+        &quot;&quot;&quot;</span>
+        <span class="s1">values </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">i</span><span class="s3">]</span>
+        <span class="s2">return </span><span class="s1">SingleArrayManager</span><span class="s3">([</span><span class="s1">values</span><span class="s3">], [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]])</span>
+
+    <span class="s2">def </span><span class="s1">iget_values</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">i</span><span class="s3">: </span><span class="s1">int</span><span class="s3">) </span><span class="s1">-&gt; ArrayLike</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Return the data for column i as the values (ndarray or ExtensionArray). 
+        &quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">i</span><span class="s3">]</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">column_arrays</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; list</span><span class="s3">[</span><span class="s1">ArrayLike</span><span class="s3">]:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Used in the JSON C code to access column arrays. 
+        &quot;&quot;&quot;</span>
+
+        <span class="s2">return </span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">asarray</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">) </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">]</span>
+
+    <span class="s2">def </span><span class="s1">iset</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">loc</span><span class="s3">: </span><span class="s1">int </span><span class="s3">| </span><span class="s1">slice </span><span class="s3">| </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">,</span>
+        <span class="s1">value</span><span class="s3">: </span><span class="s1">ArrayLike</span><span class="s3">,</span>
+        <span class="s1">inplace</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+        <span class="s1">refs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Set new column(s). 
+ 
+        This changes the ArrayManager in-place, but replaces (an) existing 
+        column(s), not changing column values in-place). 
+ 
+        Parameters 
+        ---------- 
+        loc : integer, slice or boolean mask 
+            Positional location (already bounds checked) 
+        value : np.ndarray or ExtensionArray 
+        inplace : bool, default False 
+            Whether overwrite existing array as opposed to replacing it. 
+        &quot;&quot;&quot;</span>
+        <span class="s5"># single column -&gt; single integer index</span>
+        <span class="s2">if </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">is_integer</span><span class="s3">(</span><span class="s1">loc</span><span class="s3">):</span>
+            <span class="s5"># TODO can we avoid needing to unpack this here? That means converting</span>
+            <span class="s5"># DataFrame into 1D array when loc is an integer</span>
+            <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">value</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">and </span><span class="s1">value</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+                <span class="s2">assert </span><span class="s1">value</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">1</span><span class="s3">] == </span><span class="s6">1</span>
+                <span class="s1">value </span><span class="s3">= </span><span class="s1">value</span><span class="s3">[:, </span><span class="s6">0</span><span class="s3">]</span>
+
+            <span class="s5"># TODO we receive a datetime/timedelta64 ndarray from DataFrame._iset_item</span>
+            <span class="s5"># but we should avoid that and pass directly the proper array</span>
+            <span class="s1">value </span><span class="s3">= </span><span class="s1">maybe_coerce_values</span><span class="s3">(</span><span class="s1">value</span><span class="s3">)</span>
+
+            <span class="s2">assert </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">value</span><span class="s3">, (</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">ExtensionArray</span><span class="s3">))</span>
+            <span class="s2">assert </span><span class="s1">value</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">1</span>
+            <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">value</span><span class="s3">) == </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">])</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">loc</span><span class="s3">] = </span><span class="s1">value</span>
+            <span class="s2">return</span>
+
+        <span class="s5"># multiple columns -&gt; convert slice or array to integer indices</span>
+        <span class="s2">elif </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">loc</span><span class="s3">, </span><span class="s1">slice</span><span class="s3">):</span>
+            <span class="s1">indices</span><span class="s3">: </span><span class="s1">range </span><span class="s3">| </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">= </span><span class="s1">range</span><span class="s3">(</span>
+                <span class="s1">loc</span><span class="s3">.</span><span class="s1">start </span><span class="s2">if </span><span class="s1">loc</span><span class="s3">.</span><span class="s1">start </span><span class="s2">is not None else </span><span class="s6">0</span><span class="s3">,</span>
+                <span class="s1">loc</span><span class="s3">.</span><span class="s1">stop </span><span class="s2">if </span><span class="s1">loc</span><span class="s3">.</span><span class="s1">stop </span><span class="s2">is not None else </span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape_proper</span><span class="s3">[</span><span class="s6">1</span><span class="s3">],</span>
+                <span class="s1">loc</span><span class="s3">.</span><span class="s1">step </span><span class="s2">if </span><span class="s1">loc</span><span class="s3">.</span><span class="s1">step </span><span class="s2">is not None else </span><span class="s6">1</span><span class="s3">,</span>
+            <span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">assert </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">loc</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">)</span>
+            <span class="s2">assert </span><span class="s1">loc</span><span class="s3">.</span><span class="s1">dtype </span><span class="s3">== </span><span class="s4">&quot;bool&quot;</span>
+            <span class="s1">indices </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">nonzero</span><span class="s3">(</span><span class="s1">loc</span><span class="s3">)[</span><span class="s6">0</span><span class="s3">]</span>
+
+        <span class="s2">assert </span><span class="s1">value</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span>
+        <span class="s2">assert </span><span class="s1">value</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">] == </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">])</span>
+
+        <span class="s2">for </span><span class="s1">value_idx</span><span class="s3">, </span><span class="s1">mgr_idx </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">indices</span><span class="s3">):</span>
+            <span class="s5"># error: No overload variant of &quot;__getitem__&quot; of &quot;ExtensionArray&quot; matches</span>
+            <span class="s5"># argument type &quot;Tuple[slice, int]&quot;</span>
+            <span class="s1">value_arr </span><span class="s3">= </span><span class="s1">value</span><span class="s3">[:, </span><span class="s1">value_idx</span><span class="s3">]  </span><span class="s5"># type: ignore[call-overload]</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">mgr_idx</span><span class="s3">] = </span><span class="s1">value_arr</span>
+        <span class="s2">return</span>
+
+    <span class="s2">def </span><span class="s1">column_setitem</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">, </span><span class="s1">loc</span><span class="s3">: </span><span class="s1">int</span><span class="s3">, </span><span class="s1">idx</span><span class="s3">: </span><span class="s1">int </span><span class="s3">| </span><span class="s1">slice </span><span class="s3">| </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">, </span><span class="s1">value</span><span class="s3">, </span><span class="s1">inplace_only</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span>
+    <span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Set values (&quot;setitem&quot;) into a single column (not setting the full column). 
+ 
+        This is a method on the ArrayManager level, to avoid creating an 
+        intermediate Series at the DataFrame level (`s = df[loc]; s[idx] = value`) 
+        &quot;&quot;&quot;</span>
+        <span class="s2">if not </span><span class="s1">is_integer</span><span class="s3">(</span><span class="s1">loc</span><span class="s3">):</span>
+            <span class="s2">raise </span><span class="s1">TypeError</span><span class="s3">(</span><span class="s4">&quot;The column index should be an integer&quot;</span><span class="s3">)</span>
+        <span class="s1">arr </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">loc</span><span class="s3">]</span>
+        <span class="s1">mgr </span><span class="s3">= </span><span class="s1">SingleArrayManager</span><span class="s3">([</span><span class="s1">arr</span><span class="s3">], [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]])</span>
+        <span class="s2">if </span><span class="s1">inplace_only</span><span class="s3">:</span>
+            <span class="s1">mgr</span><span class="s3">.</span><span class="s1">setitem_inplace</span><span class="s3">(</span><span class="s1">idx</span><span class="s3">, </span><span class="s1">value</span><span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">new_mgr </span><span class="s3">= </span><span class="s1">mgr</span><span class="s3">.</span><span class="s1">setitem</span><span class="s3">((</span><span class="s1">idx</span><span class="s3">,), </span><span class="s1">value</span><span class="s3">)</span>
+            <span class="s5"># update existing ArrayManager in-place</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">loc</span><span class="s3">] = </span><span class="s1">new_mgr</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+
+    <span class="s2">def </span><span class="s1">insert</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">loc</span><span class="s3">: </span><span class="s1">int</span><span class="s3">, </span><span class="s1">item</span><span class="s3">: </span><span class="s1">Hashable</span><span class="s3">, </span><span class="s1">value</span><span class="s3">: </span><span class="s1">ArrayLike</span><span class="s3">, </span><span class="s1">refs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Insert item at selected position. 
+ 
+        Parameters 
+        ---------- 
+        loc : int 
+        item : hashable 
+        value : np.ndarray or ExtensionArray 
+        &quot;&quot;&quot;</span>
+        <span class="s5"># insert to the axis; this could possibly raise a TypeError</span>
+        <span class="s1">new_axis </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">items</span><span class="s3">.</span><span class="s1">insert</span><span class="s3">(</span><span class="s1">loc</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+
+        <span class="s1">value </span><span class="s3">= </span><span class="s1">extract_array</span><span class="s3">(</span><span class="s1">value</span><span class="s3">, </span><span class="s1">extract_numpy</span><span class="s3">=</span><span class="s2">True</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">value</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s1">value</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">] == </span><span class="s6">1</span><span class="s3">:</span>
+                <span class="s5"># error: No overload variant of &quot;__getitem__&quot; of &quot;ExtensionArray&quot;</span>
+                <span class="s5"># matches argument type &quot;Tuple[int, slice]&quot;</span>
+                <span class="s1">value </span><span class="s3">= </span><span class="s1">value</span><span class="s3">[</span><span class="s6">0</span><span class="s3">, :]  </span><span class="s5"># type: ignore[call-overload]</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+                    <span class="s4">f&quot;Expected a 1D array, got an array with shape </span><span class="s2">{</span><span class="s1">value</span><span class="s3">.</span><span class="s1">shape</span><span class="s2">}</span><span class="s4">&quot;</span>
+                <span class="s3">)</span>
+        <span class="s1">value </span><span class="s3">= </span><span class="s1">maybe_coerce_values</span><span class="s3">(</span><span class="s1">value</span><span class="s3">)</span>
+
+        <span class="s5"># TODO self.arrays can be empty</span>
+        <span class="s5"># assert len(value) == len(self.arrays[0])</span>
+
+        <span class="s5"># TODO is this copy needed?</span>
+        <span class="s1">arrays </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">()</span>
+        <span class="s1">arrays</span><span class="s3">.</span><span class="s1">insert</span><span class="s3">(</span><span class="s1">loc</span><span class="s3">, </span><span class="s1">value</span><span class="s3">)</span>
+
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= </span><span class="s1">arrays</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">] = </span><span class="s1">new_axis</span>
+
+    <span class="s2">def </span><span class="s1">idelete</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">) </span><span class="s1">-&gt; ArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Delete selected locations in-place (new block and array, same BlockManager) 
+        &quot;&quot;&quot;</span>
+        <span class="s1">to_keep </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ones</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">], </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">np</span><span class="s3">.</span><span class="s1">bool_</span><span class="s3">)</span>
+        <span class="s1">to_keep</span><span class="s3">[</span><span class="s1">indexer</span><span class="s3">] = </span><span class="s2">False</span>
+
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">i</span><span class="s3">] </span><span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">np</span><span class="s3">.</span><span class="s1">nonzero</span><span class="s3">(</span><span class="s1">to_keep</span><span class="s3">)[</span><span class="s6">0</span><span class="s3">]]</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">], </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">][</span><span class="s1">to_keep</span><span class="s3">]]</span>
+        <span class="s2">return </span><span class="s1">self</span>
+
+    <span class="s5"># --------------------------------------------------------------------</span>
+    <span class="s5"># Array-wise Operation</span>
+
+    <span class="s2">def </span><span class="s1">grouped_reduce</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">func</span><span class="s3">: </span><span class="s1">Callable</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Apply grouped reduction function columnwise, returning a new ArrayManager. 
+ 
+        Parameters 
+        ---------- 
+        func : grouped reduction function 
+ 
+        Returns 
+        ------- 
+        ArrayManager 
+        &quot;&quot;&quot;</span>
+        <span class="s1">result_arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">] = []</span>
+        <span class="s1">result_indices</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">int</span><span class="s3">] = []</span>
+
+        <span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">):</span>
+            <span class="s5"># grouped_reduce functions all expect 2D arrays</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">ensure_block_shape</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">ndim</span><span class="s3">=</span><span class="s6">2</span><span class="s3">)</span>
+            <span class="s1">res </span><span class="s3">= </span><span class="s1">func</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+            <span class="s2">if </span><span class="s1">res</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+                <span class="s5"># reverse of ensure_block_shape</span>
+                <span class="s2">assert </span><span class="s1">res</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">] == </span><span class="s6">1</span>
+                <span class="s1">res </span><span class="s3">= </span><span class="s1">res</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+
+            <span class="s1">result_arrays</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">res</span><span class="s3">)</span>
+            <span class="s1">result_indices</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">i</span><span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">result_arrays</span><span class="s3">) == </span><span class="s6">0</span><span class="s3">:</span>
+            <span class="s1">nrows </span><span class="s3">= </span><span class="s6">0</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">nrows </span><span class="s3">= </span><span class="s1">result_arrays</span><span class="s3">[</span><span class="s6">0</span><span class="s3">].</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+        <span class="s1">index </span><span class="s3">= </span><span class="s1">Index</span><span class="s3">(</span><span class="s1">range</span><span class="s3">(</span><span class="s1">nrows</span><span class="s3">))</span>
+
+        <span class="s1">columns </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">items</span>
+
+        <span class="s5"># error: Argument 1 to &quot;ArrayManager&quot; has incompatible type &quot;List[ndarray]&quot;;</span>
+        <span class="s5"># expected &quot;List[Union[ndarray, ExtensionArray]]&quot;</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">result_arrays</span><span class="s3">, [</span><span class="s1">index</span><span class="s3">, </span><span class="s1">columns</span><span class="s3">])  </span><span class="s5"># type: ignore[arg-type]</span>
+
+    <span class="s2">def </span><span class="s1">reduce</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">func</span><span class="s3">: </span><span class="s1">Callable</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Apply reduction function column-wise, returning a single-row ArrayManager. 
+ 
+        Parameters 
+        ---------- 
+        func : reduction function 
+ 
+        Returns 
+        ------- 
+        ArrayManager 
+        &quot;&quot;&quot;</span>
+        <span class="s1">result_arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">] = []</span>
+        <span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">):</span>
+            <span class="s1">res </span><span class="s3">= </span><span class="s1">func</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">=</span><span class="s6">0</span><span class="s3">)</span>
+
+            <span class="s5"># TODO NaT doesn't preserve dtype, so we need to ensure to create</span>
+            <span class="s5"># a timedelta result array if original was timedelta</span>
+            <span class="s5"># what if datetime results in timedelta? (eg std)</span>
+            <span class="s1">dtype </span><span class="s3">= </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype </span><span class="s2">if </span><span class="s1">res </span><span class="s2">is </span><span class="s1">NaT </span><span class="s2">else None</span>
+            <span class="s1">result_arrays</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span>
+                <span class="s1">sanitize_array</span><span class="s3">([</span><span class="s1">res</span><span class="s3">], </span><span class="s2">None</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">)  </span><span class="s5"># type: ignore[arg-type]</span>
+            <span class="s3">)</span>
+
+        <span class="s1">index </span><span class="s3">= </span><span class="s1">Index</span><span class="s3">.</span><span class="s1">_simple_new</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">([</span><span class="s2">None</span><span class="s3">], </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">object</span><span class="s3">))  </span><span class="s5"># placeholder</span>
+        <span class="s1">columns </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">items</span>
+
+        <span class="s5"># error: Argument 1 to &quot;ArrayManager&quot; has incompatible type &quot;List[ndarray]&quot;;</span>
+        <span class="s5"># expected &quot;List[Union[ndarray, ExtensionArray]]&quot;</span>
+        <span class="s1">new_mgr </span><span class="s3">= </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">result_arrays</span><span class="s3">, [</span><span class="s1">index</span><span class="s3">, </span><span class="s1">columns</span><span class="s3">])  </span><span class="s5"># type: ignore[arg-type]</span>
+        <span class="s2">return </span><span class="s1">new_mgr</span>
+
+    <span class="s2">def </span><span class="s1">operate_blockwise</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">other</span><span class="s3">: </span><span class="s1">ArrayManager</span><span class="s3">, </span><span class="s1">array_op</span><span class="s3">) </span><span class="s1">-&gt; ArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Apply array_op blockwise with another (aligned) BlockManager. 
+        &quot;&quot;&quot;</span>
+        <span class="s5"># TODO what if `other` is BlockManager ?</span>
+        <span class="s1">left_arrays </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span>
+        <span class="s1">right_arrays </span><span class="s3">= </span><span class="s1">other</span><span class="s3">.</span><span class="s1">arrays</span>
+        <span class="s1">result_arrays </span><span class="s3">= [</span>
+            <span class="s1">array_op</span><span class="s3">(</span><span class="s1">left</span><span class="s3">, </span><span class="s1">right</span><span class="s3">) </span><span class="s2">for </span><span class="s1">left</span><span class="s3">, </span><span class="s1">right </span><span class="s2">in </span><span class="s1">zip</span><span class="s3">(</span><span class="s1">left_arrays</span><span class="s3">, </span><span class="s1">right_arrays</span><span class="s3">)</span>
+        <span class="s3">]</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">result_arrays</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">quantile</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s3">*,</span>
+        <span class="s1">qs</span><span class="s3">: </span><span class="s1">Index</span><span class="s3">,  </span><span class="s5"># with dtype float64</span>
+        <span class="s1">transposed</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+        <span class="s1">interpolation</span><span class="s3">: </span><span class="s1">QuantileInterpolation </span><span class="s3">= </span><span class="s4">&quot;linear&quot;</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; ArrayManager</span><span class="s3">:</span>
+        <span class="s1">arrs </span><span class="s3">= [</span><span class="s1">ensure_block_shape</span><span class="s3">(</span><span class="s1">x</span><span class="s3">, </span><span class="s6">2</span><span class="s3">) </span><span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">]</span>
+        <span class="s1">new_arrs </span><span class="s3">= [</span>
+            <span class="s1">quantile_compat</span><span class="s3">(</span><span class="s1">x</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">asarray</span><span class="s3">(</span><span class="s1">qs</span><span class="s3">.</span><span class="s1">_values</span><span class="s3">), </span><span class="s1">interpolation</span><span class="s3">) </span><span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s1">arrs</span>
+        <span class="s3">]</span>
+        <span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">new_arrs</span><span class="s3">):</span>
+            <span class="s2">if </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">2</span><span class="s3">:</span>
+                <span class="s2">assert </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">] == </span><span class="s6">1</span><span class="s3">, </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">shape</span>
+                <span class="s1">new_arrs</span><span class="s3">[</span><span class="s1">i</span><span class="s3">] = </span><span class="s1">arr</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+
+        <span class="s1">axes </span><span class="s3">= [</span><span class="s1">qs</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">]]</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">new_arrs</span><span class="s3">, </span><span class="s1">axes</span><span class="s3">)</span>
+
+    <span class="s5"># ----------------------------------------------------------------</span>
+
+    <span class="s2">def </span><span class="s1">unstack</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">unstacker</span><span class="s3">, </span><span class="s1">fill_value</span><span class="s3">) </span><span class="s1">-&gt; ArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Return a BlockManager with all blocks unstacked. 
+ 
+        Parameters 
+        ---------- 
+        unstacker : reshape._Unstacker 
+        fill_value : Any 
+            fill_value for newly introduced missing values. 
+ 
+        Returns 
+        ------- 
+        unstacked : BlockManager 
+        &quot;&quot;&quot;</span>
+        <span class="s1">indexer</span><span class="s3">, </span><span class="s1">_ </span><span class="s3">= </span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">_indexer_and_to_sort</span>
+        <span class="s2">if </span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">.</span><span class="s1">all</span><span class="s3">():</span>
+            <span class="s1">new_indexer </span><span class="s3">= </span><span class="s1">indexer</span>
+            <span class="s1">allow_fill </span><span class="s3">= </span><span class="s2">False</span>
+            <span class="s1">new_mask2D </span><span class="s3">= </span><span class="s2">None</span>
+            <span class="s1">needs_masking </span><span class="s3">= </span><span class="s2">None</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">new_indexer </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">full</span><span class="s3">(</span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">, -</span><span class="s6">1</span><span class="s3">)</span>
+            <span class="s1">new_indexer</span><span class="s3">[</span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">] = </span><span class="s1">indexer</span>
+            <span class="s1">allow_fill </span><span class="s3">= </span><span class="s2">True</span>
+            <span class="s5"># calculating the full mask once and passing it to take_1d is faster</span>
+            <span class="s5"># than letting take_1d calculate it in each repeated call</span>
+            <span class="s1">new_mask2D </span><span class="s3">= (~</span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">).</span><span class="s1">reshape</span><span class="s3">(*</span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">full_shape</span><span class="s3">)</span>
+            <span class="s1">needs_masking </span><span class="s3">= </span><span class="s1">new_mask2D</span><span class="s3">.</span><span class="s1">any</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">=</span><span class="s6">0</span><span class="s3">)</span>
+        <span class="s1">new_indexer2D </span><span class="s3">= </span><span class="s1">new_indexer</span><span class="s3">.</span><span class="s1">reshape</span><span class="s3">(*</span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">full_shape</span><span class="s3">)</span>
+        <span class="s1">new_indexer2D </span><span class="s3">= </span><span class="s1">ensure_platform_int</span><span class="s3">(</span><span class="s1">new_indexer2D</span><span class="s3">)</span>
+
+        <span class="s1">new_arrays </span><span class="s3">= []</span>
+        <span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">:</span>
+            <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">full_shape</span><span class="s3">[</span><span class="s6">1</span><span class="s3">]):</span>
+                <span class="s2">if </span><span class="s1">allow_fill</span><span class="s3">:</span>
+                    <span class="s5"># error: Value of type &quot;Optional[Any]&quot; is not indexable  [index]</span>
+                    <span class="s1">new_arr </span><span class="s3">= </span><span class="s1">take_1d</span><span class="s3">(</span>
+                        <span class="s1">arr</span><span class="s3">,</span>
+                        <span class="s1">new_indexer2D</span><span class="s3">[:, </span><span class="s1">i</span><span class="s3">],</span>
+                        <span class="s1">allow_fill</span><span class="s3">=</span><span class="s1">needs_masking</span><span class="s3">[</span><span class="s1">i</span><span class="s3">],  </span><span class="s5"># type: ignore[index]</span>
+                        <span class="s1">fill_value</span><span class="s3">=</span><span class="s1">fill_value</span><span class="s3">,</span>
+                        <span class="s1">mask</span><span class="s3">=</span><span class="s1">new_mask2D</span><span class="s3">[:, </span><span class="s1">i</span><span class="s3">],  </span><span class="s5"># type: ignore[index]</span>
+                    <span class="s3">)</span>
+                <span class="s2">else</span><span class="s3">:</span>
+                    <span class="s1">new_arr </span><span class="s3">= </span><span class="s1">take_1d</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">new_indexer2D</span><span class="s3">[:, </span><span class="s1">i</span><span class="s3">], </span><span class="s1">allow_fill</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+                <span class="s1">new_arrays</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">new_arr</span><span class="s3">)</span>
+
+        <span class="s1">new_index </span><span class="s3">= </span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">new_index</span>
+        <span class="s1">new_columns </span><span class="s3">= </span><span class="s1">unstacker</span><span class="s3">.</span><span class="s1">get_new_columns</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">])</span>
+        <span class="s1">new_axes </span><span class="s3">= [</span><span class="s1">new_index</span><span class="s3">, </span><span class="s1">new_columns</span><span class="s3">]</span>
+
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">new_arrays</span><span class="s3">, </span><span class="s1">new_axes</span><span class="s3">, </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">as_array</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">dtype</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s1">copy</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">False</span><span class="s3">,</span>
+        <span class="s1">na_value</span><span class="s3">: </span><span class="s1">object </span><span class="s3">= </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">no_default</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Convert the blockmanager data into an numpy array. 
+ 
+        Parameters 
+        ---------- 
+        dtype : object, default None 
+            Data type of the return array. 
+        copy : bool, default False 
+            If True then guarantee that a copy is returned. A value of 
+            False does not guarantee that the underlying data is not 
+            copied. 
+        na_value : object, default lib.no_default 
+            Value to be used as the missing value sentinel. 
+ 
+        Returns 
+        ------- 
+        arr : ndarray 
+        &quot;&quot;&quot;</span>
+        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">) == </span><span class="s6">0</span><span class="s3">:</span>
+            <span class="s1">empty_arr </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">empty</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">float</span><span class="s3">)</span>
+            <span class="s2">return </span><span class="s1">empty_arr</span><span class="s3">.</span><span class="s1">transpose</span><span class="s3">()</span>
+
+        <span class="s5"># We want to copy when na_value is provided to avoid</span>
+        <span class="s5"># mutating the original object</span>
+        <span class="s1">copy </span><span class="s3">= </span><span class="s1">copy </span><span class="s2">or </span><span class="s1">na_value </span><span class="s2">is not </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">no_default</span>
+
+        <span class="s2">if not </span><span class="s1">dtype</span><span class="s3">:</span>
+            <span class="s1">dtype </span><span class="s3">= </span><span class="s1">interleaved_dtype</span><span class="s3">([</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">])</span>
+
+        <span class="s1">dtype </span><span class="s3">= </span><span class="s1">ensure_np_dtype</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">)</span>
+
+        <span class="s1">result </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">empty</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape_proper</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">)</span>
+
+        <span class="s2">for </span><span class="s1">i</span><span class="s3">, </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">enumerate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">):</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">astype</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">copy</span><span class="s3">=</span><span class="s1">copy</span><span class="s3">)</span>
+            <span class="s1">result</span><span class="s3">[:, </span><span class="s1">i</span><span class="s3">] = </span><span class="s1">arr</span>
+
+        <span class="s2">if </span><span class="s1">na_value </span><span class="s2">is not </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">no_default</span><span class="s3">:</span>
+            <span class="s1">result</span><span class="s3">[</span><span class="s1">isna</span><span class="s3">(</span><span class="s1">result</span><span class="s3">)] = </span><span class="s1">na_value</span>
+
+        <span class="s2">return </span><span class="s1">result</span>
+
+    <span class="s3">@</span><span class="s1">classmethod</span>
+    <span class="s2">def </span><span class="s1">concat_horizontal</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">, </span><span class="s1">mgrs</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Self</span><span class="s3">], </span><span class="s1">axes</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">]) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Concatenate uniformly-indexed ArrayManagers horizontally. 
+        &quot;&quot;&quot;</span>
+        <span class="s5"># concatting along the columns -&gt; combine reindexed arrays in a single manager</span>
+        <span class="s1">arrays </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">itertools</span><span class="s3">.</span><span class="s1">chain</span><span class="s3">.</span><span class="s1">from_iterable</span><span class="s3">([</span><span class="s1">mgr</span><span class="s3">.</span><span class="s1">arrays </span><span class="s2">for </span><span class="s1">mgr </span><span class="s2">in </span><span class="s1">mgrs</span><span class="s3">]))</span>
+        <span class="s1">new_mgr </span><span class="s3">= </span><span class="s1">cls</span><span class="s3">(</span><span class="s1">arrays</span><span class="s3">, [</span><span class="s1">axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">], </span><span class="s1">axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]], </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">new_mgr</span>
+
+    <span class="s3">@</span><span class="s1">classmethod</span>
+    <span class="s2">def </span><span class="s1">concat_vertical</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">, </span><span class="s1">mgrs</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Self</span><span class="s3">], </span><span class="s1">axes</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">]) </span><span class="s1">-&gt; Self</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Concatenate uniformly-indexed ArrayManagers vertically. 
+        &quot;&quot;&quot;</span>
+        <span class="s5"># concatting along the rows -&gt; concat the reindexed arrays</span>
+        <span class="s5"># TODO(ArrayManager) doesn't yet preserve the correct dtype</span>
+        <span class="s1">arrays </span><span class="s3">= [</span>
+            <span class="s1">concat_arrays</span><span class="s3">([</span><span class="s1">mgrs</span><span class="s3">[</span><span class="s1">i</span><span class="s3">].</span><span class="s1">arrays</span><span class="s3">[</span><span class="s1">j</span><span class="s3">] </span><span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">len</span><span class="s3">(</span><span class="s1">mgrs</span><span class="s3">))])</span>
+            <span class="s2">for </span><span class="s1">j </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">len</span><span class="s3">(</span><span class="s1">mgrs</span><span class="s3">[</span><span class="s6">0</span><span class="s3">].</span><span class="s1">arrays</span><span class="s3">))</span>
+        <span class="s3">]</span>
+        <span class="s1">new_mgr </span><span class="s3">= </span><span class="s1">cls</span><span class="s3">(</span><span class="s1">arrays</span><span class="s3">, [</span><span class="s1">axes</span><span class="s3">[</span><span class="s6">1</span><span class="s3">], </span><span class="s1">axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]], </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">new_mgr</span>
+
+
+<span class="s2">class </span><span class="s1">SingleArrayManager</span><span class="s3">(</span><span class="s1">BaseArrayManager</span><span class="s3">, </span><span class="s1">SingleDataManager</span><span class="s3">):</span>
+    <span class="s1">__slots__ </span><span class="s3">= [</span>
+        <span class="s4">&quot;_axes&quot;</span><span class="s3">,  </span><span class="s5"># private attribute, because 'axes' has different order, see below</span>
+        <span class="s4">&quot;arrays&quot;</span><span class="s3">,</span>
+    <span class="s3">]</span>
+
+    <span class="s1">arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">| </span><span class="s1">ExtensionArray</span><span class="s3">]</span>
+    <span class="s1">_axes</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">]</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">ndim</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; Literal</span><span class="s3">[</span><span class="s6">1</span><span class="s3">]:</span>
+        <span class="s2">return </span><span class="s6">1</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">arrays</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">| </span><span class="s1">ExtensionArray</span><span class="s3">],</span>
+        <span class="s1">axes</span><span class="s3">: </span><span class="s1">list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">],</span>
+        <span class="s1">verify_integrity</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">True</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= </span><span class="s1">axes</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= </span><span class="s1">arrays</span>
+
+        <span class="s2">if </span><span class="s1">verify_integrity</span><span class="s3">:</span>
+            <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">axes</span><span class="s3">) == </span><span class="s6">1</span>
+            <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">arrays</span><span class="s3">) == </span><span class="s6">1</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= [</span><span class="s1">ensure_index</span><span class="s3">(</span><span class="s1">ax</span><span class="s3">) </span><span class="s2">for </span><span class="s1">ax </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">]</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">arrays</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">maybe_coerce_values</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">extract_pandas_array</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s2">None</span><span class="s3">, </span><span class="s6">1</span><span class="s3">)[</span><span class="s6">0</span><span class="s3">]</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= [</span><span class="s1">arr</span><span class="s3">]</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_verify_integrity</span><span class="s3">()</span>
+
+    <span class="s2">def </span><span class="s1">_verify_integrity</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s3">(</span><span class="s1">n_rows</span><span class="s3">,) = </span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape</span>
+        <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">) == </span><span class="s6">1</span>
+        <span class="s1">arr </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+        <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">) == </span><span class="s1">n_rows</span>
+        <span class="s2">if not </span><span class="s1">arr</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s6">1</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+                <span class="s4">&quot;Passed array should be 1-dimensional, got array with &quot;</span>
+                <span class="s4">f&quot;</span><span class="s2">{</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">ndim</span><span class="s2">} </span><span class="s4">dimensions instead.&quot;</span>
+            <span class="s3">)</span>
+
+    <span class="s3">@</span><span class="s1">staticmethod</span>
+    <span class="s2">def </span><span class="s1">_normalize_axis</span><span class="s3">(</span><span class="s1">axis</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">axis</span>
+
+    <span class="s2">def </span><span class="s1">make_empty</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">axes</span><span class="s3">=</span><span class="s2">None</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot;Return an empty ArrayManager with index/array of length 0&quot;&quot;&quot;</span>
+        <span class="s2">if </span><span class="s1">axes </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s1">axes </span><span class="s3">= [</span><span class="s1">Index</span><span class="s3">([], </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">object</span><span class="s3">)]</span>
+        <span class="s1">array</span><span class="s3">: </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">([], </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)([</span><span class="s1">array</span><span class="s3">], </span><span class="s1">axes</span><span class="s3">)</span>
+
+    <span class="s3">@</span><span class="s1">classmethod</span>
+    <span class="s2">def </span><span class="s1">from_array</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">, </span><span class="s1">array</span><span class="s3">, </span><span class="s1">index</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">cls</span><span class="s3">([</span><span class="s1">array</span><span class="s3">], [</span><span class="s1">index</span><span class="s3">])</span>
+
+    <span class="s5"># error: Cannot override writeable attribute with read-only property</span>
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">axes</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; list</span><span class="s3">[</span><span class="s1">Index</span><span class="s3">]:  </span><span class="s5"># type: ignore[override]</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">index</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; Index</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">dtype</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">.</span><span class="s1">dtype</span>
+
+    <span class="s2">def </span><span class="s1">external_values</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s0">&quot;&quot;&quot;The array that Series.values returns&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">external_values</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">internal_values</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s0">&quot;&quot;&quot;The array that Series._values returns&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span>
+
+    <span class="s2">def </span><span class="s1">array_values</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s0">&quot;&quot;&quot;The array that Series.array returns&quot;&quot;&quot;</span>
+        <span class="s1">arr </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span>
+        <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">):</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">NumpyExtensionArray</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">arr</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">_can_hold_na</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; bool</span><span class="s3">:</span>
+        <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">):</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">.</span><span class="s1">kind </span><span class="s2">not in </span><span class="s4">&quot;iub&quot;</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s5"># ExtensionArray</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">.</span><span class="s1">_can_hold_na</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">is_single_block</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; bool</span><span class="s3">:</span>
+        <span class="s2">return True</span>
+
+    <span class="s2">def </span><span class="s1">fast_xs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">loc</span><span class="s3">: </span><span class="s1">int</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s2">raise </span><span class="s1">NotImplementedError</span><span class="s3">(</span><span class="s4">&quot;Use series._values[loc] instead&quot;</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">get_slice</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">slobj</span><span class="s3">: </span><span class="s1">slice</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">: </span><span class="s1">AxisInt </span><span class="s3">= </span><span class="s6">0</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s2">if </span><span class="s1">axis </span><span class="s3">&gt;= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">IndexError</span><span class="s3">(</span><span class="s4">&quot;Requested axis not found in manager&quot;</span><span class="s3">)</span>
+
+        <span class="s1">new_array </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">[</span><span class="s1">slobj</span><span class="s3">]</span>
+        <span class="s1">new_index </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">index</span><span class="s3">.</span><span class="s1">_getitem_slice</span><span class="s3">(</span><span class="s1">slobj</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)([</span><span class="s1">new_array</span><span class="s3">], [</span><span class="s1">new_index</span><span class="s3">], </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">get_rows_with_mask</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">: </span><span class="s1">npt</span><span class="s3">.</span><span class="s1">NDArray</span><span class="s3">[</span><span class="s1">np</span><span class="s3">.</span><span class="s1">bool_</span><span class="s3">]) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s1">new_array </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">[</span><span class="s1">indexer</span><span class="s3">]</span>
+        <span class="s1">new_index </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">index</span><span class="s3">[</span><span class="s1">indexer</span><span class="s3">]</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)([</span><span class="s1">new_array</span><span class="s3">], [</span><span class="s1">new_index</span><span class="s3">])</span>
+
+    <span class="s5"># error: Signature of &quot;apply&quot; incompatible with supertype &quot;BaseArrayManager&quot;</span>
+    <span class="s2">def </span><span class="s1">apply</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">func</span><span class="s3">, **</span><span class="s1">kwargs</span><span class="s3">) </span><span class="s1">-&gt; Self</span><span class="s3">:  </span><span class="s5"># type: ignore[override]</span>
+        <span class="s2">if </span><span class="s1">callable</span><span class="s3">(</span><span class="s1">func</span><span class="s3">):</span>
+            <span class="s1">new_array </span><span class="s3">= </span><span class="s1">func</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">, **</span><span class="s1">kwargs</span><span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">new_array </span><span class="s3">= </span><span class="s1">getattr</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">, </span><span class="s1">func</span><span class="s3">)(**</span><span class="s1">kwargs</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)([</span><span class="s1">new_array</span><span class="s3">], </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">setitem</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">value</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Set values with indexer. 
+ 
+        For SingleArrayManager, this backs s[indexer] = value 
+ 
+        See `setitem_inplace` for a version that works inplace and doesn't 
+        return a new Manager. 
+        &quot;&quot;&quot;</span>
+        <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ndarray</span><span class="s3">) </span><span class="s2">and </span><span class="s1">indexer</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">&gt; </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s4">f&quot;Cannot set values with ndim &gt; </span><span class="s2">{</span><span class="s1">self</span><span class="s3">.</span><span class="s1">ndim</span><span class="s2">}</span><span class="s4">&quot;</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">apply_with_block</span><span class="s3">(</span><span class="s4">&quot;setitem&quot;</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">=</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">value</span><span class="s3">=</span><span class="s1">value</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">idelete</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">indexer</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Delete selected locations in-place (new array, same ArrayManager) 
+        &quot;&quot;&quot;</span>
+        <span class="s1">to_keep </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">ones</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">], </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">np</span><span class="s3">.</span><span class="s1">bool_</span><span class="s3">)</span>
+        <span class="s1">to_keep</span><span class="s3">[</span><span class="s1">indexer</span><span class="s3">] = </span><span class="s2">False</span>
+
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s1">to_keep</span><span class="s3">]]</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_axes </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">][</span><span class="s1">to_keep</span><span class="s3">]]</span>
+        <span class="s2">return </span><span class="s1">self</span>
+
+    <span class="s2">def </span><span class="s1">_get_data_subset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">predicate</span><span class="s3">: </span><span class="s1">Callable</span><span class="s3">) </span><span class="s1">-&gt; SingleArrayManager</span><span class="s3">:</span>
+        <span class="s5"># used in get_numeric_data / get_bool_data</span>
+        <span class="s2">if </span><span class="s1">predicate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">array</span><span class="s3">):</span>
+            <span class="s2">return </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_axes</span><span class="s3">, </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">make_empty</span><span class="s3">()</span>
+
+    <span class="s2">def </span><span class="s1">set_values</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">values</span><span class="s3">: </span><span class="s1">ArrayLike</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Set (replace) the values of the SingleArrayManager in place. 
+ 
+        Use at your own risk! This does not check if the passed values are 
+        valid for the current SingleArrayManager (length, dtype, etc). 
+        &quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s6">0</span><span class="s3">] = </span><span class="s1">values</span>
+
+    <span class="s2">def </span><span class="s1">to_2d_mgr</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">columns</span><span class="s3">: </span><span class="s1">Index</span><span class="s3">) </span><span class="s1">-&gt; ArrayManager</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Manager analogue of Series.to_frame 
+        &quot;&quot;&quot;</span>
+        <span class="s1">arrays </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">[</span><span class="s6">0</span><span class="s3">]]</span>
+        <span class="s1">axes </span><span class="s3">= [</span><span class="s1">self</span><span class="s3">.</span><span class="s1">axes</span><span class="s3">[</span><span class="s6">0</span><span class="s3">], </span><span class="s1">columns</span><span class="s3">]</span>
+
+        <span class="s2">return </span><span class="s1">ArrayManager</span><span class="s3">(</span><span class="s1">arrays</span><span class="s3">, </span><span class="s1">axes</span><span class="s3">, </span><span class="s1">verify_integrity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+
+
+<span class="s2">class </span><span class="s1">NullArrayProxy</span><span class="s3">:</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Proxy object for an all-NA array. 
+ 
+    Only stores the length of the array, and not the dtype. The dtype 
+    will only be known when actually concatenating (after determining the 
+    common dtype, for which this proxy is ignored). 
+    Using this object avoids that the internals/concat.py needs to determine 
+    the proper dtype and array type. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">ndim </span><span class="s3">= </span><span class="s6">1</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">n</span><span class="s3">: </span><span class="s1">int</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">n </span><span class="s3">= </span><span class="s1">n</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">shape</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; tuple</span><span class="s3">[</span><span class="s1">int</span><span class="s3">]:</span>
+        <span class="s2">return </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">n</span><span class="s3">,)</span>
+
+    <span class="s2">def </span><span class="s1">to_array</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">: </span><span class="s1">DtypeObj</span><span class="s3">) </span><span class="s1">-&gt; ArrayLike</span><span class="s3">:</span>
+        <span class="s0">&quot;&quot;&quot; 
+        Helper function to create the actual all-NA array from the NullArrayProxy 
+        object. 
+ 
+        Parameters 
+        ---------- 
+        arr : NullArrayProxy 
+        dtype : the dtype for the resulting array 
+ 
+        Returns 
+        ------- 
+        np.ndarray or ExtensionArray 
+        &quot;&quot;&quot;</span>
+        <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">ExtensionDtype</span><span class="s3">):</span>
+            <span class="s1">empty </span><span class="s3">= </span><span class="s1">dtype</span><span class="s3">.</span><span class="s1">construct_array_type</span><span class="s3">().</span><span class="s1">_from_sequence</span><span class="s3">([], </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">)</span>
+            <span class="s1">indexer </span><span class="s3">= -</span><span class="s1">np</span><span class="s3">.</span><span class="s1">ones</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">n</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">np</span><span class="s3">.</span><span class="s1">intp</span><span class="s3">)</span>
+            <span class="s2">return </span><span class="s1">empty</span><span class="s3">.</span><span class="s1">take</span><span class="s3">(</span><span class="s1">indexer</span><span class="s3">, </span><span class="s1">allow_fill</span><span class="s3">=</span><span class="s2">True</span><span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s5"># when introducing missing values, int becomes float, bool becomes object</span>
+            <span class="s1">dtype </span><span class="s3">= </span><span class="s1">ensure_dtype_can_hold_na</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">)</span>
+            <span class="s1">fill_value </span><span class="s3">= </span><span class="s1">na_value_for_dtype</span><span class="s3">(</span><span class="s1">dtype</span><span class="s3">)</span>
+            <span class="s1">arr </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">empty</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">n</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">dtype</span><span class="s3">)</span>
+            <span class="s1">arr</span><span class="s3">.</span><span class="s1">fill</span><span class="s3">(</span><span class="s1">fill_value</span><span class="s3">)</span>
+            <span class="s2">return </span><span class="s1">ensure_wrapped_if_datetimelike</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">)</span>
+
+
+<span class="s2">def </span><span class="s1">concat_arrays</span><span class="s3">(</span><span class="s1">to_concat</span><span class="s3">: </span><span class="s1">list</span><span class="s3">) </span><span class="s1">-&gt; ArrayLike</span><span class="s3">:</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Alternative for concat_compat but specialized for use in the ArrayManager. 
+ 
+    Differences: only deals with 1D arrays (no axis keyword), assumes 
+    ensure_wrapped_if_datetimelike and does not skip empty arrays to determine 
+    the dtype. 
+    In addition ensures that all NullArrayProxies get replaced with actual 
+    arrays. 
+ 
+    Parameters 
+    ---------- 
+    to_concat : list of arrays 
+ 
+    Returns 
+    ------- 
+    np.ndarray or ExtensionArray 
+    &quot;&quot;&quot;</span>
+    <span class="s5"># ignore the all-NA proxies to determine the resulting dtype</span>
+    <span class="s1">to_concat_no_proxy </span><span class="s3">= [</span><span class="s1">x </span><span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s1">to_concat </span><span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">x</span><span class="s3">, </span><span class="s1">NullArrayProxy</span><span class="s3">)]</span>
+
+    <span class="s1">dtypes </span><span class="s3">= {</span><span class="s1">x</span><span class="s3">.</span><span class="s1">dtype </span><span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s1">to_concat_no_proxy</span><span class="s3">}</span>
+    <span class="s1">single_dtype </span><span class="s3">= </span><span class="s1">len</span><span class="s3">(</span><span class="s1">dtypes</span><span class="s3">) == </span><span class="s6">1</span>
+
+    <span class="s2">if </span><span class="s1">single_dtype</span><span class="s3">:</span>
+        <span class="s1">target_dtype </span><span class="s3">= </span><span class="s1">to_concat_no_proxy</span><span class="s3">[</span><span class="s6">0</span><span class="s3">].</span><span class="s1">dtype</span>
+    <span class="s2">elif </span><span class="s1">all</span><span class="s3">(</span><span class="s1">lib</span><span class="s3">.</span><span class="s1">is_np_dtype</span><span class="s3">(</span><span class="s1">x</span><span class="s3">, </span><span class="s4">&quot;iub&quot;</span><span class="s3">) </span><span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s1">dtypes</span><span class="s3">):</span>
+        <span class="s5"># GH#42092</span>
+        <span class="s1">target_dtype </span><span class="s3">= </span><span class="s1">np_find_common_type</span><span class="s3">(*</span><span class="s1">dtypes</span><span class="s3">)</span>
+    <span class="s2">else</span><span class="s3">:</span>
+        <span class="s1">target_dtype </span><span class="s3">= </span><span class="s1">find_common_type</span><span class="s3">([</span><span class="s1">arr</span><span class="s3">.</span><span class="s1">dtype </span><span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">to_concat_no_proxy</span><span class="s3">])</span>
+
+    <span class="s1">to_concat </span><span class="s3">= [</span>
+        <span class="s1">arr</span><span class="s3">.</span><span class="s1">to_array</span><span class="s3">(</span><span class="s1">target_dtype</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">NullArrayProxy</span><span class="s3">)</span>
+        <span class="s2">else </span><span class="s1">astype_array</span><span class="s3">(</span><span class="s1">arr</span><span class="s3">, </span><span class="s1">target_dtype</span><span class="s3">, </span><span class="s1">copy</span><span class="s3">=</span><span class="s2">False</span><span class="s3">)</span>
+        <span class="s2">for </span><span class="s1">arr </span><span class="s2">in </span><span class="s1">to_concat</span>
+    <span class="s3">]</span>
+
+    <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">to_concat</span><span class="s3">[</span><span class="s6">0</span><span class="s3">], </span><span class="s1">ExtensionArray</span><span class="s3">):</span>
+        <span class="s1">cls </span><span class="s3">= </span><span class="s1">type</span><span class="s3">(</span><span class="s1">to_concat</span><span class="s3">[</span><span class="s6">0</span><span class="s3">])</span>
+        <span class="s2">return </span><span class="s1">cls</span><span class="s3">.</span><span class="s1">_concat_same_type</span><span class="s3">(</span><span class="s1">to_concat</span><span class="s3">)</span>
+
+    <span class="s1">result </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">concatenate</span><span class="s3">(</span><span class="s1">to_concat</span><span class="s3">)</span>
+
+    <span class="s5"># TODO decide on exact behaviour (we shouldn't do this only for empty result)</span>
+    <span class="s5"># see https://github.com/pandas-dev/pandas/issues/39817</span>
+    <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">result</span><span class="s3">) == </span><span class="s6">0</span><span class="s3">:</span>
+        <span class="s5"># all empties -&gt; check for bool to not coerce to float</span>
+        <span class="s1">kinds </span><span class="s3">= {</span><span class="s1">obj</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">.</span><span class="s1">kind </span><span class="s2">for </span><span class="s1">obj </span><span class="s2">in </span><span class="s1">to_concat_no_proxy</span><span class="s3">}</span>
+        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">kinds</span><span class="s3">) != </span><span class="s6">1</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s4">&quot;b&quot; </span><span class="s2">in </span><span class="s1">kinds</span><span class="s3">:</span>
+                <span class="s1">result </span><span class="s3">= </span><span class="s1">result</span><span class="s3">.</span><span class="s1">astype</span><span class="s3">(</span><span class="s1">object</span><span class="s3">)</span>
+    <span class="s2">return </span><span class="s1">result</span>
+</pre>
+</body>
+</html>

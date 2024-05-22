@@ -1,0 +1,124 @@
+<html>
+<head>
+<title>test_string.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #a5c261;}
+.s6 { color: #5f826b; font-style: italic;}
+.s7 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_string.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+<span class="s0">import </span><span class="s1">textwrap</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">from </span><span class="s2">. </span><span class="s0">import </span><span class="s1">util</span>
+
+
+<span class="s0">class </span><span class="s1">TestString</span><span class="s2">(</span><span class="s1">util</span><span class="s2">.</span><span class="s1">F2PyTest</span><span class="s2">):</span>
+    <span class="s1">sources </span><span class="s2">= [</span><span class="s1">util</span><span class="s2">.</span><span class="s1">getpath</span><span class="s2">(</span><span class="s3">&quot;tests&quot;</span><span class="s2">, </span><span class="s3">&quot;src&quot;</span><span class="s2">, </span><span class="s3">&quot;string&quot;</span><span class="s2">, </span><span class="s3">&quot;char.f90&quot;</span><span class="s2">)]</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">slow</span>
+    <span class="s0">def </span><span class="s1">test_char</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">strings </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s3">&quot;ab&quot;</span><span class="s2">, </span><span class="s3">&quot;cd&quot;</span><span class="s2">, </span><span class="s3">&quot;ef&quot;</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s3">&quot;c&quot;</span><span class="s2">).</span><span class="s1">T</span>
+        <span class="s1">inp</span><span class="s2">, </span><span class="s1">out </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">module</span><span class="s2">.</span><span class="s1">char_test</span><span class="s2">.</span><span class="s1">change_strings</span><span class="s2">(</span>
+            <span class="s1">strings</span><span class="s2">, </span><span class="s1">strings</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s4">1</span><span class="s2">])</span>
+        <span class="s0">assert </span><span class="s1">inp </span><span class="s2">== </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">approx</span><span class="s2">(</span><span class="s1">strings</span><span class="s2">)</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">strings</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+        <span class="s1">expected</span><span class="s2">[</span><span class="s4">1</span><span class="s2">, :] = </span><span class="s3">&quot;AAA&quot;</span>
+        <span class="s0">assert </span><span class="s1">out </span><span class="s2">== </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">approx</span><span class="s2">(</span><span class="s1">expected</span><span class="s2">)</span>
+
+
+<span class="s0">class </span><span class="s1">TestDocStringArguments</span><span class="s2">(</span><span class="s1">util</span><span class="s2">.</span><span class="s1">F2PyTest</span><span class="s2">):</span>
+    <span class="s1">sources </span><span class="s2">= [</span><span class="s1">util</span><span class="s2">.</span><span class="s1">getpath</span><span class="s2">(</span><span class="s3">&quot;tests&quot;</span><span class="s2">, </span><span class="s3">&quot;src&quot;</span><span class="s2">, </span><span class="s3">&quot;string&quot;</span><span class="s2">, </span><span class="s3">&quot;string.f&quot;</span><span class="s2">)]</span>
+
+    <span class="s0">def </span><span class="s1">test_example</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">a </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;123</span><span class="s0">\0\0</span><span class="s5">&quot;</span><span class="s2">)</span>
+        <span class="s1">b </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;123</span><span class="s0">\0\0</span><span class="s5">&quot;</span><span class="s2">)</span>
+        <span class="s1">c </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;123&quot;</span><span class="s2">)</span>
+        <span class="s1">d </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;123&quot;</span><span class="s2">)</span>
+
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">module</span><span class="s2">.</span><span class="s1">foo</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">, </span><span class="s1">c</span><span class="s2">, </span><span class="s1">d</span><span class="s2">)</span>
+
+        <span class="s0">assert </span><span class="s1">a</span><span class="s2">.</span><span class="s1">tobytes</span><span class="s2">() == </span><span class="s5">b&quot;123</span><span class="s0">\0\0</span><span class="s5">&quot;</span>
+        <span class="s0">assert </span><span class="s1">b</span><span class="s2">.</span><span class="s1">tobytes</span><span class="s2">() == </span><span class="s5">b&quot;B23</span><span class="s0">\0\0</span><span class="s5">&quot;</span>
+        <span class="s0">assert </span><span class="s1">c</span><span class="s2">.</span><span class="s1">tobytes</span><span class="s2">() == </span><span class="s5">b&quot;123&quot;</span>
+        <span class="s0">assert </span><span class="s1">d</span><span class="s2">.</span><span class="s1">tobytes</span><span class="s2">() == </span><span class="s5">b&quot;D23&quot;</span>
+
+
+<span class="s0">class </span><span class="s1">TestFixedString</span><span class="s2">(</span><span class="s1">util</span><span class="s2">.</span><span class="s1">F2PyTest</span><span class="s2">):</span>
+    <span class="s1">sources </span><span class="s2">= [</span><span class="s1">util</span><span class="s2">.</span><span class="s1">getpath</span><span class="s2">(</span><span class="s3">&quot;tests&quot;</span><span class="s2">, </span><span class="s3">&quot;src&quot;</span><span class="s2">, </span><span class="s3">&quot;string&quot;</span><span class="s2">, </span><span class="s3">&quot;fixed_string.f90&quot;</span><span class="s2">)]</span>
+
+    <span class="s2">@</span><span class="s1">staticmethod</span>
+    <span class="s0">def </span><span class="s1">_sint</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">start</span><span class="s2">=</span><span class="s4">0</span><span class="s2">, </span><span class="s1">end</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+        <span class="s6">&quot;&quot;&quot;Return the content of a string buffer as integer value. 
+ 
+        For example: 
+          _sint('1234') -&gt; 4321 
+          _sint('123A') -&gt; 17321 
+        &quot;&quot;&quot;</span>
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">):</span>
+            <span class="s1">s </span><span class="s2">= </span><span class="s1">s</span><span class="s2">.</span><span class="s1">tobytes</span><span class="s2">()</span>
+        <span class="s0">elif </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">str</span><span class="s2">):</span>
+            <span class="s1">s </span><span class="s2">= </span><span class="s1">s</span><span class="s2">.</span><span class="s1">encode</span><span class="s2">()</span>
+        <span class="s0">assert </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">end </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">end </span><span class="s2">= </span><span class="s1">len</span><span class="s2">(</span><span class="s1">s</span><span class="s2">)</span>
+        <span class="s1">i </span><span class="s2">= </span><span class="s4">0</span>
+        <span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">start</span><span class="s2">, </span><span class="s1">min</span><span class="s2">(</span><span class="s1">end</span><span class="s2">, </span><span class="s1">len</span><span class="s2">(</span><span class="s1">s</span><span class="s2">))):</span>
+            <span class="s1">i </span><span class="s2">+= </span><span class="s1">s</span><span class="s2">[</span><span class="s1">j</span><span class="s2">] * </span><span class="s4">10</span><span class="s2">**</span><span class="s1">j</span>
+        <span class="s0">return </span><span class="s1">i</span>
+
+    <span class="s0">def </span><span class="s1">_get_input</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">intent</span><span class="s2">=</span><span class="s3">&quot;in&quot;</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">intent </span><span class="s0">in </span><span class="s2">[</span><span class="s3">&quot;in&quot;</span><span class="s2">]:</span>
+            <span class="s0">yield </span><span class="s3">&quot;&quot;</span>
+            <span class="s0">yield </span><span class="s3">&quot;1&quot;</span>
+            <span class="s0">yield </span><span class="s3">&quot;1234&quot;</span>
+            <span class="s0">yield </span><span class="s3">&quot;12345&quot;</span>
+            <span class="s0">yield </span><span class="s5">b&quot;&quot;</span>
+            <span class="s0">yield </span><span class="s5">b&quot;</span><span class="s0">\0</span><span class="s5">&quot;</span>
+            <span class="s0">yield </span><span class="s5">b&quot;1&quot;</span>
+            <span class="s0">yield </span><span class="s5">b&quot;</span><span class="s0">\01</span><span class="s5">&quot;</span>
+            <span class="s0">yield </span><span class="s5">b&quot;1</span><span class="s0">\0</span><span class="s5">&quot;</span>
+            <span class="s0">yield </span><span class="s5">b&quot;1234&quot;</span>
+            <span class="s0">yield </span><span class="s5">b&quot;12345&quot;</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">((), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">bytes_</span><span class="s2">, </span><span class="s1">buffer</span><span class="s2">=</span><span class="s5">b&quot;&quot;</span><span class="s2">)  </span><span class="s7"># array(b'', dtype='|S0')</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;&quot;</span><span class="s2">)  </span><span class="s7"># array(b'', dtype='|S1')</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;</span><span class="s0">\0</span><span class="s5">&quot;</span><span class="s2">)</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;1&quot;</span><span class="s2">)</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;1</span><span class="s0">\0</span><span class="s5">&quot;</span><span class="s2">)</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;</span><span class="s0">\01</span><span class="s5">&quot;</span><span class="s2">)</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;1234&quot;</span><span class="s2">)</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;123</span><span class="s0">\0</span><span class="s5">&quot;</span><span class="s2">)</span>
+        <span class="s0">yield </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s5">b&quot;12345&quot;</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_intent_in</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">for </span><span class="s1">s </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_get_input</span><span class="s2">():</span>
+            <span class="s1">r </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">module</span><span class="s2">.</span><span class="s1">test_in_bytes4</span><span class="s2">(</span><span class="s1">s</span><span class="s2">)</span>
+            <span class="s7"># also checks that s is not changed inplace</span>
+            <span class="s1">expected </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sint</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">end</span><span class="s2">=</span><span class="s4">4</span><span class="s2">)</span>
+            <span class="s0">assert </span><span class="s1">r </span><span class="s2">== </span><span class="s1">expected</span><span class="s2">, </span><span class="s1">s</span>
+
+    <span class="s0">def </span><span class="s1">test_intent_inout</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">for </span><span class="s1">s </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_get_input</span><span class="s2">(</span><span class="s1">intent</span><span class="s2">=</span><span class="s3">&quot;inout&quot;</span><span class="s2">):</span>
+            <span class="s1">rest </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sint</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">start</span><span class="s2">=</span><span class="s4">4</span><span class="s2">)</span>
+            <span class="s1">r </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">module</span><span class="s2">.</span><span class="s1">test_inout_bytes4</span><span class="s2">(</span><span class="s1">s</span><span class="s2">)</span>
+            <span class="s1">expected </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sint</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">end</span><span class="s2">=</span><span class="s4">4</span><span class="s2">)</span>
+            <span class="s0">assert </span><span class="s1">r </span><span class="s2">== </span><span class="s1">expected</span>
+
+            <span class="s7"># check that the rest of input string is preserved</span>
+            <span class="s0">assert </span><span class="s1">rest </span><span class="s2">== </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sint</span><span class="s2">(</span><span class="s1">s</span><span class="s2">, </span><span class="s1">start</span><span class="s2">=</span><span class="s4">4</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

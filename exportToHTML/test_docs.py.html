@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>test_docs.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #a5c261;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_docs.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">pytest</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">assert_array_equal</span><span class="s2">, </span><span class="s1">assert_equal</span>
+<span class="s0">from </span><span class="s2">. </span><span class="s0">import </span><span class="s1">util</span>
+
+
+<span class="s0">def </span><span class="s1">get_docdir</span><span class="s2">():</span>
+    <span class="s3"># assuming that documentation tests are run from a source</span>
+    <span class="s3"># directory</span>
+    <span class="s0">return </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">abspath</span><span class="s2">(</span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span>
+        <span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">__file__</span><span class="s2">),</span>
+        <span class="s4">'..'</span><span class="s2">, </span><span class="s4">'..'</span><span class="s2">, </span><span class="s4">'..'</span><span class="s2">,</span>
+        <span class="s4">'doc'</span><span class="s2">, </span><span class="s4">'source'</span><span class="s2">, </span><span class="s4">'f2py'</span><span class="s2">, </span><span class="s4">'code'</span><span class="s2">))</span>
+
+
+<span class="s1">pytestmark </span><span class="s2">= </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">skipif</span><span class="s2">(</span>
+    <span class="s0">not </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">isdir</span><span class="s2">(</span><span class="s1">get_docdir</span><span class="s2">()),</span>
+    <span class="s1">reason</span><span class="s2">=(</span><span class="s4">'Could not find f2py documentation sources'</span>
+            <span class="s4">f' (</span><span class="s0">{</span><span class="s1">get_docdir</span><span class="s2">()</span><span class="s0">} </span><span class="s4">does not exists)'</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">_path</span><span class="s2">(*</span><span class="s1">a</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(*((</span><span class="s1">get_docdir</span><span class="s2">(),) + </span><span class="s1">a</span><span class="s2">))</span>
+
+
+<span class="s0">class </span><span class="s1">TestDocAdvanced</span><span class="s2">(</span><span class="s1">util</span><span class="s2">.</span><span class="s1">F2PyTest</span><span class="s2">):</span>
+    <span class="s3"># options = ['--debug-capi', '--build-dir', '/tmp/build-f2py']</span>
+    <span class="s1">sources </span><span class="s2">= [</span><span class="s1">_path</span><span class="s2">(</span><span class="s4">'asterisk1.f90'</span><span class="s2">), </span><span class="s1">_path</span><span class="s2">(</span><span class="s4">'asterisk2.f90'</span><span class="s2">),</span>
+               <span class="s1">_path</span><span class="s2">(</span><span class="s4">'ftype.f'</span><span class="s2">)]</span>
+
+    <span class="s0">def </span><span class="s1">test_asterisk1</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">foo </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">module</span><span class="s2">, </span><span class="s4">'foo1'</span><span class="s2">)</span>
+        <span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">foo</span><span class="s2">(), </span><span class="s5">b'123456789A12'</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_asterisk2</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">foo </span><span class="s2">= </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">module</span><span class="s2">, </span><span class="s4">'foo2'</span><span class="s2">)</span>
+        <span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">foo</span><span class="s2">(</span><span class="s6">2</span><span class="s2">), </span><span class="s5">b'12'</span><span class="s2">)</span>
+        <span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">foo</span><span class="s2">(</span><span class="s6">12</span><span class="s2">), </span><span class="s5">b'123456789A12'</span><span class="s2">)</span>
+        <span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">foo</span><span class="s2">(</span><span class="s6">24</span><span class="s2">), </span><span class="s5">b'123456789A123456789B'</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_ftype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">ftype </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">module</span>
+        <span class="s1">ftype</span><span class="s2">.</span><span class="s1">foo</span><span class="s2">()</span>
+        <span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">ftype</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">a</span><span class="s2">, </span><span class="s6">0</span><span class="s2">)</span>
+        <span class="s1">ftype</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">a </span><span class="s2">= </span><span class="s6">3</span>
+        <span class="s1">ftype</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">x </span><span class="s2">= [</span><span class="s6">1</span><span class="s2">, </span><span class="s6">2</span><span class="s2">, </span><span class="s6">3</span><span class="s2">]</span>
+        <span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">ftype</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">a</span><span class="s2">, </span><span class="s6">3</span><span class="s2">)</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">ftype</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">x</span><span class="s2">,</span>
+                           <span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s6">1</span><span class="s2">, </span><span class="s6">2</span><span class="s2">, </span><span class="s6">3</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float32</span><span class="s2">))</span>
+        <span class="s1">ftype</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">x</span><span class="s2">[</span><span class="s6">1</span><span class="s2">] = </span><span class="s6">45</span>
+        <span class="s1">assert_array_equal</span><span class="s2">(</span><span class="s1">ftype</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">x</span><span class="s2">,</span>
+                           <span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s6">1</span><span class="s2">, </span><span class="s6">45</span><span class="s2">, </span><span class="s6">3</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float32</span><span class="s2">))</span>
+
+    <span class="s3"># TODO: implement test methods for other example Fortran codes</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<html>
+<head>
+<title>getlimits.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+getlimits.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&gt;= (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">11</span><span class="s2">):</span>
+    <span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">assert_type</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s0">from </span><span class="s1">typing_extensions </span><span class="s0">import </span><span class="s1">assert_type</span>
+
+<span class="s1">f</span><span class="s2">: </span><span class="s1">float</span>
+<span class="s1">f8</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span>
+<span class="s1">c8</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">complex64</span>
+
+<span class="s1">i</span><span class="s2">: </span><span class="s1">int</span>
+<span class="s1">i8</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span>
+<span class="s1">u4</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint32</span>
+
+<span class="s1">finfo_f8</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">]</span>
+<span class="s1">iinfo_i8</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">]</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">(</span><span class="s1">f</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">double</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">(</span><span class="s1">f8</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">(</span><span class="s1">c8</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float32</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">(</span><span class="s4">'f2'</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">floating</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]])</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">bits</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">eps</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">epsneg</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">iexp</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">machep</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">max</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">maxexp</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">min</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">minexp</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">negep</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">nexp</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">nmant</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">precision</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">resolution</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">tiny</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">smallest_normal</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">finfo_f8</span><span class="s2">.</span><span class="s1">smallest_subnormal</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">(</span><span class="s1">i</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int_</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">(</span><span class="s1">i8</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">(</span><span class="s1">u4</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint32</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">(</span><span class="s4">'i2'</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">iinfo</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">iinfo_i8</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">iinfo_i8</span><span class="s2">.</span><span class="s1">kind</span><span class="s2">, </span><span class="s1">str</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">iinfo_i8</span><span class="s2">.</span><span class="s1">bits</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">iinfo_i8</span><span class="s2">.</span><span class="s1">key</span><span class="s2">, </span><span class="s1">str</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">iinfo_i8</span><span class="s2">.</span><span class="s1">min</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">iinfo_i8</span><span class="s2">.</span><span class="s1">max</span><span class="s2">, </span><span class="s1">int</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

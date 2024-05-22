@@ -1,0 +1,254 @@
+<html>
+<head>
+<title>_next_gen.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_next_gen.py</font>
+</center></td></tr></table>
+<pre><span class="s0"># SPDX-License-Identifier: MIT</span>
+
+<span class="s2">&quot;&quot;&quot; 
+These are keyword-only APIs that call `attr.s` and `attr.ib` with different 
+default values. 
+&quot;&quot;&quot;</span>
+
+
+<span class="s3">from </span><span class="s1">functools </span><span class="s3">import </span><span class="s1">partial</span>
+
+<span class="s3">from </span><span class="s4">. </span><span class="s3">import </span><span class="s1">setters</span>
+<span class="s3">from </span><span class="s4">.</span><span class="s1">_funcs </span><span class="s3">import </span><span class="s1">asdict </span><span class="s3">as </span><span class="s1">_asdict</span>
+<span class="s3">from </span><span class="s4">.</span><span class="s1">_funcs </span><span class="s3">import </span><span class="s1">astuple </span><span class="s3">as </span><span class="s1">_astuple</span>
+<span class="s3">from </span><span class="s4">.</span><span class="s1">_make </span><span class="s3">import </span><span class="s4">(</span>
+    <span class="s1">NOTHING</span><span class="s4">,</span>
+    <span class="s1">_frozen_setattrs</span><span class="s4">,</span>
+    <span class="s1">_ng_default_on_setattr</span><span class="s4">,</span>
+    <span class="s1">attrib</span><span class="s4">,</span>
+    <span class="s1">attrs</span><span class="s4">,</span>
+<span class="s4">)</span>
+<span class="s3">from </span><span class="s4">.</span><span class="s1">exceptions </span><span class="s3">import </span><span class="s1">UnannotatedAttributeError</span>
+
+
+<span class="s3">def </span><span class="s1">define</span><span class="s4">(</span>
+    <span class="s1">maybe_cls</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s4">*,</span>
+    <span class="s1">these</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">repr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">unsafe_hash</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">hash</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">init</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">slots</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+    <span class="s1">frozen</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+    <span class="s1">weakref_slot</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+    <span class="s1">str</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+    <span class="s1">auto_attribs</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">kw_only</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+    <span class="s1">cache_hash</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+    <span class="s1">auto_exc</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+    <span class="s1">eq</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">order</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+    <span class="s1">auto_detect</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+    <span class="s1">getstate_setstate</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">on_setattr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">field_transformer</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">match_args</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<span class="s4">):</span>
+    <span class="s2">r&quot;&quot;&quot; 
+    Define an *attrs* class. 
+ 
+    Differences to the classic `attr.s` that it uses underneath: 
+ 
+    - Automatically detect whether or not *auto_attribs* should be `True` (c.f. 
+      *auto_attribs* parameter). 
+    - If *frozen* is `False`, run converters and validators when setting an 
+      attribute by default. 
+    - *slots=True* 
+ 
+      .. caution:: 
+ 
+         Usually this has only upsides and few visible effects in everyday 
+         programming. But it *can* lead to some suprising behaviors, so please 
+         make sure to read :term:`slotted classes`. 
+    - *auto_exc=True* 
+    - *auto_detect=True* 
+    - *order=False* 
+    - Some options that were only relevant on Python 2 or were kept around for 
+      backwards-compatibility have been removed. 
+ 
+    Please note that these are all defaults and you can change them as you 
+    wish. 
+ 
+    :param Optional[bool] auto_attribs: If set to `True` or `False`, it behaves 
+       exactly like `attr.s`. If left `None`, `attr.s` will try to guess: 
+ 
+       1. If any attributes are annotated and no unannotated `attrs.fields`\ s 
+          are found, it assumes *auto_attribs=True*. 
+       2. Otherwise it assumes *auto_attribs=False* and tries to collect 
+          `attrs.fields`\ s. 
+ 
+    For now, please refer to `attr.s` for the rest of the parameters. 
+ 
+    .. versionadded:: 20.1.0 
+    .. versionchanged:: 21.3.0 Converters are also run ``on_setattr``. 
+    .. versionadded:: 22.2.0 
+       *unsafe_hash* as an alias for *hash* (for :pep:`681` compliance). 
+    &quot;&quot;&quot;</span>
+
+    <span class="s3">def </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s1">auto_attribs</span><span class="s4">):</span>
+        <span class="s3">return </span><span class="s1">attrs</span><span class="s4">(</span>
+            <span class="s1">maybe_cls</span><span class="s4">=</span><span class="s1">cls</span><span class="s4">,</span>
+            <span class="s1">these</span><span class="s4">=</span><span class="s1">these</span><span class="s4">,</span>
+            <span class="s1">repr</span><span class="s4">=</span><span class="s1">repr</span><span class="s4">,</span>
+            <span class="s1">hash</span><span class="s4">=</span><span class="s1">hash</span><span class="s4">,</span>
+            <span class="s1">unsafe_hash</span><span class="s4">=</span><span class="s1">unsafe_hash</span><span class="s4">,</span>
+            <span class="s1">init</span><span class="s4">=</span><span class="s1">init</span><span class="s4">,</span>
+            <span class="s1">slots</span><span class="s4">=</span><span class="s1">slots</span><span class="s4">,</span>
+            <span class="s1">frozen</span><span class="s4">=</span><span class="s1">frozen</span><span class="s4">,</span>
+            <span class="s1">weakref_slot</span><span class="s4">=</span><span class="s1">weakref_slot</span><span class="s4">,</span>
+            <span class="s1">str</span><span class="s4">=</span><span class="s1">str</span><span class="s4">,</span>
+            <span class="s1">auto_attribs</span><span class="s4">=</span><span class="s1">auto_attribs</span><span class="s4">,</span>
+            <span class="s1">kw_only</span><span class="s4">=</span><span class="s1">kw_only</span><span class="s4">,</span>
+            <span class="s1">cache_hash</span><span class="s4">=</span><span class="s1">cache_hash</span><span class="s4">,</span>
+            <span class="s1">auto_exc</span><span class="s4">=</span><span class="s1">auto_exc</span><span class="s4">,</span>
+            <span class="s1">eq</span><span class="s4">=</span><span class="s1">eq</span><span class="s4">,</span>
+            <span class="s1">order</span><span class="s4">=</span><span class="s1">order</span><span class="s4">,</span>
+            <span class="s1">auto_detect</span><span class="s4">=</span><span class="s1">auto_detect</span><span class="s4">,</span>
+            <span class="s1">collect_by_mro</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+            <span class="s1">getstate_setstate</span><span class="s4">=</span><span class="s1">getstate_setstate</span><span class="s4">,</span>
+            <span class="s1">on_setattr</span><span class="s4">=</span><span class="s1">on_setattr</span><span class="s4">,</span>
+            <span class="s1">field_transformer</span><span class="s4">=</span><span class="s1">field_transformer</span><span class="s4">,</span>
+            <span class="s1">match_args</span><span class="s4">=</span><span class="s1">match_args</span><span class="s4">,</span>
+        <span class="s4">)</span>
+
+    <span class="s3">def </span><span class="s1">wrap</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">):</span>
+        <span class="s2">&quot;&quot;&quot; 
+        Making this a wrapper ensures this code runs during class creation. 
+ 
+        We also ensure that frozen-ness of classes is inherited. 
+        &quot;&quot;&quot;</span>
+        <span class="s3">nonlocal </span><span class="s1">frozen</span><span class="s4">, </span><span class="s1">on_setattr</span>
+
+        <span class="s1">had_on_setattr </span><span class="s4">= </span><span class="s1">on_setattr </span><span class="s3">not in </span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">setters</span><span class="s4">.</span><span class="s1">NO_OP</span><span class="s4">)</span>
+
+        <span class="s0"># By default, mutable classes convert &amp; validate on setattr.</span>
+        <span class="s3">if </span><span class="s1">frozen </span><span class="s3">is False and </span><span class="s1">on_setattr </span><span class="s3">is None</span><span class="s4">:</span>
+            <span class="s1">on_setattr </span><span class="s4">= </span><span class="s1">_ng_default_on_setattr</span>
+
+        <span class="s0"># However, if we subclass a frozen class, we inherit the immutability</span>
+        <span class="s0"># and disable on_setattr.</span>
+        <span class="s3">for </span><span class="s1">base_cls </span><span class="s3">in </span><span class="s1">cls</span><span class="s4">.</span><span class="s1">__bases__</span><span class="s4">:</span>
+            <span class="s3">if </span><span class="s1">base_cls</span><span class="s4">.</span><span class="s1">__setattr__ </span><span class="s3">is </span><span class="s1">_frozen_setattrs</span><span class="s4">:</span>
+                <span class="s3">if </span><span class="s1">had_on_setattr</span><span class="s4">:</span>
+                    <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+                        <span class="s5">&quot;Frozen classes can't use on_setattr &quot;</span>
+                        <span class="s5">&quot;(frozen-ness was inherited).&quot;</span>
+                    <span class="s4">)</span>
+
+                <span class="s1">on_setattr </span><span class="s4">= </span><span class="s1">setters</span><span class="s4">.</span><span class="s1">NO_OP</span>
+                <span class="s3">break</span>
+
+        <span class="s3">if </span><span class="s1">auto_attribs </span><span class="s3">is not None</span><span class="s4">:</span>
+            <span class="s3">return </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s1">auto_attribs</span><span class="s4">)</span>
+
+        <span class="s3">try</span><span class="s4">:</span>
+            <span class="s3">return </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s3">True</span><span class="s4">)</span>
+        <span class="s3">except </span><span class="s1">UnannotatedAttributeError</span><span class="s4">:</span>
+            <span class="s3">return </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s3">False</span><span class="s4">)</span>
+
+    <span class="s0"># maybe_cls's type depends on the usage of the decorator.  It's a class</span>
+    <span class="s0"># if it's used as `@attrs` but ``None`` if used as `@attrs()`.</span>
+    <span class="s3">if </span><span class="s1">maybe_cls </span><span class="s3">is None</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s1">wrap</span>
+    <span class="s3">else</span><span class="s4">:</span>
+        <span class="s3">return </span><span class="s1">wrap</span><span class="s4">(</span><span class="s1">maybe_cls</span><span class="s4">)</span>
+
+
+<span class="s1">mutable </span><span class="s4">= </span><span class="s1">define</span>
+<span class="s1">frozen </span><span class="s4">= </span><span class="s1">partial</span><span class="s4">(</span><span class="s1">define</span><span class="s4">, </span><span class="s1">frozen</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">on_setattr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">field</span><span class="s4">(</span>
+    <span class="s4">*,</span>
+    <span class="s1">default</span><span class="s4">=</span><span class="s1">NOTHING</span><span class="s4">,</span>
+    <span class="s1">validator</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">repr</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+    <span class="s1">hash</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">init</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+    <span class="s1">metadata</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">type</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">converter</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">factory</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">kw_only</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+    <span class="s1">eq</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">order</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">on_setattr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+    <span class="s1">alias</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<span class="s4">):</span>
+    <span class="s2">&quot;&quot;&quot; 
+    Identical to `attr.ib`, except keyword-only and with some arguments 
+    removed. 
+ 
+    .. versionadded:: 23.1.0 
+       The *type* parameter has been re-added; mostly for 
+       {func}`attrs.make_class`. Please note that type checkers ignore this 
+       metadata. 
+    .. versionadded:: 20.1.0 
+    &quot;&quot;&quot;</span>
+    <span class="s3">return </span><span class="s1">attrib</span><span class="s4">(</span>
+        <span class="s1">default</span><span class="s4">=</span><span class="s1">default</span><span class="s4">,</span>
+        <span class="s1">validator</span><span class="s4">=</span><span class="s1">validator</span><span class="s4">,</span>
+        <span class="s1">repr</span><span class="s4">=</span><span class="s1">repr</span><span class="s4">,</span>
+        <span class="s1">hash</span><span class="s4">=</span><span class="s1">hash</span><span class="s4">,</span>
+        <span class="s1">init</span><span class="s4">=</span><span class="s1">init</span><span class="s4">,</span>
+        <span class="s1">metadata</span><span class="s4">=</span><span class="s1">metadata</span><span class="s4">,</span>
+        <span class="s1">type</span><span class="s4">=</span><span class="s1">type</span><span class="s4">,</span>
+        <span class="s1">converter</span><span class="s4">=</span><span class="s1">converter</span><span class="s4">,</span>
+        <span class="s1">factory</span><span class="s4">=</span><span class="s1">factory</span><span class="s4">,</span>
+        <span class="s1">kw_only</span><span class="s4">=</span><span class="s1">kw_only</span><span class="s4">,</span>
+        <span class="s1">eq</span><span class="s4">=</span><span class="s1">eq</span><span class="s4">,</span>
+        <span class="s1">order</span><span class="s4">=</span><span class="s1">order</span><span class="s4">,</span>
+        <span class="s1">on_setattr</span><span class="s4">=</span><span class="s1">on_setattr</span><span class="s4">,</span>
+        <span class="s1">alias</span><span class="s4">=</span><span class="s1">alias</span><span class="s4">,</span>
+    <span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">asdict</span><span class="s4">(</span><span class="s1">inst</span><span class="s4">, *, </span><span class="s1">recurse</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">filter</span><span class="s4">=</span><span class="s3">None</span><span class="s4">, </span><span class="s1">value_serializer</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+    <span class="s2">&quot;&quot;&quot; 
+    Same as `attr.asdict`, except that collections types are always retained 
+    and dict is always used as *dict_factory*. 
+ 
+    .. versionadded:: 21.3.0 
+    &quot;&quot;&quot;</span>
+    <span class="s3">return </span><span class="s1">_asdict</span><span class="s4">(</span>
+        <span class="s1">inst</span><span class="s4">=</span><span class="s1">inst</span><span class="s4">,</span>
+        <span class="s1">recurse</span><span class="s4">=</span><span class="s1">recurse</span><span class="s4">,</span>
+        <span class="s1">filter</span><span class="s4">=</span><span class="s1">filter</span><span class="s4">,</span>
+        <span class="s1">value_serializer</span><span class="s4">=</span><span class="s1">value_serializer</span><span class="s4">,</span>
+        <span class="s1">retain_collection_types</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+    <span class="s4">)</span>
+
+
+<span class="s3">def </span><span class="s1">astuple</span><span class="s4">(</span><span class="s1">inst</span><span class="s4">, *, </span><span class="s1">recurse</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">filter</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+    <span class="s2">&quot;&quot;&quot; 
+    Same as `attr.astuple`, except that collections types are always retained 
+    and `tuple` is always used as the *tuple_factory*. 
+ 
+    .. versionadded:: 21.3.0 
+    &quot;&quot;&quot;</span>
+    <span class="s3">return </span><span class="s1">_astuple</span><span class="s4">(</span>
+        <span class="s1">inst</span><span class="s4">=</span><span class="s1">inst</span><span class="s4">, </span><span class="s1">recurse</span><span class="s4">=</span><span class="s1">recurse</span><span class="s4">, </span><span class="s1">filter</span><span class="s4">=</span><span class="s1">filter</span><span class="s4">, </span><span class="s1">retain_collection_types</span><span class="s4">=</span><span class="s3">True</span>
+    <span class="s4">)</span>
+</pre>
+</body>
+</html>

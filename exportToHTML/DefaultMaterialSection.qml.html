@@ -1,0 +1,417 @@
+<html>
+<head>
+<title>DefaultMaterialSection.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+DefaultMaterialSection.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2019 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of Qt Quick 3D.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:GPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 3 or (at your option) any later version</span>
+<span class="s0">** approved by the KDE Free Qt Foundation. The licenses are as published by</span>
+<span class="s0">** the Free Software Foundation and appearing in the file LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.15</span>
+<span class="s2">import </span><span class="s1">HelperWidgets </span><span class="s3">2.0</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Layouts </span><span class="s3">1.12</span>
+
+<span class="s1">Column </span><span class="s4">{</span>
+    <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+
+    <span class="s1">Section </span><span class="s4">{</span>
+        <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Default Material&quot;</span><span class="s4">)</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+        <span class="s1">SectionLayout </span><span class="s4">{</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Lighting&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines which lighting method is used when generating this material.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">ComboBox </span><span class="s4">{</span>
+                <span class="s1">scope</span><span class="s4">: </span><span class="s5">&quot;DefaultMaterial&quot;</span>
+                <span class="s1">model</span><span class="s4">: [</span><span class="s5">&quot;NoLighting&quot;</span><span class="s4">, </span><span class="s5">&quot;FragmentLighting&quot;</span><span class="s4">]</span>
+                <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">lighting</span>
+                <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+            <span class="s4">}</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Blend Mode&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Determines how the colors of the model rendered blend with those behind it.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">ComboBox </span><span class="s4">{</span>
+                <span class="s1">scope</span><span class="s4">: </span><span class="s5">&quot;DefaultMaterial&quot;</span>
+                <span class="s1">model</span><span class="s4">: [</span><span class="s5">&quot;SourceOver&quot;</span><span class="s4">, </span><span class="s5">&quot;Screen&quot;</span><span class="s4">, </span><span class="s5">&quot;Multiply&quot;</span><span class="s4">, </span><span class="s5">&quot;Overlay&quot;</span><span class="s4">, </span><span class="s5">&quot;ColorBurn&quot;</span><span class="s4">, </span><span class="s5">&quot;ColorDodge&quot;</span><span class="s4">]</span>
+                <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">blendMode</span>
+                <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+            <span class="s4">}</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Enable Vertex Colors&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Enables the use of vertex colors from the mesh.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">CheckBox </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">vertexColorsEnabled</span><span class="s4">.</span><span class="s1">valueToString</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">vertexColorsEnabled</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Section </span><span class="s4">{</span>
+        <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Diffuse&quot;</span><span class="s4">)</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+        <span class="s1">Column </span><span class="s4">{</span>
+            <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+            <span class="s1">ColorEditor </span><span class="s4">{</span>
+                <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Diffuse Color&quot;</span><span class="s4">)</span>
+                <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">diffuseColor</span>
+                <span class="s1">supportGradient</span><span class="s4">: </span><span class="s2">false</span>
+                <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+            <span class="s4">}</span>
+            <span class="s1">SectionLayout </span><span class="s4">{</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Diffuse Map&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines a texture to apply to the material.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">IdComboBox </span><span class="s4">{</span>
+                        <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">diffuseMap</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Section </span><span class="s4">{</span>
+        <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Emissive&quot;</span><span class="s4">)</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+        <span class="s1">Column </span><span class="s4">{</span>
+            <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+            <span class="s1">ColorEditor </span><span class="s4">{</span>
+                <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Emissive Color&quot;</span><span class="s4">)</span>
+                <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">emissiveColor</span>
+                <span class="s1">supportGradient</span><span class="s4">: </span><span class="s2">false</span>
+                <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+            <span class="s4">}</span>
+            <span class="s1">SectionLayout </span><span class="s4">{</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Emissive Factor&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Determines the amount of self-illumination from the material (will not light other objects).&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">SpinBox </span><span class="s4">{</span>
+                        <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">1</span>
+                        <span class="s1">minimumValue</span><span class="s4">: </span><span class="s3">0</span>
+                        <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                        <span class="s1">stepSize</span><span class="s4">: </span><span class="s3">0.1</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">emissiveFactor</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Emissive Map&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Sets a texture to be used to set the emissive factor for different parts of the material.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">IdComboBox </span><span class="s4">{</span>
+                        <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">emissiveMap</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Section </span><span class="s4">{</span>
+        <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Specular&quot;</span><span class="s4">)</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+        <span class="s1">Column </span><span class="s4">{</span>
+            <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+            <span class="s1">ColorEditor </span><span class="s4">{</span>
+                <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Specular Tint&quot;</span><span class="s4">)</span>
+                <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">specularTint</span>
+                <span class="s1">supportGradient</span><span class="s4">: </span><span class="s2">false</span>
+                <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+            <span class="s4">}</span>
+
+            <span class="s1">SectionLayout </span><span class="s4">{</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Specular Amount&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Controls the strength of specularity (highlights and reflections).&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">SpinBox </span><span class="s4">{</span>
+                        <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">1</span>
+                        <span class="s1">minimumValue</span><span class="s4">: </span><span class="s3">0</span>
+                        <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                        <span class="s1">stepSize</span><span class="s4">: </span><span class="s3">0.1</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">specularAmount</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Specular Map&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines a RGB texture to modulate the amount and the color of specularity across the surface of the material.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">IdComboBox </span><span class="s4">{</span>
+                        <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">specularMap</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Specular Model&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Determines which functions are used to calculate specular highlights for lights in the scene.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">ComboBox </span><span class="s4">{</span>
+                    <span class="s1">scope</span><span class="s4">: </span><span class="s5">&quot;DefaultMaterial&quot;</span>
+                    <span class="s1">model</span><span class="s4">: [</span><span class="s5">&quot;Default&quot;</span><span class="s4">, </span><span class="s5">&quot;KGGX&quot;</span><span class="s4">, </span><span class="s5">&quot;KWard&quot;</span><span class="s4">]</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">specularModel</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Reflection Map&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Sets a texture used for specular highlights on the material.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">IdComboBox </span><span class="s4">{</span>
+                        <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">specularReflectionMap</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Index of Refraction&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Controls what angles of reflections are affected by the Fresnel power.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">SpinBox </span><span class="s4">{</span>
+                        <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">3</span>
+                        <span class="s1">minimumValue</span><span class="s4">: </span><span class="s3">1</span>
+                        <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                        <span class="s1">stepSize</span><span class="s4">: </span><span class="s3">0.1</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">indexOfRefraction</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Fresnel Power&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Decreases head-on reflections (looking directly at the surface) while maintaining reflections seen at grazing angles.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">SpinBox </span><span class="s4">{</span>
+                        <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">9999999</span>
+                        <span class="s1">minimumValue</span><span class="s4">: -</span><span class="s3">9999999</span>
+                        <span class="s1">realDragRange</span><span class="s4">: </span><span class="s3">5000</span>
+                        <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">fresnelPower</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Specular Roughness&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Controls the size of the specular highlight generated from lights and the clarity of reflections in general.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">SpinBox </span><span class="s4">{</span>
+                        <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">1</span>
+                        <span class="s1">minimumValue</span><span class="s4">: </span><span class="s3">0.001</span>
+                        <span class="s1">decimals</span><span class="s4">: </span><span class="s3">3</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">specularRoughness</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s1">Label </span><span class="s4">{</span>
+                    <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Roughness Map&quot;</span><span class="s4">)</span>
+                    <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines a texture to control the specular roughness of the material.&quot;</span><span class="s4">)</span>
+                <span class="s4">}</span>
+                <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                    <span class="s1">IdComboBox </span><span class="s4">{</span>
+                        <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                        <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                        <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">roughnessMap</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Section </span><span class="s4">{</span>
+        <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Opacity&quot;</span><span class="s4">)</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+        <span class="s1">SectionLayout </span><span class="s4">{</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Opacity&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Sets the visibility of the geometry for this material.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">SpinBox </span><span class="s4">{</span>
+                    <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">1</span>
+                    <span class="s1">minimumValue</span><span class="s4">: </span><span class="s3">0</span>
+                    <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                    <span class="s1">stepSize</span><span class="s4">: </span><span class="s3">0.1</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">opacity</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Opacity Map&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines a texture used to control the opacity differently for different parts of the material.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">IdComboBox </span><span class="s4">{</span>
+                    <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">opacityMap</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Section </span><span class="s4">{</span>
+        <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Bump/Normal&quot;</span><span class="s4">)</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+        <span class="s1">SectionLayout </span><span class="s4">{</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Bump Amount&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Controls the amount of simulated displacement for the bump map or normal map.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">SpinBox </span><span class="s4">{</span>
+                    <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">1</span>
+                    <span class="s1">minimumValue</span><span class="s4">: </span><span class="s3">0</span>
+                    <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                    <span class="s1">stepSize</span><span class="s4">: </span><span class="s3">0.1</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">bumpAmount</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Bump Map&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines a grayscale texture to simulate fine geometry displacement across the surface of the material.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">IdComboBox </span><span class="s4">{</span>
+                    <span class="s1">id</span><span class="s4">: </span><span class="s1">bumpMapComboBox</span>
+                    <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">bumpMap</span>
+
+                    <span class="s1">Connections </span><span class="s4">{</span>
+                        <span class="s1">target</span><span class="s4">: </span><span class="s1">normalMapComboBox</span><span class="s4">.</span><span class="s1">backendValue</span>
+                        <span class="s1">onExpressionChanged</span><span class="s4">: {</span>
+                            <span class="s2">if </span><span class="s4">(</span><span class="s1">normalMapComboBox</span><span class="s4">.</span><span class="s1">backendValue</span><span class="s4">.</span><span class="s1">expression </span><span class="s4">!== </span><span class="s5">&quot;&quot;</span><span class="s4">)</span>
+                                <span class="s1">bumpMapComboBox</span><span class="s4">.</span><span class="s1">backendValue</span><span class="s4">.</span><span class="s1">resetValue</span><span class="s4">()</span>
+                        <span class="s4">}</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Normal Map&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines a RGB image used to simulate fine geometry displacement across the surface of the material.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">IdComboBox </span><span class="s4">{</span>
+                    <span class="s1">id</span><span class="s4">: </span><span class="s1">normalMapComboBox</span>
+                    <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">normalMap</span>
+
+                    <span class="s1">Connections </span><span class="s4">{</span>
+                        <span class="s1">target</span><span class="s4">: </span><span class="s1">bumpMapComboBox</span><span class="s4">.</span><span class="s1">backendValue</span>
+                        <span class="s1">onExpressionChanged</span><span class="s4">: {</span>
+                            <span class="s2">if </span><span class="s4">(</span><span class="s1">bumpMapComboBox</span><span class="s4">.</span><span class="s1">backendValue</span><span class="s4">.</span><span class="s1">expression </span><span class="s4">!== </span><span class="s5">&quot;&quot;</span><span class="s4">)</span>
+                                <span class="s1">normalMapComboBox</span><span class="s4">.</span><span class="s1">backendValue</span><span class="s4">.</span><span class="s1">resetValue</span><span class="s4">()</span>
+                        <span class="s4">}</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Section </span><span class="s4">{</span>
+        <span class="s1">caption</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Translucency&quot;</span><span class="s4">)</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width</span>
+        <span class="s1">SectionLayout </span><span class="s4">{</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Translucency Falloff&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines the amount of falloff for the translucency based on the angle of the normals of the object to the light source.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">SpinBox </span><span class="s4">{</span>
+                    <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">999999</span>
+                    <span class="s1">minimumValue</span><span class="s4">: -</span><span class="s3">999999</span>
+                    <span class="s1">realDragRange</span><span class="s4">: </span><span class="s3">5000</span>
+                    <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">translucentFalloff</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Diffuse Light Wrap&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Determines the amount of light wrap for the translucency map.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">SpinBox </span><span class="s4">{</span>
+                    <span class="s1">maximumValue</span><span class="s4">: </span><span class="s3">1</span>
+                    <span class="s1">minimumValue</span><span class="s4">: </span><span class="s3">0</span>
+                    <span class="s1">decimals</span><span class="s4">: </span><span class="s3">2</span>
+                    <span class="s1">stepSize</span><span class="s4">: </span><span class="s3">0.1</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">diffuseLightWrap</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+            <span class="s1">Label </span><span class="s4">{</span>
+                <span class="s1">text</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Translucency Map&quot;</span><span class="s4">)</span>
+                <span class="s1">tooltip</span><span class="s4">: </span><span class="s1">qsTr</span><span class="s4">(</span><span class="s5">&quot;Defines a grayscale texture controlling how much light can pass through the material from behind.&quot;</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">SecondColumnLayout </span><span class="s4">{</span>
+                <span class="s1">IdComboBox </span><span class="s4">{</span>
+                    <span class="s1">typeFilter</span><span class="s4">: </span><span class="s5">&quot;QtQuick3D.Texture&quot;</span>
+                    <span class="s1">Layout</span><span class="s4">.</span><span class="s1">fillWidth</span><span class="s4">: </span><span class="s2">true</span>
+                    <span class="s1">backendValue</span><span class="s4">: </span><span class="s1">backendValues</span><span class="s4">.</span><span class="s1">translucencyMap</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>polynomial.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+polynomial.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">ndarray</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">int_</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">_polybase </span><span class="s0">import </span><span class="s1">ABCPolyBase</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">polyutils </span><span class="s0">import </span><span class="s1">trimcoef</span>
+
+<span class="s1">__all__</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]</span>
+
+<span class="s1">polytrim </span><span class="s2">= </span><span class="s1">trimcoef</span>
+
+<span class="s1">polydomain</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">polyzero</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">polyone</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">polyx</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+
+<span class="s0">def </span><span class="s1">polyline</span><span class="s2">(</span><span class="s1">off</span><span class="s2">, </span><span class="s1">scl</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polyfromroots</span><span class="s2">(</span><span class="s1">roots</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polyadd</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polysub</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polymulx</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polymul</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polydiv</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polypow</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">pow</span><span class="s2">, </span><span class="s1">maxpower</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">polyder</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">polyint</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">k</span><span class="s2">=..., </span><span class="s1">lbnd</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">polyval</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">c</span><span class="s2">, </span><span class="s1">tensor</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">polyvalfromroots</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">r</span><span class="s2">, </span><span class="s1">tensor</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">polyval2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polygrid2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polyval3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polygrid3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polyvander</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polyvander2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polyvander3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">polyfit</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">, </span><span class="s1">rcond</span><span class="s2">=..., </span><span class="s1">full</span><span class="s2">=..., </span><span class="s1">w</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">polyroots</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">Polynomial</span><span class="s2">(</span><span class="s1">ABCPolyBase</span><span class="s2">):</span>
+    <span class="s1">domain</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">window</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">basis_name</span><span class="s2">: </span><span class="s1">Any</span>
+</pre>
+</body>
+</html>

@@ -12,18 +12,36 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 
-from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH
+import json
 
+def load_config():
+    # Valores predeterminados para la configuración
+    default_config = {"WEBDRIVER_PATH": "", "EDGE_BINARY_PATH": "", "USER_PROFILE_PATH": ""}
 
+    # Si el archivo config.json no existe, lo creamos con los valores predeterminados
+    if not os.path.exists('config.json'):
+        with open('config.json', 'w') as config_file:
+            json.dump(default_config, config_file)
+
+    # Leemos el archivo config.json (que ahora sabemos que existe)
+    with open('config.json', 'r') as config_file:
+        config = json.load(config_file)
+
+    return config
+
+config = load_config()
+WEBDRIVER_PATH = config.get('WEBDRIVER_PATH', '')
+EDGE_BINARY_PATH = config.get('EDGE_BINARY_PATH', '')
+USER_PROFILE_PATH = config.get('USER_PROFILE_PATH', '')
 ruta_actual = os.getcwd()
 
 
 def mostrar_ventana_emergente():
     msgBox = QMessageBox()
-    msgBox.setIcon(QMessageBox.Critical)
-    msgBox.setWindowTitle("Notificación de Error")
-    msgBox.setText("Se generaron algunos errores en la carga de los MEF y se guardaron en un archivo Excel.")
-    msgBox.exec()
+    msgBox.setIcon(QMessageBox.Critical)  # Establecer el icono a rojo
+    msgBox.setWindowTitle("Notificacion de Error")
+    msgBox.setText("Se generaron algunos errores en la Extraccion de los MEF y se guardaron en un archivo Excel.")
+    msgBox.show()
 
 
 def esperar_y_encontrar_elemento(driver, by, identificador, tiempo_espera=20):

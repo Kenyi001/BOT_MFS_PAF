@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>bit_generator.pxd</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+bit_generator.pxd</font>
+</center></td></tr></table>
+<pre><span class="s0">cimport </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">from </span><span class="s1">libc</span><span class="s2">.</span><span class="s1">stdint </span><span class="s0">cimport </span><span class="s1">uint32_t</span><span class="s2">, </span><span class="s1">uint64_t</span>
+
+<span class="s0">cdef </span><span class="s1">extern </span><span class="s0">from </span><span class="s3">&quot;numpy/random/bitgen.h&quot;</span><span class="s2">:</span>
+    <span class="s1">struct bitgen</span><span class="s2">:</span>
+        <span class="s1">void </span><span class="s2">*</span><span class="s1">state</span>
+        <span class="s1">uint64_t </span><span class="s2">(*</span><span class="s1">next_uint64</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+        <span class="s1">uint32_t </span><span class="s2">(*</span><span class="s1">next_uint32</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+        <span class="s1">double </span><span class="s2">(*</span><span class="s1">next_double</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+        <span class="s1">uint64_t </span><span class="s2">(*</span><span class="s1">next_raw</span><span class="s2">)(</span><span class="s1">void </span><span class="s2">*</span><span class="s1">st</span><span class="s2">) </span><span class="s1">nogil</span>
+
+    <span class="s0">ctypedef </span><span class="s1">bitgen bitgen_t</span>
+
+<span class="s0">cdef class </span><span class="s1">BitGenerator</span><span class="s2">():</span>
+    <span class="s0">cdef </span><span class="s1">readonly object _seed_seq</span>
+    <span class="s0">cdef </span><span class="s1">readonly object lock</span>
+    <span class="s0">cdef </span><span class="s1">bitgen_t _bitgen</span>
+    <span class="s0">cdef </span><span class="s1">readonly object _ctypes</span>
+    <span class="s0">cdef </span><span class="s1">readonly object _cffi</span>
+    <span class="s0">cdef </span><span class="s1">readonly object capsule</span>
+
+
+<span class="s0">cdef class </span><span class="s1">SeedSequence</span><span class="s2">():</span>
+    <span class="s0">cdef </span><span class="s1">readonly object entropy</span>
+    <span class="s0">cdef </span><span class="s1">readonly tuple spawn_key</span>
+    <span class="s0">cdef </span><span class="s1">readonly Py_ssize_t pool_size</span>
+    <span class="s0">cdef </span><span class="s1">readonly object pool</span>
+    <span class="s0">cdef </span><span class="s1">readonly uint32_t n_children_spawned</span>
+
+    <span class="s0">cdef </span><span class="s1">mix_entropy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">npy_uint32</span><span class="s2">, </span><span class="s1">ndim</span><span class="s2">=</span><span class="s4">1</span><span class="s2">] </span><span class="s1">mixer</span><span class="s2">,</span>
+                     <span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">npy_uint32</span><span class="s2">, </span><span class="s1">ndim</span><span class="s2">=</span><span class="s4">1</span><span class="s2">] </span><span class="s1">entropy_array</span><span class="s2">)</span>
+    <span class="s0">cdef </span><span class="s1">get_assembled_entropy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+
+<span class="s0">cdef class </span><span class="s1">SeedlessSequence</span><span class="s2">():</span>
+    <span class="s0">pass</span>
+</pre>
+</body>
+</html>

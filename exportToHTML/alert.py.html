@@ -1,0 +1,102 @@
+<html>
+<head>
+<title>alert.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+alert.py</font>
+</center></td></tr></table>
+<pre><span class="s0"># Licensed to the Software Freedom Conservancy (SFC) under one</span>
+<span class="s0"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="s0"># distributed with this work for additional information</span>
+<span class="s0"># regarding copyright ownership.  The SFC licenses this file</span>
+<span class="s0"># to you under the Apache License, Version 2.0 (the</span>
+<span class="s0"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="s0"># with the License.  You may obtain a copy of the License at</span>
+<span class="s0">#</span>
+<span class="s0">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="s0">#</span>
+<span class="s0"># Unless required by applicable law or agreed to in writing,</span>
+<span class="s0"># software distributed under the License is distributed on an</span>
+<span class="s0"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="s0"># KIND, either express or implied.  See the License for the</span>
+<span class="s0"># specific language governing permissions and limitations</span>
+<span class="s0"># under the License.</span>
+<span class="s2">&quot;&quot;&quot;The Alert implementation.&quot;&quot;&quot;</span>
+
+<span class="s3">from </span><span class="s1">selenium</span><span class="s4">.</span><span class="s1">webdriver</span><span class="s4">.</span><span class="s1">common</span><span class="s4">.</span><span class="s1">utils </span><span class="s3">import </span><span class="s1">keys_to_typing</span>
+<span class="s3">from </span><span class="s1">selenium</span><span class="s4">.</span><span class="s1">webdriver</span><span class="s4">.</span><span class="s1">remote</span><span class="s4">.</span><span class="s1">command </span><span class="s3">import </span><span class="s1">Command</span>
+
+
+<span class="s3">class </span><span class="s1">Alert</span><span class="s4">:</span>
+    <span class="s2">&quot;&quot;&quot;Allows to work with alerts. 
+ 
+    Use this class to interact with alert prompts.  It contains methods for dismissing, 
+    accepting, inputting, and getting text from alert prompts. 
+ 
+    Accepting / Dismissing alert prompts:: 
+ 
+        Alert(driver).accept() 
+        Alert(driver).dismiss() 
+ 
+    Inputting a value into an alert prompt:: 
+ 
+        name_prompt = Alert(driver) 
+        name_prompt.send_keys(&quot;Willian Shakesphere&quot;) 
+        name_prompt.accept() 
+ 
+ 
+    Reading a the text of a prompt for verification:: 
+ 
+        alert_text = Alert(driver).text 
+        self.assertEqual(&quot;Do you wish to quit?&quot;, alert_text) 
+    &quot;&quot;&quot;</span>
+
+    <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">driver</span><span class="s4">) </span><span class="s1">-&gt; </span><span class="s3">None</span><span class="s4">:</span>
+        <span class="s2">&quot;&quot;&quot;Creates a new Alert. 
+ 
+        :Args: 
+         - driver: The WebDriver instance which performs user actions. 
+        &quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">driver </span><span class="s4">= </span><span class="s1">driver</span>
+
+    <span class="s4">@</span><span class="s1">property</span>
+    <span class="s3">def </span><span class="s1">text</span><span class="s4">(</span><span class="s1">self</span><span class="s4">) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+        <span class="s2">&quot;&quot;&quot;Gets the text of the Alert.&quot;&quot;&quot;</span>
+        <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">driver</span><span class="s4">.</span><span class="s1">execute</span><span class="s4">(</span><span class="s1">Command</span><span class="s4">.</span><span class="s1">W3C_GET_ALERT_TEXT</span><span class="s4">)[</span><span class="s5">&quot;value&quot;</span><span class="s4">]</span>
+
+    <span class="s3">def </span><span class="s1">dismiss</span><span class="s4">(</span><span class="s1">self</span><span class="s4">) </span><span class="s1">-&gt; </span><span class="s3">None</span><span class="s4">:</span>
+        <span class="s2">&quot;&quot;&quot;Dismisses the alert available.&quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">driver</span><span class="s4">.</span><span class="s1">execute</span><span class="s4">(</span><span class="s1">Command</span><span class="s4">.</span><span class="s1">W3C_DISMISS_ALERT</span><span class="s4">)</span>
+
+    <span class="s3">def </span><span class="s1">accept</span><span class="s4">(</span><span class="s1">self</span><span class="s4">) </span><span class="s1">-&gt; </span><span class="s3">None</span><span class="s4">:</span>
+        <span class="s2">&quot;&quot;&quot;Accepts the alert available. 
+ 
+        :Usage: 
+            :: 
+ 
+                Alert(driver).accept() # Confirm a alert dialog. 
+        &quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">driver</span><span class="s4">.</span><span class="s1">execute</span><span class="s4">(</span><span class="s1">Command</span><span class="s4">.</span><span class="s1">W3C_ACCEPT_ALERT</span><span class="s4">)</span>
+
+    <span class="s3">def </span><span class="s1">send_keys</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">keysToSend</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; </span><span class="s3">None</span><span class="s4">:</span>
+        <span class="s2">&quot;&quot;&quot;Send Keys to the Alert. 
+ 
+        :Args: 
+         - keysToSend: The text to be sent to Alert. 
+        &quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s4">.</span><span class="s1">driver</span><span class="s4">.</span><span class="s1">execute</span><span class="s4">(</span><span class="s1">Command</span><span class="s4">.</span><span class="s1">W3C_SET_ALERT_VALUE</span><span class="s4">, {</span><span class="s5">&quot;value&quot;</span><span class="s4">: </span><span class="s1">keys_to_typing</span><span class="s4">(</span><span class="s1">keysToSend</span><span class="s4">), </span><span class="s5">&quot;text&quot;</span><span class="s4">: </span><span class="s1">keysToSend</span><span class="s4">})</span>
+</pre>
+</body>
+</html>

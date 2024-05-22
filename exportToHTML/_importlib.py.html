@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>_importlib.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_importlib.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+
+
+<span class="s0">def </span><span class="s1">disable_importlib_metadata_finder</span><span class="s2">(</span><span class="s1">metadata</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Ensure importlib_metadata doesn't provide older, incompatible 
+    Distributions. 
+ 
+    Workaround for #3102. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s0">import </span><span class="s1">importlib_metadata</span>
+    <span class="s0">except </span><span class="s1">ImportError</span><span class="s2">:</span>
+        <span class="s0">return</span>
+    <span class="s0">except </span><span class="s1">AttributeError</span><span class="s2">:</span>
+        <span class="s0">from </span><span class="s2">.</span><span class="s1">warnings </span><span class="s0">import </span><span class="s1">SetuptoolsWarning</span>
+
+        <span class="s1">SetuptoolsWarning</span><span class="s2">.</span><span class="s1">emit</span><span class="s2">(</span>
+            <span class="s4">&quot;Incompatibility problem.&quot;</span><span class="s2">,</span>
+            <span class="s4">&quot;&quot;&quot; 
+            `importlib-metadata` version is incompatible with `setuptools`. 
+            This problem is likely to be solved by installing an updated version of 
+            `importlib-metadata`. 
+            &quot;&quot;&quot;</span><span class="s2">,</span>
+            <span class="s1">see_url</span><span class="s2">=</span><span class="s4">&quot;https://github.com/python/importlib_metadata/issues/396&quot;</span><span class="s2">,</span>
+        <span class="s2">)  </span><span class="s5"># Ensure a descriptive message is shown.</span>
+        <span class="s0">raise  </span><span class="s5"># This exception can be suppressed by _distutils_hack</span>
+
+    <span class="s0">if </span><span class="s1">importlib_metadata </span><span class="s0">is </span><span class="s1">metadata</span><span class="s2">:</span>
+        <span class="s0">return</span>
+    <span class="s1">to_remove </span><span class="s2">= [</span>
+        <span class="s1">ob</span>
+        <span class="s0">for </span><span class="s1">ob </span><span class="s0">in </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">meta_path</span>
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">ob</span><span class="s2">, </span><span class="s1">importlib_metadata</span><span class="s2">.</span><span class="s1">MetadataPathFinder</span><span class="s2">)</span>
+    <span class="s2">]</span>
+    <span class="s0">for </span><span class="s1">item </span><span class="s0">in </span><span class="s1">to_remove</span><span class="s2">:</span>
+        <span class="s1">sys</span><span class="s2">.</span><span class="s1">meta_path</span><span class="s2">.</span><span class="s1">remove</span><span class="s2">(</span><span class="s1">item</span><span class="s2">)</span>
+
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&lt; (</span><span class="s6">3</span><span class="s2">, </span><span class="s6">10</span><span class="s2">):</span>
+    <span class="s0">from </span><span class="s1">setuptools</span><span class="s2">.</span><span class="s1">extern </span><span class="s0">import </span><span class="s1">importlib_metadata </span><span class="s0">as </span><span class="s1">metadata</span>
+
+    <span class="s1">disable_importlib_metadata_finder</span><span class="s2">(</span><span class="s1">metadata</span><span class="s2">)</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s0">import </span><span class="s1">importlib</span><span class="s2">.</span><span class="s1">metadata </span><span class="s0">as </span><span class="s1">metadata  </span><span class="s5"># noqa: F401</span>
+
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&lt; (</span><span class="s6">3</span><span class="s2">, </span><span class="s6">9</span><span class="s2">):</span>
+    <span class="s0">from </span><span class="s1">setuptools</span><span class="s2">.</span><span class="s1">extern </span><span class="s0">import </span><span class="s1">importlib_resources </span><span class="s0">as </span><span class="s1">resources</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s0">import </span><span class="s1">importlib</span><span class="s2">.</span><span class="s1">resources </span><span class="s0">as </span><span class="s1">resources  </span><span class="s5"># noqa: F401</span>
+</pre>
+</body>
+</html>

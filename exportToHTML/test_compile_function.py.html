@@ -1,0 +1,141 @@
+<html>
+<head>
+<title>test_compile_function.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+.s7 { color: #a5c261;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_compile_function.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot;See https://github.com/numpy/numpy/pull/11937. 
+ 
+&quot;&quot;&quot;</span>
+<span class="s2">import </span><span class="s1">sys</span>
+<span class="s2">import </span><span class="s1">os</span>
+<span class="s2">import </span><span class="s1">uuid</span>
+<span class="s2">from </span><span class="s1">importlib </span><span class="s2">import </span><span class="s1">import_module</span>
+<span class="s2">import </span><span class="s1">pytest</span>
+
+<span class="s2">import </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">f2py</span>
+
+<span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">util</span>
+
+
+<span class="s2">def </span><span class="s1">setup_module</span><span class="s3">():</span>
+    <span class="s2">if not </span><span class="s1">util</span><span class="s3">.</span><span class="s1">has_c_compiler</span><span class="s3">():</span>
+        <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s4">&quot;Needs C compiler&quot;</span><span class="s3">)</span>
+    <span class="s2">if not </span><span class="s1">util</span><span class="s3">.</span><span class="s1">has_f77_compiler</span><span class="s3">():</span>
+        <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s4">&quot;Needs FORTRAN 77 compiler&quot;</span><span class="s3">)</span>
+
+
+<span class="s5"># extra_args can be a list (since gh-11937) or string.</span>
+<span class="s5"># also test absence of extra_args</span>
+<span class="s3">@</span><span class="s1">pytest</span><span class="s3">.</span><span class="s1">mark</span><span class="s3">.</span><span class="s1">parametrize</span><span class="s3">(</span><span class="s4">&quot;extra_args&quot;</span><span class="s3">,</span>
+                         <span class="s3">[[</span><span class="s4">&quot;--noopt&quot;</span><span class="s3">, </span><span class="s4">&quot;--debug&quot;</span><span class="s3">], </span><span class="s4">&quot;--noopt --debug&quot;</span><span class="s3">, </span><span class="s4">&quot;&quot;</span><span class="s3">])</span>
+<span class="s3">@</span><span class="s1">pytest</span><span class="s3">.</span><span class="s1">mark</span><span class="s3">.</span><span class="s1">leaks_references</span><span class="s3">(</span><span class="s1">reason</span><span class="s3">=</span><span class="s4">&quot;Imported module seems never deleted.&quot;</span><span class="s3">)</span>
+<span class="s2">def </span><span class="s1">test_f2py_init_compile</span><span class="s3">(</span><span class="s1">extra_args</span><span class="s3">):</span>
+    <span class="s5"># flush through the f2py __init__ compile() function code path as a</span>
+    <span class="s5"># crude test for input handling following migration from</span>
+    <span class="s5"># exec_command() to subprocess.check_output() in gh-11937</span>
+
+    <span class="s5"># the Fortran 77 syntax requires 6 spaces before any commands, but</span>
+    <span class="s5"># more space may be added/</span>
+    <span class="s1">fsource </span><span class="s3">= </span><span class="s4">&quot;&quot;&quot; 
+        integer function foo() 
+        foo = 10 + 5 
+        return 
+        end 
+    &quot;&quot;&quot;</span>
+    <span class="s5"># use various helper functions in util.py to enable robust build /</span>
+    <span class="s5"># compile and reimport cycle in test suite</span>
+    <span class="s1">moddir </span><span class="s3">= </span><span class="s1">util</span><span class="s3">.</span><span class="s1">get_module_dir</span><span class="s3">()</span>
+    <span class="s1">modname </span><span class="s3">= </span><span class="s1">util</span><span class="s3">.</span><span class="s1">get_temp_module_name</span><span class="s3">()</span>
+
+    <span class="s1">cwd </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">getcwd</span><span class="s3">()</span>
+    <span class="s1">target </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">moddir</span><span class="s3">, </span><span class="s1">str</span><span class="s3">(</span><span class="s1">uuid</span><span class="s3">.</span><span class="s1">uuid4</span><span class="s3">()) + </span><span class="s4">&quot;.f&quot;</span><span class="s3">)</span>
+    <span class="s5"># try running compile() with and without a source_fn provided so</span>
+    <span class="s5"># that the code path where a temporary file for writing Fortran</span>
+    <span class="s5"># source is created is also explored</span>
+    <span class="s2">for </span><span class="s1">source_fn </span><span class="s2">in </span><span class="s3">[</span><span class="s1">target</span><span class="s3">, </span><span class="s2">None</span><span class="s3">]:</span>
+        <span class="s5"># mimic the path changing behavior used by build_module() in</span>
+        <span class="s5"># util.py, but don't actually use build_module() because it has</span>
+        <span class="s5"># its own invocation of subprocess that circumvents the</span>
+        <span class="s5"># f2py.compile code block under test</span>
+        <span class="s2">with </span><span class="s1">util</span><span class="s3">.</span><span class="s1">switchdir</span><span class="s3">(</span><span class="s1">moddir</span><span class="s3">):</span>
+            <span class="s1">ret_val </span><span class="s3">= </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">f2py</span><span class="s3">.</span><span class="s1">compile</span><span class="s3">(</span><span class="s1">fsource</span><span class="s3">,</span>
+                                         <span class="s1">modulename</span><span class="s3">=</span><span class="s1">modname</span><span class="s3">,</span>
+                                         <span class="s1">extra_args</span><span class="s3">=</span><span class="s1">extra_args</span><span class="s3">,</span>
+                                         <span class="s1">source_fn</span><span class="s3">=</span><span class="s1">source_fn</span><span class="s3">)</span>
+
+            <span class="s5"># check for compile success return value</span>
+            <span class="s2">assert </span><span class="s1">ret_val </span><span class="s3">== </span><span class="s6">0</span>
+
+    <span class="s5"># we are not currently able to import the Python-Fortran</span>
+    <span class="s5"># interface module on Windows / Appveyor, even though we do get</span>
+    <span class="s5"># successful compilation on that platform with Python 3.x</span>
+    <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">!= </span><span class="s4">&quot;win32&quot;</span><span class="s3">:</span>
+        <span class="s5"># check for sensible result of Fortran function; that means</span>
+        <span class="s5"># we can import the module name in Python and retrieve the</span>
+        <span class="s5"># result of the sum operation</span>
+        <span class="s1">return_check </span><span class="s3">= </span><span class="s1">import_module</span><span class="s3">(</span><span class="s1">modname</span><span class="s3">)</span>
+        <span class="s1">calc_result </span><span class="s3">= </span><span class="s1">return_check</span><span class="s3">.</span><span class="s1">foo</span><span class="s3">()</span>
+        <span class="s2">assert </span><span class="s1">calc_result </span><span class="s3">== </span><span class="s6">15</span>
+        <span class="s5"># Removal from sys.modules, is not as such necessary. Even with</span>
+        <span class="s5"># removal, the module (dict) stays alive.</span>
+        <span class="s2">del </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">modules</span><span class="s3">[</span><span class="s1">modname</span><span class="s3">]</span>
+
+
+<span class="s2">def </span><span class="s1">test_f2py_init_compile_failure</span><span class="s3">():</span>
+    <span class="s5"># verify an appropriate integer status value returned by</span>
+    <span class="s5"># f2py.compile() when invalid Fortran is provided</span>
+    <span class="s1">ret_val </span><span class="s3">= </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">f2py</span><span class="s3">.</span><span class="s1">compile</span><span class="s3">(</span><span class="s7">b&quot;invalid&quot;</span><span class="s3">)</span>
+    <span class="s2">assert </span><span class="s1">ret_val </span><span class="s3">== </span><span class="s6">1</span>
+
+
+<span class="s2">def </span><span class="s1">test_f2py_init_compile_bad_cmd</span><span class="s3">():</span>
+    <span class="s5"># verify that usage of invalid command in f2py.compile() returns</span>
+    <span class="s5"># status value of 127 for historic consistency with exec_command()</span>
+    <span class="s5"># error handling</span>
+
+    <span class="s5"># patch the sys Python exe path temporarily to induce an OSError</span>
+    <span class="s5"># downstream NOTE: how bad of an idea is this patching?</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">temp </span><span class="s3">= </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span>
+        <span class="s1">sys</span><span class="s3">.</span><span class="s1">executable </span><span class="s3">= </span><span class="s4">&quot;does not exist&quot;</span>
+
+        <span class="s5"># the OSError should take precedence over invalid Fortran</span>
+        <span class="s1">ret_val </span><span class="s3">= </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">f2py</span><span class="s3">.</span><span class="s1">compile</span><span class="s3">(</span><span class="s7">b&quot;invalid&quot;</span><span class="s3">)</span>
+        <span class="s2">assert </span><span class="s1">ret_val </span><span class="s3">== </span><span class="s6">127</span>
+    <span class="s2">finally</span><span class="s3">:</span>
+        <span class="s1">sys</span><span class="s3">.</span><span class="s1">executable </span><span class="s3">= </span><span class="s1">temp</span>
+
+
+<span class="s3">@</span><span class="s1">pytest</span><span class="s3">.</span><span class="s1">mark</span><span class="s3">.</span><span class="s1">parametrize</span><span class="s3">(</span>
+    <span class="s4">&quot;fsource&quot;</span><span class="s3">,</span>
+    <span class="s3">[</span>
+        <span class="s4">&quot;program test_f2py</span><span class="s2">\n</span><span class="s4">end program test_f2py&quot;</span><span class="s3">,</span>
+        <span class="s7">b&quot;program test_f2py</span><span class="s2">\n</span><span class="s7">end program test_f2py&quot;</span><span class="s3">,</span>
+    <span class="s3">],</span>
+<span class="s3">)</span>
+<span class="s2">def </span><span class="s1">test_compile_from_strings</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">, </span><span class="s1">fsource</span><span class="s3">):</span>
+    <span class="s5"># Make sure we can compile str and bytes gh-12796</span>
+    <span class="s2">with </span><span class="s1">util</span><span class="s3">.</span><span class="s1">switchdir</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">):</span>
+        <span class="s1">ret_val </span><span class="s3">= </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">f2py</span><span class="s3">.</span><span class="s1">compile</span><span class="s3">(</span><span class="s1">fsource</span><span class="s3">,</span>
+                                     <span class="s1">modulename</span><span class="s3">=</span><span class="s4">&quot;test_compile_from_strings&quot;</span><span class="s3">,</span>
+                                     <span class="s1">extension</span><span class="s3">=</span><span class="s4">&quot;.f90&quot;</span><span class="s3">)</span>
+        <span class="s2">assert </span><span class="s1">ret_val </span><span class="s3">== </span><span class="s6">0</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>_isocbind.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.s3 { color: #cf8e6d;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_isocbind.py</font>
+</center></td></tr></table>
+<pre><span class="s0">iso_c_binding_map </span><span class="s1">= {</span>
+    <span class="s2">'integer'</span><span class="s1">: {</span>
+        <span class="s2">'c_int'</span><span class="s1">: </span><span class="s2">'int'</span><span class="s1">,</span>
+        <span class="s2">'c_short'</span><span class="s1">: </span><span class="s2">'short int'</span><span class="s1">,</span>
+        <span class="s2">'c_long'</span><span class="s1">: </span><span class="s2">'long int'</span><span class="s1">,</span>
+        <span class="s2">'c_long_long'</span><span class="s1">: </span><span class="s2">'long long int'</span><span class="s1">,</span>
+        <span class="s2">'c_signed_char'</span><span class="s1">: </span><span class="s2">'signed char'</span><span class="s1">,</span>
+        <span class="s2">'c_size_t'</span><span class="s1">: </span><span class="s2">'size_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int8_t'</span><span class="s1">: </span><span class="s2">'int8_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int16_t'</span><span class="s1">: </span><span class="s2">'int16_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int32_t'</span><span class="s1">: </span><span class="s2">'int32_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int64_t'</span><span class="s1">: </span><span class="s2">'int64_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_least8_t'</span><span class="s1">: </span><span class="s2">'int_least8_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_least16_t'</span><span class="s1">: </span><span class="s2">'int_least16_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_least32_t'</span><span class="s1">: </span><span class="s2">'int_least32_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_least64_t'</span><span class="s1">: </span><span class="s2">'int_least64_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_fast8_t'</span><span class="s1">: </span><span class="s2">'int_fast8_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_fast16_t'</span><span class="s1">: </span><span class="s2">'int_fast16_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_fast32_t'</span><span class="s1">: </span><span class="s2">'int_fast32_t'</span><span class="s1">,</span>
+        <span class="s2">'c_int_fast64_t'</span><span class="s1">: </span><span class="s2">'int_fast64_t'</span><span class="s1">,</span>
+        <span class="s2">'c_intmax_t'</span><span class="s1">: </span><span class="s2">'intmax_t'</span><span class="s1">,</span>
+        <span class="s2">'c_intptr_t'</span><span class="s1">: </span><span class="s2">'intptr_t'</span><span class="s1">,</span>
+        <span class="s2">'c_ptrdiff_t'</span><span class="s1">: </span><span class="s2">'intptr_t'</span><span class="s1">,</span>
+    <span class="s1">},</span>
+    <span class="s2">'real'</span><span class="s1">: {</span>
+        <span class="s2">'c_float'</span><span class="s1">: </span><span class="s2">'float'</span><span class="s1">,</span>
+        <span class="s2">'c_double'</span><span class="s1">: </span><span class="s2">'double'</span><span class="s1">,</span>
+        <span class="s2">'c_long_double'</span><span class="s1">: </span><span class="s2">'long double'</span>
+    <span class="s1">},</span>
+    <span class="s2">'complex'</span><span class="s1">: {</span>
+        <span class="s2">'c_float_complex'</span><span class="s1">: </span><span class="s2">'float _Complex'</span><span class="s1">,</span>
+        <span class="s2">'c_double_complex'</span><span class="s1">: </span><span class="s2">'double _Complex'</span><span class="s1">,</span>
+        <span class="s2">'c_long_double_complex'</span><span class="s1">: </span><span class="s2">'long double _Complex'</span>
+    <span class="s1">},</span>
+    <span class="s2">'logical'</span><span class="s1">: {</span>
+        <span class="s2">'c_bool'</span><span class="s1">: </span><span class="s2">'_Bool'</span>
+    <span class="s1">},</span>
+    <span class="s2">'character'</span><span class="s1">: {</span>
+        <span class="s2">'c_char'</span><span class="s1">: </span><span class="s2">'char'</span>
+    <span class="s1">}</span>
+<span class="s1">}</span>
+
+<span class="s0">isoc_kindmap </span><span class="s1">= {}</span>
+<span class="s3">for </span><span class="s0">fortran_type</span><span class="s1">, </span><span class="s0">c_type_dict </span><span class="s3">in </span><span class="s0">iso_c_binding_map</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+    <span class="s3">for </span><span class="s0">c_type </span><span class="s3">in </span><span class="s0">c_type_dict</span><span class="s1">.</span><span class="s0">keys</span><span class="s1">():</span>
+        <span class="s0">isoc_kindmap</span><span class="s1">[</span><span class="s0">c_type</span><span class="s1">] = </span><span class="s0">fortran_type</span>
+</pre>
+</body>
+</html>

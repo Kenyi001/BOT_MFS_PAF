@@ -1,0 +1,144 @@
+<html>
+<head>
+<title>_statistical_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_statistical_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_dtypes </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">_real_floating_dtypes</span><span class="s2">,</span>
+    <span class="s1">_real_numeric_dtypes</span><span class="s2">,</span>
+    <span class="s1">_numeric_dtypes</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_array_object </span><span class="s0">import </span><span class="s1">Array</span>
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_dtypes </span><span class="s0">import </span><span class="s1">float32</span><span class="s2">, </span><span class="s1">float64</span><span class="s2">, </span><span class="s1">complex64</span><span class="s2">, </span><span class="s1">complex128</span>
+
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">TYPE_CHECKING</span><span class="s2">, </span><span class="s1">Optional</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">, </span><span class="s1">Union</span>
+
+<span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+    <span class="s0">from </span><span class="s2">.</span><span class="s1">_typing </span><span class="s0">import </span><span class="s1">Dtype</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+
+<span class="s0">def </span><span class="s1">max</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+    <span class="s2">/,</span>
+    <span class="s2">*,</span>
+    <span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...]]] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;Only real numeric dtypes are allowed in max&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">max</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">mean</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+    <span class="s2">/,</span>
+    <span class="s2">*,</span>
+    <span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...]]] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;Only real floating-point dtypes are allowed in mean&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">mean</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">min</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+    <span class="s2">/,</span>
+    <span class="s2">*,</span>
+    <span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...]]] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;Only real numeric dtypes are allowed in min&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">min</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">prod</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+    <span class="s2">/,</span>
+    <span class="s2">*,</span>
+    <span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...]]] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">dtype</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Dtype</span><span class="s2">] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;Only numeric dtypes are allowed in prod&quot;</span><span class="s2">)</span>
+    <span class="s4"># Note: sum() and prod() always upcast for dtype=None. `np.prod` does that</span>
+    <span class="s4"># for integers, but not for float32 or complex64, so we need to</span>
+    <span class="s4"># special-case it here</span>
+    <span class="s0">if </span><span class="s1">dtype </span><span class="s0">is None</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">float32</span><span class="s2">:</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s1">float64</span>
+        <span class="s0">elif </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">complex64</span><span class="s2">:</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s1">complex128</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">prod</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">std</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+    <span class="s2">/,</span>
+    <span class="s2">*,</span>
+    <span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...]]] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">correction</span><span class="s2">: </span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">float</span><span class="s2">] = </span><span class="s5">0.0</span><span class="s2">,</span>
+    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s4"># Note: the keyword argument correction is different here</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;Only real floating-point dtypes are allowed in std&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">std</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">ddof</span><span class="s2">=</span><span class="s1">correction</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">sum</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+    <span class="s2">/,</span>
+    <span class="s2">*,</span>
+    <span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...]]] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">dtype</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Dtype</span><span class="s2">] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;Only numeric dtypes are allowed in sum&quot;</span><span class="s2">)</span>
+    <span class="s4"># Note: sum() and prod() always upcast for dtype=None. `np.sum` does that</span>
+    <span class="s4"># for integers, but not for float32 or complex64, so we need to</span>
+    <span class="s4"># special-case it here</span>
+    <span class="s0">if </span><span class="s1">dtype </span><span class="s0">is None</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">float32</span><span class="s2">:</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s1">float64</span>
+        <span class="s0">elif </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">complex64</span><span class="s2">:</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s1">complex128</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sum</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">var</span><span class="s2">(</span>
+    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+    <span class="s2">/,</span>
+    <span class="s2">*,</span>
+    <span class="s1">axis</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...]]] = </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">correction</span><span class="s2">: </span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">float</span><span class="s2">] = </span><span class="s5">0.0</span><span class="s2">,</span>
+    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s4"># Note: the keyword argument correction is different here</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;Only real floating-point dtypes are allowed in var&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">var</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">ddof</span><span class="s2">=</span><span class="s1">correction</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">))</span>
+</pre>
+</body>
+</html>

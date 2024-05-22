@@ -1,0 +1,126 @@
+<html>
+<head>
+<title>action_builder.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.s6 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+action_builder.py</font>
+</center></td></tr></table>
+<pre><span class="s0"># Licensed to the Software Freedom Conservancy (SFC) under one</span>
+<span class="s0"># or more contributor license agreements.  See the NOTICE file</span>
+<span class="s0"># distributed with this work for additional information</span>
+<span class="s0"># regarding copyright ownership.  The SFC licenses this file</span>
+<span class="s0"># to you under the Apache License, Version 2.0 (the</span>
+<span class="s0"># &quot;License&quot;); you may not use this file except in compliance</span>
+<span class="s0"># with the License.  You may obtain a copy of the License at</span>
+<span class="s0">#</span>
+<span class="s0">#   http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="s0">#</span>
+<span class="s0"># Unless required by applicable law or agreed to in writing,</span>
+<span class="s0"># software distributed under the License is distributed on an</span>
+<span class="s0"># &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</span>
+<span class="s0"># KIND, either express or implied.  See the License for the</span>
+<span class="s0"># specific language governing permissions and limitations</span>
+<span class="s0"># under the License.</span>
+
+<span class="s2">from </span><span class="s1">typing </span><span class="s2">import </span><span class="s1">List</span>
+<span class="s2">from </span><span class="s1">typing </span><span class="s2">import </span><span class="s1">Optional</span>
+<span class="s2">from </span><span class="s1">typing </span><span class="s2">import </span><span class="s1">Union</span>
+
+<span class="s2">from </span><span class="s1">selenium</span><span class="s3">.</span><span class="s1">webdriver</span><span class="s3">.</span><span class="s1">remote</span><span class="s3">.</span><span class="s1">command </span><span class="s2">import </span><span class="s1">Command</span>
+
+<span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">interaction</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">key_actions </span><span class="s2">import </span><span class="s1">KeyActions</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">key_input </span><span class="s2">import </span><span class="s1">KeyInput</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">pointer_actions </span><span class="s2">import </span><span class="s1">PointerActions</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">pointer_input </span><span class="s2">import </span><span class="s1">PointerInput</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">wheel_actions </span><span class="s2">import </span><span class="s1">WheelActions</span>
+<span class="s2">from </span><span class="s3">.</span><span class="s1">wheel_input </span><span class="s2">import </span><span class="s1">WheelInput</span>
+
+
+<span class="s2">class </span><span class="s1">ActionBuilder</span><span class="s3">:</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span>
+        <span class="s1">self</span><span class="s3">,</span>
+        <span class="s1">driver</span><span class="s3">,</span>
+        <span class="s1">mouse</span><span class="s3">: </span><span class="s1">Optional</span><span class="s3">[</span><span class="s1">PointerInput</span><span class="s3">] = </span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s1">wheel</span><span class="s3">: </span><span class="s1">Optional</span><span class="s3">[</span><span class="s1">WheelInput</span><span class="s3">] = </span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s1">keyboard</span><span class="s3">: </span><span class="s1">Optional</span><span class="s3">[</span><span class="s1">KeyInput</span><span class="s3">] = </span><span class="s2">None</span><span class="s3">,</span>
+        <span class="s1">duration</span><span class="s3">: </span><span class="s1">int </span><span class="s3">= </span><span class="s4">250</span><span class="s3">,</span>
+    <span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s1">mouse </span><span class="s3">= </span><span class="s1">mouse </span><span class="s2">or </span><span class="s1">PointerInput</span><span class="s3">(</span><span class="s1">interaction</span><span class="s3">.</span><span class="s1">POINTER_MOUSE</span><span class="s3">, </span><span class="s5">&quot;mouse&quot;</span><span class="s3">)</span>
+        <span class="s1">keyboard </span><span class="s3">= </span><span class="s1">keyboard </span><span class="s2">or </span><span class="s1">KeyInput</span><span class="s3">(</span><span class="s1">interaction</span><span class="s3">.</span><span class="s1">KEY</span><span class="s3">)</span>
+        <span class="s1">wheel </span><span class="s3">= </span><span class="s1">wheel </span><span class="s2">or </span><span class="s1">WheelInput</span><span class="s3">(</span><span class="s1">interaction</span><span class="s3">.</span><span class="s1">WHEEL</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">devices </span><span class="s3">= [</span><span class="s1">mouse</span><span class="s3">, </span><span class="s1">keyboard</span><span class="s3">, </span><span class="s1">wheel</span><span class="s3">]</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_key_action </span><span class="s3">= </span><span class="s1">KeyActions</span><span class="s3">(</span><span class="s1">keyboard</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_pointer_action </span><span class="s3">= </span><span class="s1">PointerActions</span><span class="s3">(</span><span class="s1">mouse</span><span class="s3">, </span><span class="s1">duration</span><span class="s3">=</span><span class="s1">duration</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_wheel_action </span><span class="s3">= </span><span class="s1">WheelActions</span><span class="s3">(</span><span class="s1">wheel</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">driver </span><span class="s3">= </span><span class="s1">driver</span>
+
+    <span class="s2">def </span><span class="s1">get_device_with</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">name</span><span class="s3">: </span><span class="s1">str</span><span class="s3">) </span><span class="s1">-&gt; Optional</span><span class="s3">[</span><span class="s1">Union</span><span class="s3">[</span><span class="s5">&quot;WheelInput&quot;</span><span class="s3">, </span><span class="s5">&quot;PointerInput&quot;</span><span class="s3">, </span><span class="s5">&quot;KeyInput&quot;</span><span class="s3">]]:</span>
+        <span class="s2">return </span><span class="s1">next</span><span class="s3">(</span><span class="s1">filter</span><span class="s3">(</span><span class="s2">lambda </span><span class="s1">x</span><span class="s3">: </span><span class="s1">x </span><span class="s3">== </span><span class="s1">name</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">devices</span><span class="s3">), </span><span class="s2">None</span><span class="s3">)</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">pointer_inputs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; List</span><span class="s3">[</span><span class="s1">PointerInput</span><span class="s3">]:</span>
+        <span class="s2">return </span><span class="s3">[</span><span class="s1">device </span><span class="s2">for </span><span class="s1">device </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">devices </span><span class="s2">if </span><span class="s1">device</span><span class="s3">.</span><span class="s1">type </span><span class="s3">== </span><span class="s1">interaction</span><span class="s3">.</span><span class="s1">POINTER</span><span class="s3">]</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">key_inputs</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; List</span><span class="s3">[</span><span class="s1">KeyInput</span><span class="s3">]:</span>
+        <span class="s2">return </span><span class="s3">[</span><span class="s1">device </span><span class="s2">for </span><span class="s1">device </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">devices </span><span class="s2">if </span><span class="s1">device</span><span class="s3">.</span><span class="s1">type </span><span class="s3">== </span><span class="s1">interaction</span><span class="s3">.</span><span class="s1">KEY</span><span class="s3">]</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">key_action</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; KeyActions</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_key_action</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">pointer_action</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; PointerActions</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_pointer_action</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">wheel_action</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; WheelActions</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_wheel_action</span>
+
+    <span class="s2">def </span><span class="s1">add_key_input</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">name</span><span class="s3">: </span><span class="s1">str</span><span class="s3">) </span><span class="s1">-&gt; KeyInput</span><span class="s3">:</span>
+        <span class="s1">new_input </span><span class="s3">= </span><span class="s1">KeyInput</span><span class="s3">(</span><span class="s1">name</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_add_input</span><span class="s3">(</span><span class="s1">new_input</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">new_input</span>
+
+    <span class="s2">def </span><span class="s1">add_pointer_input</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">kind</span><span class="s3">: </span><span class="s1">str</span><span class="s3">, </span><span class="s1">name</span><span class="s3">: </span><span class="s1">str</span><span class="s3">) </span><span class="s1">-&gt; PointerInput</span><span class="s3">:</span>
+        <span class="s1">new_input </span><span class="s3">= </span><span class="s1">PointerInput</span><span class="s3">(</span><span class="s1">kind</span><span class="s3">, </span><span class="s1">name</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_add_input</span><span class="s3">(</span><span class="s1">new_input</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">new_input</span>
+
+    <span class="s2">def </span><span class="s1">add_wheel_input</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">name</span><span class="s3">: </span><span class="s1">str</span><span class="s3">) </span><span class="s1">-&gt; WheelInput</span><span class="s3">:</span>
+        <span class="s1">new_input </span><span class="s3">= </span><span class="s1">WheelInput</span><span class="s3">(</span><span class="s1">name</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_add_input</span><span class="s3">(</span><span class="s1">new_input</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">new_input</span>
+
+    <span class="s2">def </span><span class="s1">perform</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s1">enc </span><span class="s3">= {</span><span class="s5">&quot;actions&quot;</span><span class="s3">: []}</span>
+        <span class="s2">for </span><span class="s1">device </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">devices</span><span class="s3">:</span>
+            <span class="s1">encoded </span><span class="s3">= </span><span class="s1">device</span><span class="s3">.</span><span class="s1">encode</span><span class="s3">()</span>
+            <span class="s2">if </span><span class="s1">encoded</span><span class="s3">[</span><span class="s5">&quot;actions&quot;</span><span class="s3">]:</span>
+                <span class="s1">enc</span><span class="s3">[</span><span class="s5">&quot;actions&quot;</span><span class="s3">].</span><span class="s1">append</span><span class="s3">(</span><span class="s1">encoded</span><span class="s3">)</span>
+                <span class="s1">device</span><span class="s3">.</span><span class="s1">actions </span><span class="s3">= []</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">driver</span><span class="s3">.</span><span class="s1">execute</span><span class="s3">(</span><span class="s1">Command</span><span class="s3">.</span><span class="s1">W3C_ACTIONS</span><span class="s3">, </span><span class="s1">enc</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">clear_actions</span><span class="s3">(</span><span class="s1">self</span><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s6">&quot;&quot;&quot;Clears actions that are already stored on the remote end.&quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">driver</span><span class="s3">.</span><span class="s1">execute</span><span class="s3">(</span><span class="s1">Command</span><span class="s3">.</span><span class="s1">W3C_CLEAR_ACTIONS</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">_add_input</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">new_input</span><span class="s3">: </span><span class="s1">Union</span><span class="s3">[</span><span class="s1">KeyInput</span><span class="s3">, </span><span class="s1">PointerInput</span><span class="s3">, </span><span class="s1">WheelInput</span><span class="s3">]) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">devices</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">new_input</span><span class="s3">)</span>
+</pre>
+</body>
+</html>

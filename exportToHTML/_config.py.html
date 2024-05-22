@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>_config.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #cf8e6d;}
+.s5 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_config.py</font>
+</center></td></tr></table>
+<pre><span class="s0"># SPDX-License-Identifier: MIT</span>
+
+
+<span class="s1">__all__ </span><span class="s2">= [</span><span class="s3">&quot;set_run_validators&quot;</span><span class="s2">, </span><span class="s3">&quot;get_run_validators&quot;</span><span class="s2">]</span>
+
+<span class="s1">_run_validators </span><span class="s2">= </span><span class="s4">True</span>
+
+
+<span class="s4">def </span><span class="s1">set_run_validators</span><span class="s2">(</span><span class="s1">run</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Set whether or not validators are run.  By default, they are run. 
+ 
+    .. deprecated:: 21.3.0 It will not be removed, but it also will not be 
+        moved to new ``attrs`` namespace. Use `attrs.validators.set_disabled()` 
+        instead. 
+    &quot;&quot;&quot;</span>
+    <span class="s4">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">run</span><span class="s2">, </span><span class="s1">bool</span><span class="s2">):</span>
+        <span class="s4">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s3">&quot;'run' must be bool.&quot;</span><span class="s2">)</span>
+    <span class="s4">global </span><span class="s1">_run_validators</span>
+    <span class="s1">_run_validators </span><span class="s2">= </span><span class="s1">run</span>
+
+
+<span class="s4">def </span><span class="s1">get_run_validators</span><span class="s2">():</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Return whether or not validators are run. 
+ 
+    .. deprecated:: 21.3.0 It will not be removed, but it also will not be 
+        moved to new ``attrs`` namespace. Use `attrs.validators.get_disabled()` 
+        instead. 
+    &quot;&quot;&quot;</span>
+    <span class="s4">return </span><span class="s1">_run_validators</span>
+</pre>
+</body>
+</html>

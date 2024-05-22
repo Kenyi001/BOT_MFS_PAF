@@ -1,0 +1,352 @@
+<html>
+<head>
+<title>TabView.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #7a7e85;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+TabView.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2016 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Controls module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.2</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls </span><span class="s3">1.2</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Private </span><span class="s3">1.0</span>
+
+<span class="s5">/*! 
+    \qmltype TabView 
+    \inqmlmodule QtQuick.Controls 
+    \since 5.1 
+    \ingroup views 
+    \ingroup controls 
+    \brief A control that allows the user to select one of multiple stacked items. 
+ 
+    \image tabview.png 
+ 
+    TabView provides tab-based navigation model for your application. 
+    For example, the following snippet uses tabs to present rectangles of 
+    different color on each tab page: 
+ 
+    \qml 
+    TabView { 
+        Tab { 
+            title: &quot;Red&quot; 
+            Rectangle { color: &quot;red&quot; } 
+        } 
+        Tab { 
+            title: &quot;Blue&quot; 
+            Rectangle { color: &quot;blue&quot; } 
+        } 
+        Tab { 
+            title: &quot;Green&quot; 
+            Rectangle { color: &quot;green&quot; } 
+        } 
+    } 
+    \endqml 
+ 
+    \note You can create a custom appearance for a TabView by 
+    assigning a \l {TabViewStyle}. 
+ 
+    \l Tab represents the content of a tab in a TabView. 
+*/</span>
+
+<span class="s1">FocusScope </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">root</span>
+
+    <span class="s1">implicitWidth</span><span class="s4">: </span><span class="s3">240</span>
+    <span class="s1">implicitHeight</span><span class="s4">: </span><span class="s3">150</span>
+
+    <span class="s5">/*! The current tab index */</span>
+    <span class="s1">property int currentIndex</span><span class="s4">: </span><span class="s3">0</span>
+
+    <span class="s5">/*! The current tab count */</span>
+    <span class="s1">readonly property int count</span><span class="s4">: </span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">count</span>
+
+    <span class="s5">/*! The visibility of the tab frame around contents */</span>
+    <span class="s1">property bool frameVisible</span><span class="s4">: </span><span class="s2">true</span>
+
+    <span class="s5">/*! The visibility of the tab bar */</span>
+    <span class="s1">property bool tabsVisible</span><span class="s4">: </span><span class="s2">true</span>
+
+    <span class="s5">/*! 
+        \qmlproperty enumeration TabView::tabPosition 
+ 
+        \list 
+        \li Qt.TopEdge (default) 
+        \li Qt.BottomEdge 
+        \endlist 
+    */</span>
+    <span class="s1">property int tabPosition</span><span class="s4">: </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">TopEdge</span>
+
+    <span class="s5">/*! 
+        \qmlproperty Item TabView::contentItem 
+        \since QtQuick.Controls 1.3 
+ 
+        This property holds the content item of the tab view. 
+ 
+        Tabs declared as children of a TabView are automatically parented to the TabView's contentItem. 
+     */</span>
+    <span class="s1">readonly property alias contentItem</span><span class="s4">: </span><span class="s1">stack</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s2">default </span><span class="s1">property alias data</span><span class="s4">: </span><span class="s1">stack</span><span class="s4">.</span><span class="s1">data</span>
+
+    <span class="s5">/*! 
+        \qmlmethod Tab TabView::addTab(string title, Component component) 
+ 
+        Adds a new tab with the given \a title and an optional \a component. 
+ 
+        Returns the newly added tab. 
+    */</span>
+    <span class="s2">function </span><span class="s1">addTab</span><span class="s4">(</span><span class="s1">title</span><span class="s4">, </span><span class="s1">component</span><span class="s4">) {</span>
+        <span class="s2">return </span><span class="s1">insertTab</span><span class="s4">(</span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">count</span><span class="s4">, </span><span class="s1">title</span><span class="s4">, </span><span class="s1">component</span><span class="s4">)</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! 
+        \qmlmethod Tab TabView::insertTab(int index, string title, Component component) 
+ 
+        Inserts a new tab at \a index, with the given \a title and 
+        an optional \a component. 
+ 
+        Returns the newly added tab. 
+    */</span>
+    <span class="s2">function </span><span class="s1">insertTab</span><span class="s4">(</span><span class="s1">index</span><span class="s4">, </span><span class="s1">title</span><span class="s4">, </span><span class="s1">component</span><span class="s4">) {</span>
+        <span class="s2">var </span><span class="s1">tab </span><span class="s4">= </span><span class="s1">tabcomp</span><span class="s4">.</span><span class="s1">createObject</span><span class="s4">()</span>
+        <span class="s1">tab</span><span class="s4">.</span><span class="s1">sourceComponent </span><span class="s4">= </span><span class="s1">component</span>
+        <span class="s1">tab</span><span class="s4">.</span><span class="s1">title </span><span class="s4">= </span><span class="s1">title</span>
+        <span class="s5">// insert at appropriate index first, then set the parent to</span>
+        <span class="s5">// avoid onChildrenChanged appending it to the end of the list</span>
+        <span class="s1">__tabs</span><span class="s4">.</span><span class="s1">insert</span><span class="s4">(</span><span class="s1">index</span><span class="s4">, {</span><span class="s1">tab</span><span class="s4">: </span><span class="s1">tab</span><span class="s4">})</span>
+        <span class="s1">tab</span><span class="s4">.</span><span class="s1">__inserted </span><span class="s4">= </span><span class="s2">true</span>
+        <span class="s1">tab</span><span class="s4">.</span><span class="s1">parent </span><span class="s4">= </span><span class="s1">stack</span>
+        <span class="s1">__didInsertIndex</span><span class="s4">(</span><span class="s1">index</span><span class="s4">)</span>
+        <span class="s1">__setOpacities</span><span class="s4">()</span>
+        <span class="s2">return </span><span class="s1">tab</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! \qmlmethod void TabView::removeTab(int index) 
+        Removes and destroys a tab at the given \a index. */</span>
+    <span class="s2">function </span><span class="s1">removeTab</span><span class="s4">(</span><span class="s1">index</span><span class="s4">) {</span>
+        <span class="s2">var </span><span class="s1">tab </span><span class="s4">= </span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s1">index</span><span class="s4">).</span><span class="s1">tab</span>
+        <span class="s1">__willRemoveIndex</span><span class="s4">(</span><span class="s1">index</span><span class="s4">)</span>
+        <span class="s1">__tabs</span><span class="s4">.</span><span class="s1">remove</span><span class="s4">(</span><span class="s1">index</span><span class="s4">, </span><span class="s3">1</span><span class="s4">)</span>
+        <span class="s1">tab</span><span class="s4">.</span><span class="s1">destroy</span><span class="s4">()</span>
+        <span class="s1">__setOpacities</span><span class="s4">()</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! \qmlmethod void TabView::moveTab(int from, int to) 
+        Moves a tab \a from index \a to another. */</span>
+    <span class="s2">function </span><span class="s1">moveTab</span><span class="s4">(</span><span class="s1">from</span><span class="s4">, </span><span class="s1">to</span><span class="s4">) {</span>
+        <span class="s1">__tabs</span><span class="s4">.</span><span class="s1">move</span><span class="s4">(</span><span class="s1">from</span><span class="s4">, </span><span class="s1">to</span><span class="s4">, </span><span class="s3">1</span><span class="s4">)</span>
+
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">currentIndex </span><span class="s4">== </span><span class="s1">from</span><span class="s4">) {</span>
+            <span class="s1">currentIndex </span><span class="s4">= </span><span class="s1">to</span>
+        <span class="s4">} </span><span class="s2">else </span><span class="s4">{</span>
+            <span class="s2">var </span><span class="s1">start </span><span class="s4">= </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">min</span><span class="s4">(</span><span class="s1">from</span><span class="s4">, </span><span class="s1">to</span><span class="s4">)</span>
+            <span class="s2">var </span><span class="s1">end </span><span class="s4">= </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">max</span><span class="s4">(</span><span class="s1">from</span><span class="s4">, </span><span class="s1">to</span><span class="s4">)</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">currentIndex </span><span class="s4">&gt;= </span><span class="s1">start </span><span class="s4">&amp;&amp; </span><span class="s1">currentIndex </span><span class="s4">&lt;= </span><span class="s1">end</span><span class="s4">) {</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">from </span><span class="s4">&lt; </span><span class="s1">to</span><span class="s4">)</span>
+                    <span class="s4">--</span><span class="s1">currentIndex</span>
+                <span class="s2">else</span>
+                    <span class="s4">++</span><span class="s1">currentIndex</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! \qmlmethod Tab TabView::getTab(int index) 
+        Returns the \l Tab item at \a index. */</span>
+    <span class="s2">function </span><span class="s1">getTab</span><span class="s4">(</span><span class="s1">index</span><span class="s4">) {</span>
+        <span class="s2">var </span><span class="s1">data </span><span class="s4">= </span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s1">index</span><span class="s4">)</span>
+        <span class="s2">return </span><span class="s1">data </span><span class="s4">&amp;&amp; </span><span class="s1">data</span><span class="s4">.</span><span class="s1">tab</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">property ListModel __tabs</span><span class="s4">: </span><span class="s1">ListModel </span><span class="s4">{ }</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">property Component style</span><span class="s4">: </span><span class="s1">Settings</span><span class="s4">.</span><span class="s1">styleComponent</span><span class="s4">(</span><span class="s1">Settings</span><span class="s4">.</span><span class="s1">style</span><span class="s4">, </span><span class="s6">&quot;TabViewStyle.qml&quot;</span><span class="s4">, </span><span class="s1">root</span><span class="s4">)</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">property </span><span class="s2">var </span><span class="s1">__styleItem</span><span class="s4">: </span><span class="s1">loader</span><span class="s4">.</span><span class="s1">item</span>
+
+    <span class="s1">onCurrentIndexChanged</span><span class="s4">: </span><span class="s1">__setOpacities</span><span class="s4">()</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s2">function </span><span class="s1">__willRemoveIndex</span><span class="s4">(</span><span class="s1">index</span><span class="s4">) {</span>
+        <span class="s5">// Make sure currentIndex will points to the same tab after the removal.</span>
+        <span class="s5">// Also activate the next index if the current index is being removed,</span>
+        <span class="s5">// except when it's both the current and last index.</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">count </span><span class="s4">&gt; </span><span class="s3">1 </span><span class="s4">&amp;&amp; (</span><span class="s1">currentIndex </span><span class="s4">&gt; </span><span class="s1">index </span><span class="s4">|| </span><span class="s1">currentIndex </span><span class="s4">== </span><span class="s1">count </span><span class="s4">-</span><span class="s3">1</span><span class="s4">))</span>
+            <span class="s4">--</span><span class="s1">currentIndex</span>
+    <span class="s4">}</span>
+    <span class="s2">function </span><span class="s1">__didInsertIndex</span><span class="s4">(</span><span class="s1">index</span><span class="s4">) {</span>
+        <span class="s5">// Make sure currentIndex points to the same tab as before the insertion.</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">count </span><span class="s4">&gt; </span><span class="s3">1 </span><span class="s4">&amp;&amp; </span><span class="s1">currentIndex </span><span class="s4">&gt;= </span><span class="s1">index</span><span class="s4">)</span>
+            <span class="s1">currentIndex</span><span class="s4">++</span>
+    <span class="s4">}</span>
+
+    <span class="s2">function </span><span class="s1">__setOpacities</span><span class="s4">() {</span>
+        <span class="s2">for </span><span class="s4">(</span><span class="s2">var </span><span class="s1">i </span><span class="s4">= </span><span class="s3">0</span><span class="s4">; </span><span class="s1">i </span><span class="s4">&lt; </span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">count</span><span class="s4">; ++</span><span class="s1">i</span><span class="s4">) {</span>
+            <span class="s2">var </span><span class="s1">child </span><span class="s4">= </span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s1">i</span><span class="s4">).</span><span class="s1">tab</span>
+            <span class="s1">child</span><span class="s4">.</span><span class="s1">visible </span><span class="s4">= (</span><span class="s1">i </span><span class="s4">== </span><span class="s1">currentIndex </span><span class="s4">? </span><span class="s2">true </span><span class="s4">: </span><span class="s2">false</span><span class="s4">)</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">activeFocusOnTab</span><span class="s4">: </span><span class="s2">false</span>
+
+    <span class="s1">Component </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">tabcomp</span>
+        <span class="s1">Tab </span><span class="s4">{}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">TabBar </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">tabbarItem</span>
+        <span class="s1">objectName</span><span class="s4">: </span><span class="s6">&quot;tabbar&quot;</span>
+        <span class="s1">tabView</span><span class="s4">: </span><span class="s1">root</span>
+        <span class="s1">style</span><span class="s4">: </span><span class="s1">loader</span><span class="s4">.</span><span class="s1">item</span>
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">top</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">top</span>
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">left</span><span class="s4">: </span><span class="s1">root</span><span class="s4">.</span><span class="s1">left</span>
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">right</span><span class="s4">: </span><span class="s1">root</span><span class="s4">.</span><span class="s1">right</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Loader </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">loader</span>
+        <span class="s1">z</span><span class="s4">: </span><span class="s1">tabbarItem</span><span class="s4">.</span><span class="s1">z </span><span class="s4">- </span><span class="s3">1</span>
+        <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">style</span>
+        <span class="s1">property </span><span class="s2">var </span><span class="s1">__control</span><span class="s4">: </span><span class="s1">root</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Loader </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">frameLoader</span>
+        <span class="s1">z</span><span class="s4">: </span><span class="s1">tabbarItem</span><span class="s4">.</span><span class="s1">z </span><span class="s4">- </span><span class="s3">1</span>
+
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">topMargin</span><span class="s4">: </span><span class="s1">tabPosition </span><span class="s4">=== </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">TopEdge </span><span class="s4">&amp;&amp; </span><span class="s1">tabbarItem </span><span class="s4">&amp;&amp; </span><span class="s1">tabsVisible  </span><span class="s4">? </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">max</span><span class="s4">(</span><span class="s3">0</span><span class="s4">, </span><span class="s1">tabbarItem</span><span class="s4">.</span><span class="s1">height </span><span class="s4">- </span><span class="s1">baseOverlap</span><span class="s4">) : </span><span class="s3">0</span>
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">bottomMargin</span><span class="s4">: </span><span class="s1">tabPosition </span><span class="s4">=== </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">BottomEdge </span><span class="s4">&amp;&amp; </span><span class="s1">tabbarItem </span><span class="s4">&amp;&amp; </span><span class="s1">tabsVisible </span><span class="s4">? </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">max</span><span class="s4">(</span><span class="s3">0</span><span class="s4">, </span><span class="s1">tabbarItem</span><span class="s4">.</span><span class="s1">height </span><span class="s4">-</span><span class="s1">baseOverlap</span><span class="s4">) : </span><span class="s3">0</span>
+        <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">frameVisible </span><span class="s4">&amp;&amp; </span><span class="s1">loader</span><span class="s4">.</span><span class="s1">item </span><span class="s4">? </span><span class="s1">loader</span><span class="s4">.</span><span class="s1">item</span><span class="s4">.</span><span class="s1">frame </span><span class="s4">: </span><span class="s2">null</span>
+
+        <span class="s1">property int baseOverlap</span><span class="s4">: </span><span class="s1">__styleItem </span><span class="s4">? </span><span class="s1">__styleItem</span><span class="s4">.</span><span class="s1">frameOverlap </span><span class="s4">: </span><span class="s3">0</span>
+
+        <span class="s1">Item </span><span class="s4">{</span>
+            <span class="s1">id</span><span class="s4">: </span><span class="s1">stack</span>
+
+            <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+            <span class="s1">anchors</span><span class="s4">.</span><span class="s1">margins</span><span class="s4">: (</span><span class="s1">frameVisible </span><span class="s4">? </span><span class="s1">frameWidth </span><span class="s4">: </span><span class="s3">0</span><span class="s4">)</span>
+            <span class="s1">anchors</span><span class="s4">.</span><span class="s1">topMargin</span><span class="s4">: </span><span class="s1">anchors</span><span class="s4">.</span><span class="s1">margins </span><span class="s4">+ (</span><span class="s1">style </span><span class="s4">==</span><span class="s6">&quot;mac&quot; </span><span class="s4">? </span><span class="s3">6 </span><span class="s4">: </span><span class="s3">0</span><span class="s4">)</span>
+            <span class="s1">anchors</span><span class="s4">.</span><span class="s1">bottomMargin</span><span class="s4">: </span><span class="s1">anchors</span><span class="s4">.</span><span class="s1">margins</span>
+
+            <span class="s1">property int frameWidth</span>
+            <span class="s1">property string style</span>
+            <span class="s1">property bool completed</span><span class="s4">: </span><span class="s2">false</span>
+
+            <span class="s1">Component</span><span class="s4">.</span><span class="s1">onCompleted</span><span class="s4">: {</span>
+                <span class="s1">addTabs</span><span class="s4">(</span><span class="s1">stack</span><span class="s4">.</span><span class="s1">children</span><span class="s4">)</span>
+                <span class="s1">completed </span><span class="s4">= </span><span class="s2">true</span>
+            <span class="s4">}</span>
+
+            <span class="s1">onChildrenChanged</span><span class="s4">: {</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">completed</span><span class="s4">)</span>
+                    <span class="s1">stack</span><span class="s4">.</span><span class="s1">addTabs</span><span class="s4">(</span><span class="s1">stack</span><span class="s4">.</span><span class="s1">children</span><span class="s4">)</span>
+            <span class="s4">}</span>
+
+            <span class="s2">function </span><span class="s1">addTabs</span><span class="s4">(</span><span class="s1">tabs</span><span class="s4">) {</span>
+                <span class="s2">var </span><span class="s1">tabAdded </span><span class="s4">= </span><span class="s2">false</span>
+                <span class="s2">for </span><span class="s4">(</span><span class="s2">var </span><span class="s1">i </span><span class="s4">= </span><span class="s3">0 </span><span class="s4">; </span><span class="s1">i </span><span class="s4">&lt; </span><span class="s1">tabs</span><span class="s4">.</span><span class="s1">length </span><span class="s4">; ++</span><span class="s1">i</span><span class="s4">) {</span>
+                    <span class="s2">var </span><span class="s1">tab </span><span class="s4">= </span><span class="s1">tabs</span><span class="s4">[</span><span class="s1">i</span><span class="s4">]</span>
+                    <span class="s2">if </span><span class="s4">(!</span><span class="s1">tab</span><span class="s4">.</span><span class="s1">__inserted </span><span class="s4">&amp;&amp; </span><span class="s1">tab</span><span class="s4">.</span><span class="s1">Accessible</span><span class="s4">.</span><span class="s1">role </span><span class="s4">=== </span><span class="s1">Accessible</span><span class="s4">.</span><span class="s1">LayeredPane</span><span class="s4">) {</span>
+                        <span class="s1">tab</span><span class="s4">.</span><span class="s1">__inserted </span><span class="s4">= </span><span class="s2">true</span>
+                        <span class="s5">// reparent tabs created dynamically by createObject(tabView)</span>
+                        <span class="s1">tab</span><span class="s4">.</span><span class="s1">parent </span><span class="s4">= </span><span class="s1">stack</span>
+                        <span class="s5">// a dynamically added tab should also get automatically removed when destructed</span>
+                        <span class="s2">if </span><span class="s4">(</span><span class="s1">completed</span><span class="s4">)</span>
+                            <span class="s1">tab</span><span class="s4">.</span><span class="s1">Component</span><span class="s4">.</span><span class="s1">onDestruction</span><span class="s4">.</span><span class="s1">connect</span><span class="s4">(</span><span class="s1">stack</span><span class="s4">.</span><span class="s1">onDynamicTabDestroyed</span><span class="s4">.</span><span class="s1">bind</span><span class="s4">(</span><span class="s1">tab</span><span class="s4">))</span>
+                        <span class="s1">__tabs</span><span class="s4">.</span><span class="s1">append</span><span class="s4">({</span><span class="s1">tab</span><span class="s4">: </span><span class="s1">tab</span><span class="s4">})</span>
+                        <span class="s1">tabAdded </span><span class="s4">= </span><span class="s2">true</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">tabAdded</span><span class="s4">)</span>
+                    <span class="s1">__setOpacities</span><span class="s4">()</span>
+            <span class="s4">}</span>
+
+            <span class="s2">function </span><span class="s1">onDynamicTabDestroyed</span><span class="s4">() {</span>
+                <span class="s2">for </span><span class="s4">(</span><span class="s2">var </span><span class="s1">i </span><span class="s4">= </span><span class="s3">0</span><span class="s4">; </span><span class="s1">i </span><span class="s4">&lt; </span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">count</span><span class="s4">; ++</span><span class="s1">i</span><span class="s4">) {</span>
+                    <span class="s2">if </span><span class="s4">(</span><span class="s1">__tabs</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s1">i</span><span class="s4">).</span><span class="s1">tab </span><span class="s4">=== </span><span class="s2">this</span><span class="s4">) {</span>
+                        <span class="s1">__willRemoveIndex</span><span class="s4">(</span><span class="s1">i</span><span class="s4">)</span>
+                        <span class="s1">__tabs</span><span class="s4">.</span><span class="s1">remove</span><span class="s4">(</span><span class="s1">i</span><span class="s4">, </span><span class="s3">1</span><span class="s4">)</span>
+                        <span class="s1">__setOpacities</span><span class="s4">()</span>
+                        <span class="s2">break</span>
+                    <span class="s4">}</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+        <span class="s1">onLoaded</span><span class="s4">: { </span><span class="s1">item</span><span class="s4">.</span><span class="s1">z </span><span class="s4">= -</span><span class="s3">1 </span><span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">onChildrenChanged</span><span class="s4">: </span><span class="s1">stack</span><span class="s4">.</span><span class="s1">addTabs</span><span class="s4">(</span><span class="s1">root</span><span class="s4">.</span><span class="s1">children</span><span class="s4">)</span>
+
+    <span class="s1">states</span><span class="s4">: [</span>
+        <span class="s1">State </span><span class="s4">{</span>
+            <span class="s1">name</span><span class="s4">: </span><span class="s6">&quot;Bottom&quot;</span>
+            <span class="s1">when</span><span class="s4">: </span><span class="s1">tabPosition </span><span class="s4">=== </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">BottomEdge </span><span class="s4">&amp;&amp; </span><span class="s1">tabbarItem </span><span class="s4">!= </span><span class="s1">undefined</span>
+            <span class="s1">PropertyChanges </span><span class="s4">{</span>
+                <span class="s1">target</span><span class="s4">: </span><span class="s1">tabbarItem</span>
+                <span class="s1">anchors</span><span class="s4">.</span><span class="s1">topMargin</span><span class="s4">: -</span><span class="s1">frameLoader</span><span class="s4">.</span><span class="s1">baseOverlap</span>
+            <span class="s4">}</span>
+            <span class="s1">AnchorChanges </span><span class="s4">{</span>
+                <span class="s1">target</span><span class="s4">: </span><span class="s1">tabbarItem</span>
+                <span class="s1">anchors</span><span class="s4">.</span><span class="s1">top</span><span class="s4">: </span><span class="s1">frameLoader</span><span class="s4">.</span><span class="s1">bottom</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">]</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

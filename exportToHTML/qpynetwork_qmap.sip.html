@@ -1,0 +1,231 @@
+<html>
+<head>
+<title>qpynetwork_qmap.sip</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qpynetwork_qmap.sip</font>
+</center></td></tr></table>
+<pre><span class="s0">// This is the SIP interface definition for the QMap and QMultiMap based mapped</span>
+<span class="s0">// types specific to the QtNetwork module.</span>
+<span class="s0">//</span>
+<span class="s0">// Copyright (c) 2023 Riverbank Computing Limited &lt;info@riverbankcomputing.com&gt;</span>
+<span class="s0">// </span>
+<span class="s0">// This file is part of PyQt5.</span>
+<span class="s0">// </span>
+<span class="s0">// This file may be used under the terms of the GNU General Public License</span>
+<span class="s0">// version 3.0 as published by the Free Software Foundation and appearing in</span>
+<span class="s0">// the file LICENSE included in the packaging of this file.  Please review the</span>
+<span class="s0">// following information to ensure the GNU General Public License version 3.0</span>
+<span class="s0">// requirements will be met: http://www.gnu.org/copyleft/gpl.html.</span>
+<span class="s0">// </span>
+<span class="s0">// If you do not wish to use this file under the terms of the GPL version 3.0</span>
+<span class="s0">// then you may purchase a commercial license.  For more information contact</span>
+<span class="s0">// info@riverbankcomputing.com.</span>
+<span class="s0">// </span>
+<span class="s0">// This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE</span>
+<span class="s0">// WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</span>
+
+
+<span class="s0">%If (PyQt_SSL)</span>
+
+<span class="s0">%MappedType QMultiMap&lt;QSsl::AlternativeNameEntryType, QString&gt;</span>
+        <span class="s0">/TypeHintOut=&quot;Dict[QSsl.AlternativeNameEntryType, List[QString]]&quot;,</span>
+        <span class="s0">TypeHintValue=&quot;[]&quot;/</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;qmap.h&gt;</span>
+<span class="s0">#include &lt;qssl.h&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertFromTypeCode</span>
+    <span class="s0">// Get the enum member objects that are the dictionary keys.</span>
+    <span class="s0">static PyObject *email_entry = 0;</span>
+
+    <span class="s0">if (!email_entry)</span>
+    <span class="s0">{</span>
+        <span class="s0">email_entry = PyObject_GetAttrString(</span>
+                <span class="s0">(PyObject *)sipTypeAsPyTypeObject(sipType_QSsl), &quot;EmailEntry&quot;);</span>
+
+        <span class="s0">if (!email_entry)</span>
+            <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+    <span class="s0">static PyObject *dns_entry = 0;</span>
+
+    <span class="s0">if (!dns_entry)</span>
+    <span class="s0">{</span>
+        <span class="s0">dns_entry = PyObject_GetAttrString(</span>
+                <span class="s0">(PyObject *)sipTypeAsPyTypeObject(sipType_QSsl), &quot;DnsEntry&quot;);</span>
+
+        <span class="s0">if (!dns_entry)</span>
+            <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+
+<span class="s0">#if QT_VERSION &gt;= 0x050d00</span>
+    <span class="s0">static PyObject *ip_address_entry = 0;</span>
+
+    <span class="s0">if (!ip_address_entry)</span>
+    <span class="s0">{</span>
+        <span class="s0">ip_address_entry = PyObject_GetAttrString(</span>
+                <span class="s0">(PyObject *)sipTypeAsPyTypeObject(sipType_QSsl), &quot;IpAddressEntry&quot;);</span>
+
+        <span class="s0">if (!ip_address_entry)</span>
+            <span class="s0">return 0;</span>
+    <span class="s0">}</span>
+<span class="s0">#endif</span>
+
+    <span class="s0">// Create the dictionary.</span>
+    <span class="s0">PyObject *d = PyDict_New();</span>
+
+    <span class="s0">if (!d)</span>
+        <span class="s0">return 0;</span>
+
+    <span class="s0">QList&lt;QString&gt; vl;</span>
+
+    <span class="s0">// Handle the Qssl::EmailEntry key.</span>
+    <span class="s0">vl = sipCpp-&gt;values(QSsl::EmailEntry);</span>
+
+    <span class="s0">if (!vl.isEmpty())</span>
+    <span class="s0">{</span>
+        <span class="s0">PyObject *vlobj = PyList_New(vl.count());</span>
+
+        <span class="s0">if (!vlobj)</span>
+        <span class="s0">{</span>
+            <span class="s0">Py_DECREF(d);</span>
+            <span class="s0">return 0;</span>
+        <span class="s0">}</span>
+
+        <span class="s0">int rc = PyDict_SetItem(d, email_entry, vlobj);</span>
+
+        <span class="s0">Py_DECREF(vlobj);</span>
+
+        <span class="s0">if (rc &lt; 0)</span>
+        <span class="s0">{</span>
+            <span class="s0">Py_DECREF(d);</span>
+            <span class="s0">return 0;</span>
+        <span class="s0">}</span>
+
+        <span class="s0">for (int i = 0; i &lt; vl.count(); ++i)</span>
+        <span class="s0">{</span>
+            <span class="s0">QString *s = new QString(vl.at(i));</span>
+            <span class="s0">PyObject *vobj = sipConvertFromNewType(s, sipType_QString,</span>
+                    <span class="s0">sipTransferObj);</span>
+
+            <span class="s0">if (!vobj)</span>
+            <span class="s0">{</span>
+                <span class="s0">delete s;</span>
+                <span class="s0">Py_DECREF(d);</span>
+                <span class="s0">return 0;</span>
+            <span class="s0">}</span>
+
+            <span class="s0">PyList_SetItem(vlobj, i, vobj);</span>
+        <span class="s0">}</span>
+    <span class="s0">}</span>
+
+    <span class="s0">// Handle the Qssl::DnsEntry key.</span>
+    <span class="s0">vl = sipCpp-&gt;values(QSsl::DnsEntry);</span>
+
+    <span class="s0">if (!vl.isEmpty())</span>
+    <span class="s0">{</span>
+        <span class="s0">PyObject *vlobj = PyList_New(vl.count());</span>
+
+        <span class="s0">if (!vlobj)</span>
+        <span class="s0">{</span>
+            <span class="s0">Py_DECREF(d);</span>
+            <span class="s0">return 0;</span>
+        <span class="s0">}</span>
+
+        <span class="s0">int rc = PyDict_SetItem(d, dns_entry, vlobj);</span>
+
+        <span class="s0">Py_DECREF(vlobj);</span>
+
+        <span class="s0">if (rc &lt; 0)</span>
+        <span class="s0">{</span>
+            <span class="s0">Py_DECREF(d);</span>
+            <span class="s0">return 0;</span>
+        <span class="s0">}</span>
+
+        <span class="s0">for (int i = 0; i &lt; vl.count(); ++i)</span>
+        <span class="s0">{</span>
+            <span class="s0">QString *s = new QString(vl.at(i));</span>
+            <span class="s0">PyObject *vobj = sipConvertFromNewType(s, sipType_QString,</span>
+                    <span class="s0">sipTransferObj);</span>
+
+            <span class="s0">if (!vobj)</span>
+            <span class="s0">{</span>
+                <span class="s0">delete s;</span>
+                <span class="s0">Py_DECREF(d);</span>
+                <span class="s0">return 0;</span>
+            <span class="s0">}</span>
+
+            <span class="s0">PyList_SetItem(vlobj, i, vobj);</span>
+        <span class="s0">}</span>
+    <span class="s0">}</span>
+
+<span class="s0">#if QT_VERSION &gt;= 0x050d00</span>
+    <span class="s0">// Handle the Qssl::IpAddressEntry key.</span>
+    <span class="s0">vl = sipCpp-&gt;values(QSsl::IpAddressEntry);</span>
+
+    <span class="s0">if (!vl.isEmpty())</span>
+    <span class="s0">{</span>
+        <span class="s0">PyObject *vlobj = PyList_New(vl.count());</span>
+
+        <span class="s0">if (!vlobj)</span>
+        <span class="s0">{</span>
+            <span class="s0">Py_DECREF(d);</span>
+            <span class="s0">return 0;</span>
+        <span class="s0">}</span>
+
+        <span class="s0">int rc = PyDict_SetItem(d, ip_address_entry, vlobj);</span>
+
+        <span class="s0">Py_DECREF(vlobj);</span>
+
+        <span class="s0">if (rc &lt; 0)</span>
+        <span class="s0">{</span>
+            <span class="s0">Py_DECREF(d);</span>
+            <span class="s0">return 0;</span>
+        <span class="s0">}</span>
+
+        <span class="s0">for (int i = 0; i &lt; vl.count(); ++i)</span>
+        <span class="s0">{</span>
+            <span class="s0">QString *s = new QString(vl.at(i));</span>
+            <span class="s0">PyObject *vobj = sipConvertFromNewType(s, sipType_QString,</span>
+                    <span class="s0">sipTransferObj);</span>
+
+            <span class="s0">if (!vobj)</span>
+            <span class="s0">{</span>
+                <span class="s0">delete s;</span>
+                <span class="s0">Py_DECREF(d);</span>
+                <span class="s0">return 0;</span>
+            <span class="s0">}</span>
+
+            <span class="s0">PyList_SetItem(vlobj, i, vobj);</span>
+        <span class="s0">}</span>
+    <span class="s0">}</span>
+<span class="s0">#endif</span>
+
+    <span class="s0">return d;</span>
+<span class="s0">%End</span>
+
+<span class="s0">%ConvertToTypeCode</span>
+    <span class="s0">if (!sipIsErr)</span>
+        <span class="s0">return PyDict_Check(sipPy);</span>
+
+    <span class="s0">PyErr_SetString(PyExc_NotImplementedError,</span>
+            <span class="s0">&quot;converting to QMultiMap&lt;QSsl::AlternativeNameEntryType, QString&gt; is unsupported&quot;);</span>
+
+    <span class="s0">return 0;</span>
+<span class="s0">%End</span>
+<span class="s0">};</span>
+
+<span class="s0">%End</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>py37compat.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+py37compat.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+
+
+<span class="s0">def </span><span class="s1">_pythonlib_compat</span><span class="s2">():</span>
+    <span class="s3">&quot;&quot;&quot; 
+    On Python 3.7 and earlier, distutils would include the Python 
+    library. See pypa/distutils#9. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">from </span><span class="s1">distutils </span><span class="s0">import </span><span class="s1">sysconfig</span>
+
+    <span class="s0">if not </span><span class="s1">sysconfig</span><span class="s2">.</span><span class="s1">get_config_var</span><span class="s2">(</span><span class="s4">'Py_ENABLED_SHARED'</span><span class="s2">):</span>
+        <span class="s0">return</span>
+
+    <span class="s0">yield </span><span class="s4">'python{}.{}{}'</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span>
+        <span class="s1">sys</span><span class="s2">.</span><span class="s1">hexversion </span><span class="s2">&gt;&gt; </span><span class="s5">24</span><span class="s2">,</span>
+        <span class="s2">(</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">hexversion </span><span class="s2">&gt;&gt; </span><span class="s5">16</span><span class="s2">) &amp; </span><span class="s5">0xFF</span><span class="s2">,</span>
+        <span class="s1">sysconfig</span><span class="s2">.</span><span class="s1">get_config_var</span><span class="s2">(</span><span class="s4">'ABIFLAGS'</span><span class="s2">),</span>
+    <span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">compose</span><span class="s2">(</span><span class="s1">f1</span><span class="s2">, </span><span class="s1">f2</span><span class="s2">):</span>
+    <span class="s0">return lambda </span><span class="s2">*</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">: </span><span class="s1">f1</span><span class="s2">(</span><span class="s1">f2</span><span class="s2">(*</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">))</span>
+
+
+<span class="s1">pythonlib </span><span class="s2">= (</span>
+    <span class="s1">compose</span><span class="s2">(</span><span class="s1">list</span><span class="s2">, </span><span class="s1">_pythonlib_compat</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&lt; (</span><span class="s5">3</span><span class="s2">, </span><span class="s5">8</span><span class="s2">)</span>
+    <span class="s0">and </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s4">'darwin'</span>
+    <span class="s0">and </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform</span><span class="s2">[:</span><span class="s5">3</span><span class="s2">] != </span><span class="s4">'aix'</span>
+    <span class="s0">else </span><span class="s1">list</span>
+<span class="s2">)</span>
+</pre>
+</body>
+</html>

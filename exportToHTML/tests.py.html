@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>tests.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+tests.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">importlib</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+
+<span class="s0">from </span><span class="s2">. </span><span class="s0">import </span><span class="s1">_tests</span>
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_deprecate </span><span class="s0">import </span><span class="s1">warn_deprecated</span>
+
+<span class="s1">warn_deprecated</span><span class="s2">(</span>
+    <span class="s3">&quot;trio.tests&quot;</span><span class="s2">,</span>
+    <span class="s3">&quot;0.22.1&quot;</span><span class="s2">,</span>
+    <span class="s1">instead</span><span class="s2">=</span><span class="s3">&quot;trio._tests&quot;</span><span class="s2">,</span>
+    <span class="s1">issue</span><span class="s2">=</span><span class="s4">274</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+
+<span class="s5"># This won't give deprecation warning on import, but will give a warning on use of any</span>
+<span class="s5"># attribute in tests, and static analysis tools will also not see any content inside.</span>
+<span class="s0">class </span><span class="s1">TestsDeprecationWrapper</span><span class="s2">:</span>
+    <span class="s1">__name__ </span><span class="s2">= </span><span class="s3">&quot;trio.tests&quot;</span>
+
+    <span class="s0">def </span><span class="s1">__getattr__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">attr</span><span class="s2">: </span><span class="s1">str</span><span class="s2">) </span><span class="s1">-&gt; Any</span><span class="s2">:</span>
+        <span class="s1">warn_deprecated</span><span class="s2">(</span>
+            <span class="s3">f&quot;trio.tests.</span><span class="s0">{</span><span class="s1">attr</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">,</span>
+            <span class="s3">&quot;0.22.1&quot;</span><span class="s2">,</span>
+            <span class="s1">instead</span><span class="s2">=</span><span class="s3">f&quot;trio._tests.</span><span class="s0">{</span><span class="s1">attr</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">,</span>
+            <span class="s1">issue</span><span class="s2">=</span><span class="s4">274</span><span class="s2">,</span>
+        <span class="s2">)</span>
+
+        <span class="s5"># needed to access e.g. trio._tests.tools, although pytest doesn't need it</span>
+        <span class="s0">if not </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_tests</span><span class="s2">, </span><span class="s1">attr</span><span class="s2">):  </span><span class="s5"># pragma: no cover</span>
+            <span class="s1">importlib</span><span class="s2">.</span><span class="s1">import_module</span><span class="s2">(</span><span class="s3">f&quot;trio._tests.</span><span class="s0">{</span><span class="s1">attr</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">, </span><span class="s3">&quot;trio._tests&quot;</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">attr</span>
+
+        <span class="s0">return </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">_tests</span><span class="s2">, </span><span class="s1">attr</span><span class="s2">)</span>
+
+
+<span class="s5"># https://stackoverflow.com/questions/2447353/getattr-on-a-module</span>
+<span class="s1">sys</span><span class="s2">.</span><span class="s1">modules</span><span class="s2">[</span><span class="s1">__name__</span><span class="s2">] = </span><span class="s1">TestsDeprecationWrapper</span><span class="s2">()  </span><span class="s5"># type: ignore[assignment]</span>
+</pre>
+</body>
+</html>

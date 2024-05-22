@@ -1,0 +1,539 @@
+<html>
+<head>
+<title>config.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+.s6 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+config.py</font>
+</center></td></tr></table>
+<pre><span class="s0"># Added Fortran compiler support to config. Currently useful only for</span>
+<span class="s0"># try_compile call. try_run works but is untested for most of Fortran</span>
+<span class="s0"># compilers (they must define linker_exe first).</span>
+<span class="s0"># Pearu Peterson</span>
+<span class="s2">import </span><span class="s1">os</span>
+<span class="s2">import </span><span class="s1">signal</span>
+<span class="s2">import </span><span class="s1">subprocess</span>
+<span class="s2">import </span><span class="s1">sys</span>
+<span class="s2">import </span><span class="s1">textwrap</span>
+<span class="s2">import </span><span class="s1">warnings</span>
+
+<span class="s2">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">command</span><span class="s3">.</span><span class="s1">config </span><span class="s2">import </span><span class="s1">config </span><span class="s2">as </span><span class="s1">old_config</span>
+<span class="s2">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">command</span><span class="s3">.</span><span class="s1">config </span><span class="s2">import </span><span class="s1">LANG_EXT</span>
+<span class="s2">from </span><span class="s1">distutils </span><span class="s2">import </span><span class="s1">log</span>
+<span class="s2">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">file_util </span><span class="s2">import </span><span class="s1">copy_file</span>
+<span class="s2">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">ccompiler </span><span class="s2">import </span><span class="s1">CompileError</span><span class="s3">, </span><span class="s1">LinkError</span>
+<span class="s2">import </span><span class="s1">distutils</span>
+<span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">exec_command </span><span class="s2">import </span><span class="s1">filepath_from_subprocess_output</span>
+<span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">mingw32ccompiler </span><span class="s2">import </span><span class="s1">generate_manifest</span>
+<span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">command</span><span class="s3">.</span><span class="s1">autodist </span><span class="s2">import </span><span class="s3">(</span><span class="s1">check_gcc_function_attribute</span><span class="s3">,</span>
+                                              <span class="s1">check_gcc_function_attribute_with_intrinsics</span><span class="s3">,</span>
+                                              <span class="s1">check_gcc_variable_attribute</span><span class="s3">,</span>
+                                              <span class="s1">check_gcc_version_at_least</span><span class="s3">,</span>
+                                              <span class="s1">check_inline</span><span class="s3">,</span>
+                                              <span class="s1">check_restrict</span><span class="s3">,</span>
+                                              <span class="s1">check_compiler_gcc</span><span class="s3">)</span>
+
+<span class="s1">LANG_EXT</span><span class="s3">[</span><span class="s4">'f77'</span><span class="s3">] = </span><span class="s4">'.f'</span>
+<span class="s1">LANG_EXT</span><span class="s3">[</span><span class="s4">'f90'</span><span class="s3">] = </span><span class="s4">'.f90'</span>
+
+<span class="s2">class </span><span class="s1">config</span><span class="s3">(</span><span class="s1">old_config</span><span class="s3">):</span>
+    <span class="s1">old_config</span><span class="s3">.</span><span class="s1">user_options </span><span class="s3">+= [</span>
+        <span class="s3">(</span><span class="s4">'fcompiler='</span><span class="s3">, </span><span class="s2">None</span><span class="s3">, </span><span class="s4">&quot;specify the Fortran compiler type&quot;</span><span class="s3">),</span>
+        <span class="s3">]</span>
+
+    <span class="s2">def </span><span class="s1">initialize_options</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler </span><span class="s3">= </span><span class="s2">None</span>
+        <span class="s1">old_config</span><span class="s3">.</span><span class="s1">initialize_options</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">_check_compiler </span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">old_config</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+        <span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">fcompiler </span><span class="s2">import </span><span class="s1">FCompiler</span><span class="s3">, </span><span class="s1">new_fcompiler</span>
+
+        <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s4">'win32' </span><span class="s2">and </span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">compiler_type </span><span class="s2">in</span>
+                                        <span class="s3">(</span><span class="s4">'msvc'</span><span class="s3">, </span><span class="s4">'intelw'</span><span class="s3">, </span><span class="s4">'intelemw'</span><span class="s3">)):</span>
+            <span class="s0"># XXX: hack to circumvent a python 2.6 bug with msvc9compiler:</span>
+            <span class="s0"># initialize call query_vcvarsall, which throws an IOError, and</span>
+            <span class="s0"># causes an error along the way without much information. We try to</span>
+            <span class="s0"># catch it here, hoping it is early enough, and print a helpful</span>
+            <span class="s0"># message instead of Error: None.</span>
+            <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">initialized</span><span class="s3">:</span>
+                <span class="s2">try</span><span class="s3">:</span>
+                    <span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">initialize</span><span class="s3">()</span>
+                <span class="s2">except </span><span class="s1">IOError </span><span class="s2">as </span><span class="s1">e</span><span class="s3">:</span>
+                    <span class="s1">msg </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">&quot;&quot;&quot;</span><span class="s2">\ 
+                        </span><span class="s4">Could not initialize compiler instance: do you have Visual Studio 
+                        installed?  If you are trying to build with MinGW, please use &quot;python setup.py 
+                        build -c mingw32&quot; instead.  If you have Visual Studio installed, check it is 
+                        correctly installed, and the right version (VS 2015 as of this writing). 
+ 
+                        Original exception was: %s, and the Compiler class was %s 
+                        ============================================================================&quot;&quot;&quot;</span><span class="s3">) </span><span class="s1">\</span>
+                        <span class="s3">% (</span><span class="s1">e</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">__name__</span><span class="s3">)</span>
+                    <span class="s1">print</span><span class="s3">(</span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">&quot;&quot;&quot;</span><span class="s2">\ 
+                        </span><span class="s4">============================================================================&quot;&quot;&quot;</span><span class="s3">))</span>
+                    <span class="s2">raise </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">errors</span><span class="s3">.</span><span class="s1">DistutilsPlatformError</span><span class="s3">(</span><span class="s1">msg</span><span class="s3">) </span><span class="s2">from </span><span class="s1">e</span>
+
+            <span class="s0"># After MSVC is initialized, add an explicit /MANIFEST to linker</span>
+            <span class="s0"># flags.  See issues gh-4245 and gh-4101 for details.  Also</span>
+            <span class="s0"># relevant are issues 4431 and 16296 on the Python bug tracker.</span>
+            <span class="s2">from </span><span class="s1">distutils </span><span class="s2">import </span><span class="s1">msvc9compiler</span>
+            <span class="s2">if </span><span class="s1">msvc9compiler</span><span class="s3">.</span><span class="s1">get_build_version</span><span class="s3">() &gt;= </span><span class="s5">10</span><span class="s3">:</span>
+                <span class="s2">for </span><span class="s1">ldflags </span><span class="s2">in </span><span class="s3">[</span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">ldflags_shared</span><span class="s3">,</span>
+                                <span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">ldflags_shared_debug</span><span class="s3">]:</span>
+                    <span class="s2">if </span><span class="s4">'/MANIFEST' </span><span class="s2">not in </span><span class="s1">ldflags</span><span class="s3">:</span>
+                        <span class="s1">ldflags</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">'/MANIFEST'</span><span class="s3">)</span>
+
+        <span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">, </span><span class="s1">FCompiler</span><span class="s3">):</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler </span><span class="s3">= </span><span class="s1">new_fcompiler</span><span class="s3">(</span><span class="s1">compiler</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">,</span>
+                                           <span class="s1">dry_run</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">dry_run</span><span class="s3">, </span><span class="s1">force</span><span class="s3">=</span><span class="s5">1</span><span class="s3">,</span>
+                                           <span class="s1">c_compiler</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">)</span>
+            <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler </span><span class="s2">is not None</span><span class="s3">:</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">.</span><span class="s1">customize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">distribution</span><span class="s3">)</span>
+                <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">.</span><span class="s1">get_version</span><span class="s3">():</span>
+                    <span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">.</span><span class="s1">customize_cmd</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+                    <span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">.</span><span class="s1">show_customization</span><span class="s3">()</span>
+
+    <span class="s2">def </span><span class="s1">_wrap_method</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">mth</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">, </span><span class="s1">args</span><span class="s3">):</span>
+        <span class="s2">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">ccompiler </span><span class="s2">import </span><span class="s1">CompileError</span>
+        <span class="s2">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">errors </span><span class="s2">import </span><span class="s1">DistutilsExecError</span>
+        <span class="s1">save_compiler </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span>
+        <span class="s2">if </span><span class="s1">lang </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'f77'</span><span class="s3">, </span><span class="s4">'f90'</span><span class="s3">]:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">compiler </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler </span><span class="s2">is None</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">CompileError</span><span class="s3">(</span><span class="s4">'%s compiler is not set' </span><span class="s3">% (</span><span class="s1">lang</span><span class="s3">,))</span>
+        <span class="s2">try</span><span class="s3">:</span>
+            <span class="s1">ret </span><span class="s3">= </span><span class="s1">mth</span><span class="s3">(*((</span><span class="s1">self</span><span class="s3">,)+</span><span class="s1">args</span><span class="s3">))</span>
+        <span class="s2">except </span><span class="s3">(</span><span class="s1">DistutilsExecError</span><span class="s3">, </span><span class="s1">CompileError</span><span class="s3">) </span><span class="s2">as </span><span class="s1">e</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">compiler </span><span class="s3">= </span><span class="s1">save_compiler</span>
+            <span class="s2">raise </span><span class="s1">CompileError </span><span class="s2">from </span><span class="s1">e</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">compiler </span><span class="s3">= </span><span class="s1">save_compiler</span>
+        <span class="s2">return </span><span class="s1">ret</span>
+
+    <span class="s2">def </span><span class="s1">_compile </span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">):</span>
+        <span class="s1">src</span><span class="s3">, </span><span class="s1">obj </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_wrap_method</span><span class="s3">(</span><span class="s1">old_config</span><span class="s3">.</span><span class="s1">_compile</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">,</span>
+                                     <span class="s3">(</span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">))</span>
+        <span class="s0"># _compile in unixcompiler.py sometimes creates .d dependency files.</span>
+        <span class="s0"># Clean them up.</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">temp_files</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">obj </span><span class="s3">+ </span><span class="s4">'.d'</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">src</span><span class="s3">, </span><span class="s1">obj</span>
+
+    <span class="s2">def </span><span class="s1">_link </span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">body</span><span class="s3">,</span>
+               <span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">,</span>
+               <span class="s1">libraries</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">compiler_type</span><span class="s3">==</span><span class="s4">'msvc'</span><span class="s3">:</span>
+            <span class="s1">libraries </span><span class="s3">= (</span><span class="s1">libraries </span><span class="s2">or </span><span class="s3">[])[:]</span>
+            <span class="s1">library_dirs </span><span class="s3">= (</span><span class="s1">library_dirs </span><span class="s2">or </span><span class="s3">[])[:]</span>
+            <span class="s2">if </span><span class="s1">lang </span><span class="s2">in </span><span class="s3">[</span><span class="s4">'f77'</span><span class="s3">, </span><span class="s4">'f90'</span><span class="s3">]:</span>
+                <span class="s1">lang </span><span class="s3">= </span><span class="s4">'c' </span><span class="s0"># always use system linker when using MSVC compiler</span>
+                <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">:</span>
+                    <span class="s2">for </span><span class="s1">d </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">.</span><span class="s1">library_dirs </span><span class="s2">or </span><span class="s3">[]:</span>
+                        <span class="s0"># correct path when compiling in Cygwin but with</span>
+                        <span class="s0"># normal Win Python</span>
+                        <span class="s2">if </span><span class="s1">d</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'/usr/lib'</span><span class="s3">):</span>
+                            <span class="s2">try</span><span class="s3">:</span>
+                                <span class="s1">d </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">check_output</span><span class="s3">([</span><span class="s4">'cygpath'</span><span class="s3">,</span>
+                                                             <span class="s4">'-w'</span><span class="s3">, </span><span class="s1">d</span><span class="s3">])</span>
+                            <span class="s2">except </span><span class="s3">(</span><span class="s1">OSError</span><span class="s3">, </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">CalledProcessError</span><span class="s3">):</span>
+                                <span class="s2">pass</span>
+                            <span class="s2">else</span><span class="s3">:</span>
+                                <span class="s1">d </span><span class="s3">= </span><span class="s1">filepath_from_subprocess_output</span><span class="s3">(</span><span class="s1">d</span><span class="s3">)</span>
+                        <span class="s1">library_dirs</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">d</span><span class="s3">)</span>
+                    <span class="s2">for </span><span class="s1">libname </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">fcompiler</span><span class="s3">.</span><span class="s1">libraries </span><span class="s2">or </span><span class="s3">[]:</span>
+                        <span class="s2">if </span><span class="s1">libname </span><span class="s2">not in </span><span class="s1">libraries</span><span class="s3">:</span>
+                            <span class="s1">libraries</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">libname</span><span class="s3">)</span>
+            <span class="s2">for </span><span class="s1">libname </span><span class="s2">in </span><span class="s1">libraries</span><span class="s3">:</span>
+                <span class="s2">if </span><span class="s1">libname</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s4">'msvc'</span><span class="s3">): </span><span class="s2">continue</span>
+                <span class="s1">fileexists </span><span class="s3">= </span><span class="s2">False</span>
+                <span class="s2">for </span><span class="s1">libdir </span><span class="s2">in </span><span class="s1">library_dirs </span><span class="s2">or </span><span class="s3">[]:</span>
+                    <span class="s1">libfile </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">libdir</span><span class="s3">, </span><span class="s4">'%s.lib' </span><span class="s3">% (</span><span class="s1">libname</span><span class="s3">))</span>
+                    <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">libfile</span><span class="s3">):</span>
+                        <span class="s1">fileexists </span><span class="s3">= </span><span class="s2">True</span>
+                        <span class="s2">break</span>
+                <span class="s2">if </span><span class="s1">fileexists</span><span class="s3">: </span><span class="s2">continue</span>
+                <span class="s0"># make g77-compiled static libs available to MSVC</span>
+                <span class="s1">fileexists </span><span class="s3">= </span><span class="s2">False</span>
+                <span class="s2">for </span><span class="s1">libdir </span><span class="s2">in </span><span class="s1">library_dirs</span><span class="s3">:</span>
+                    <span class="s1">libfile </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">libdir</span><span class="s3">, </span><span class="s4">'lib%s.a' </span><span class="s3">% (</span><span class="s1">libname</span><span class="s3">))</span>
+                    <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">libfile</span><span class="s3">):</span>
+                        <span class="s0"># copy libname.a file to name.lib so that MSVC linker</span>
+                        <span class="s0"># can find it</span>
+                        <span class="s1">libfile2 </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">libdir</span><span class="s3">, </span><span class="s4">'%s.lib' </span><span class="s3">% (</span><span class="s1">libname</span><span class="s3">))</span>
+                        <span class="s1">copy_file</span><span class="s3">(</span><span class="s1">libfile</span><span class="s3">, </span><span class="s1">libfile2</span><span class="s3">)</span>
+                        <span class="s1">self</span><span class="s3">.</span><span class="s1">temp_files</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">libfile2</span><span class="s3">)</span>
+                        <span class="s1">fileexists </span><span class="s3">= </span><span class="s2">True</span>
+                        <span class="s2">break</span>
+                <span class="s2">if </span><span class="s1">fileexists</span><span class="s3">: </span><span class="s2">continue</span>
+                <span class="s1">log</span><span class="s3">.</span><span class="s1">warn</span><span class="s3">(</span><span class="s4">'could not find library %r in directories %s' </span><span class="s1">\</span>
+                         <span class="s3">% (</span><span class="s1">libname</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">))</span>
+        <span class="s2">elif </span><span class="s1">self</span><span class="s3">.</span><span class="s1">compiler</span><span class="s3">.</span><span class="s1">compiler_type </span><span class="s3">== </span><span class="s4">'mingw32'</span><span class="s3">:</span>
+            <span class="s1">generate_manifest</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_wrap_method</span><span class="s3">(</span><span class="s1">old_config</span><span class="s3">.</span><span class="s1">_link</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">,</span>
+                                 <span class="s3">(</span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">,</span>
+                                  <span class="s1">libraries</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">))</span>
+
+    <span class="s2">def </span><span class="s1">check_header</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">header</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">=</span><span class="s4">'c'</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">try_compile</span><span class="s3">(</span>
+                <span class="s4">&quot;/* we need a dummy line to make distutils happy */&quot;</span><span class="s3">,</span>
+                <span class="s3">[</span><span class="s1">header</span><span class="s3">], </span><span class="s1">include_dirs</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_decl</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">symbol</span><span class="s3">,</span>
+                   <span class="s1">headers</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+        <span class="s1">body </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">&quot;&quot;&quot; 
+            int main(void) 
+            { 
+            #ifndef %s 
+                (void) %s; 
+            #endif 
+                ; 
+                return 0; 
+            }&quot;&quot;&quot;</span><span class="s3">) % (</span><span class="s1">symbol</span><span class="s3">, </span><span class="s1">symbol</span><span class="s3">)</span>
+
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">try_compile</span><span class="s3">(</span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_macro_true</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">symbol</span><span class="s3">,</span>
+                         <span class="s1">headers</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+        <span class="s1">body </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">&quot;&quot;&quot; 
+            int main(void) 
+            { 
+            #if %s 
+            #else 
+            #error false or undefined macro 
+            #endif 
+                ; 
+                return 0; 
+            }&quot;&quot;&quot;</span><span class="s3">) % (</span><span class="s1">symbol</span><span class="s3">,)</span>
+
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">try_compile</span><span class="s3">(</span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">type_name</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+            <span class="s1">library_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Check type availability. Return True if the type can be compiled, 
+        False otherwise&quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+
+        <span class="s0"># First check the type can be compiled</span>
+        <span class="s1">body </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">r&quot;&quot;&quot; 
+            int main(void) { 
+              if ((%(name)s *) 0) 
+                return 0; 
+              if (sizeof (%(name)s)) 
+                return 0; 
+            } 
+            &quot;&quot;&quot;</span><span class="s3">) % {</span><span class="s4">'name'</span><span class="s3">: </span><span class="s1">type_name</span><span class="s3">}</span>
+
+        <span class="s1">st </span><span class="s3">= </span><span class="s2">False</span>
+        <span class="s2">try</span><span class="s3">:</span>
+            <span class="s2">try</span><span class="s3">:</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">_compile</span><span class="s3">(</span><span class="s1">body </span><span class="s3">% {</span><span class="s4">'type'</span><span class="s3">: </span><span class="s1">type_name</span><span class="s3">},</span>
+                        <span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">, </span><span class="s4">'c'</span><span class="s3">)</span>
+                <span class="s1">st </span><span class="s3">= </span><span class="s2">True</span>
+            <span class="s2">except </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">errors</span><span class="s3">.</span><span class="s1">CompileError</span><span class="s3">:</span>
+                <span class="s1">st </span><span class="s3">= </span><span class="s2">False</span>
+        <span class="s2">finally</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">_clean</span><span class="s3">()</span>
+
+        <span class="s2">return </span><span class="s1">st</span>
+
+    <span class="s2">def </span><span class="s1">check_type_size</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">type_name</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">expected</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Check size of a given type.&quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+
+        <span class="s0"># First check the type can be compiled</span>
+        <span class="s1">body </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">r&quot;&quot;&quot; 
+            typedef %(type)s npy_check_sizeof_type; 
+            int main (void) 
+            { 
+                static int test_array [1 - 2 * !(((long) (sizeof (npy_check_sizeof_type))) &gt;= 0)]; 
+                test_array [0] = 0 
+ 
+                ; 
+                return 0; 
+            } 
+            &quot;&quot;&quot;</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_compile</span><span class="s3">(</span><span class="s1">body </span><span class="s3">% {</span><span class="s4">'type'</span><span class="s3">: </span><span class="s1">type_name</span><span class="s3">},</span>
+                <span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">, </span><span class="s4">'c'</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_clean</span><span class="s3">()</span>
+
+        <span class="s2">if </span><span class="s1">expected</span><span class="s3">:</span>
+            <span class="s1">body </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">r&quot;&quot;&quot; 
+                typedef %(type)s npy_check_sizeof_type; 
+                int main (void) 
+                { 
+                    static int test_array [1 - 2 * !(((long) (sizeof (npy_check_sizeof_type))) == %(size)s)]; 
+                    test_array [0] = 0 
+ 
+                    ; 
+                    return 0; 
+                } 
+                &quot;&quot;&quot;</span><span class="s3">)</span>
+            <span class="s2">for </span><span class="s1">size </span><span class="s2">in </span><span class="s1">expected</span><span class="s3">:</span>
+                <span class="s2">try</span><span class="s3">:</span>
+                    <span class="s1">self</span><span class="s3">.</span><span class="s1">_compile</span><span class="s3">(</span><span class="s1">body </span><span class="s3">% {</span><span class="s4">'type'</span><span class="s3">: </span><span class="s1">type_name</span><span class="s3">, </span><span class="s4">'size'</span><span class="s3">: </span><span class="s1">size</span><span class="s3">},</span>
+                            <span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">, </span><span class="s4">'c'</span><span class="s3">)</span>
+                    <span class="s1">self</span><span class="s3">.</span><span class="s1">_clean</span><span class="s3">()</span>
+                    <span class="s2">return </span><span class="s1">size</span>
+                <span class="s2">except </span><span class="s1">CompileError</span><span class="s3">:</span>
+                    <span class="s2">pass</span>
+
+        <span class="s0"># this fails to *compile* if size &gt; sizeof(type)</span>
+        <span class="s1">body </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s4">r&quot;&quot;&quot; 
+            typedef %(type)s npy_check_sizeof_type; 
+            int main (void) 
+            { 
+                static int test_array [1 - 2 * !(((long) (sizeof (npy_check_sizeof_type))) &lt;= %(size)s)]; 
+                test_array [0] = 0 
+ 
+                ; 
+                return 0; 
+            } 
+            &quot;&quot;&quot;</span><span class="s3">)</span>
+
+        <span class="s0"># The principle is simple: we first find low and high bounds of size</span>
+        <span class="s0"># for the type, where low/high are looked up on a log scale. Then, we</span>
+        <span class="s0"># do a binary search to find the exact size between low and high</span>
+        <span class="s1">low </span><span class="s3">= </span><span class="s5">0</span>
+        <span class="s1">mid </span><span class="s3">= </span><span class="s5">0</span>
+        <span class="s2">while True</span><span class="s3">:</span>
+            <span class="s2">try</span><span class="s3">:</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">_compile</span><span class="s3">(</span><span class="s1">body </span><span class="s3">% {</span><span class="s4">'type'</span><span class="s3">: </span><span class="s1">type_name</span><span class="s3">, </span><span class="s4">'size'</span><span class="s3">: </span><span class="s1">mid</span><span class="s3">},</span>
+                        <span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">, </span><span class="s4">'c'</span><span class="s3">)</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">_clean</span><span class="s3">()</span>
+                <span class="s2">break</span>
+            <span class="s2">except </span><span class="s1">CompileError</span><span class="s3">:</span>
+                <span class="s0">#log.info(&quot;failure to test for bound %d&quot; % mid)</span>
+                <span class="s1">low </span><span class="s3">= </span><span class="s1">mid </span><span class="s3">+ </span><span class="s5">1</span>
+                <span class="s1">mid </span><span class="s3">= </span><span class="s5">2 </span><span class="s3">* </span><span class="s1">mid </span><span class="s3">+ </span><span class="s5">1</span>
+
+        <span class="s1">high </span><span class="s3">= </span><span class="s1">mid</span>
+        <span class="s0"># Binary search:</span>
+        <span class="s2">while </span><span class="s1">low </span><span class="s3">!= </span><span class="s1">high</span><span class="s3">:</span>
+            <span class="s1">mid </span><span class="s3">= (</span><span class="s1">high </span><span class="s3">- </span><span class="s1">low</span><span class="s3">) // </span><span class="s5">2 </span><span class="s3">+ </span><span class="s1">low</span>
+            <span class="s2">try</span><span class="s3">:</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">_compile</span><span class="s3">(</span><span class="s1">body </span><span class="s3">% {</span><span class="s4">'type'</span><span class="s3">: </span><span class="s1">type_name</span><span class="s3">, </span><span class="s4">'size'</span><span class="s3">: </span><span class="s1">mid</span><span class="s3">},</span>
+                        <span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">, </span><span class="s4">'c'</span><span class="s3">)</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">_clean</span><span class="s3">()</span>
+                <span class="s1">high </span><span class="s3">= </span><span class="s1">mid</span>
+            <span class="s2">except </span><span class="s1">CompileError</span><span class="s3">:</span>
+                <span class="s1">low </span><span class="s3">= </span><span class="s1">mid </span><span class="s3">+ </span><span class="s5">1</span>
+        <span class="s2">return </span><span class="s1">low</span>
+
+    <span class="s2">def </span><span class="s1">check_func</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">func</span><span class="s3">,</span>
+                   <span class="s1">headers</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+                   <span class="s1">libraries</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+                   <span class="s1">decl</span><span class="s3">=</span><span class="s2">False</span><span class="s3">, </span><span class="s1">call</span><span class="s3">=</span><span class="s2">False</span><span class="s3">, </span><span class="s1">call_args</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s0"># clean up distutils's config a bit: add void to main(), and</span>
+        <span class="s0"># return a value.</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+        <span class="s1">body </span><span class="s3">= []</span>
+        <span class="s2">if </span><span class="s1">decl</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s1">type</span><span class="s3">(</span><span class="s1">decl</span><span class="s3">) == </span><span class="s1">str</span><span class="s3">:</span>
+                <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">decl</span><span class="s3">)</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;int %s (void);&quot; </span><span class="s3">% </span><span class="s1">func</span><span class="s3">)</span>
+        <span class="s0"># Handle MSVC intrinsics: force MS compiler to make a function call.</span>
+        <span class="s0"># Useful to test for some functions when built with optimization on, to</span>
+        <span class="s0"># avoid build error because the intrinsic and our 'fake' test</span>
+        <span class="s0"># declaration do not match.</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;#ifdef _MSC_VER&quot;</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;#pragma function(%s)&quot; </span><span class="s3">% </span><span class="s1">func</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;#endif&quot;</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;int main (void) {&quot;</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">call</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s1">call_args </span><span class="s2">is None</span><span class="s3">:</span>
+                <span class="s1">call_args </span><span class="s3">= </span><span class="s4">''</span>
+            <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;  %s(%s);&quot; </span><span class="s3">% (</span><span class="s1">func</span><span class="s3">, </span><span class="s1">call_args</span><span class="s3">))</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;  %s;&quot; </span><span class="s3">% </span><span class="s1">func</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;  return 0;&quot;</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;}&quot;</span><span class="s3">)</span>
+        <span class="s1">body </span><span class="s3">= </span><span class="s4">'</span><span class="s2">\n</span><span class="s4">'</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">body</span><span class="s3">) + </span><span class="s4">&quot;</span><span class="s2">\n</span><span class="s4">&quot;</span>
+
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">try_link</span><span class="s3">(</span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">,</span>
+                             <span class="s1">libraries</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_funcs_once</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">funcs</span><span class="s3">,</span>
+                   <span class="s1">headers</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+                   <span class="s1">libraries</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+                   <span class="s1">decl</span><span class="s3">=</span><span class="s2">False</span><span class="s3">, </span><span class="s1">call</span><span class="s3">=</span><span class="s2">False</span><span class="s3">, </span><span class="s1">call_args</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Check a list of functions at once. 
+ 
+        This is useful to speed up things, since all the functions in the funcs 
+        list will be put in one compilation unit. 
+ 
+        Arguments 
+        --------- 
+        funcs : seq 
+            list of functions to test 
+        include_dirs : seq 
+            list of header paths 
+        libraries : seq 
+            list of libraries to link the code snippet to 
+        library_dirs : seq 
+            list of library paths 
+        decl : dict 
+            for every (key, value), the declaration in the value will be 
+            used for function in key. If a function is not in the 
+            dictionary, no declaration will be used. 
+        call : dict 
+            for every item (f, value), if the value is True, a call will be 
+            done to the function f. 
+        &quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+        <span class="s1">body </span><span class="s3">= []</span>
+        <span class="s2">if </span><span class="s1">decl</span><span class="s3">:</span>
+            <span class="s2">for </span><span class="s1">f</span><span class="s3">, </span><span class="s1">v </span><span class="s2">in </span><span class="s1">decl</span><span class="s3">.</span><span class="s1">items</span><span class="s3">():</span>
+                <span class="s2">if </span><span class="s1">v</span><span class="s3">:</span>
+                    <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;int %s (void);&quot; </span><span class="s3">% </span><span class="s1">f</span><span class="s3">)</span>
+
+        <span class="s0"># Handle MS intrinsics. See check_func for more info.</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;#ifdef _MSC_VER&quot;</span><span class="s3">)</span>
+        <span class="s2">for </span><span class="s1">func </span><span class="s2">in </span><span class="s1">funcs</span><span class="s3">:</span>
+            <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;#pragma function(%s)&quot; </span><span class="s3">% </span><span class="s1">func</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;#endif&quot;</span><span class="s3">)</span>
+
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;int main (void) {&quot;</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">call</span><span class="s3">:</span>
+            <span class="s2">for </span><span class="s1">f </span><span class="s2">in </span><span class="s1">funcs</span><span class="s3">:</span>
+                <span class="s2">if </span><span class="s1">f </span><span class="s2">in </span><span class="s1">call </span><span class="s2">and </span><span class="s1">call</span><span class="s3">[</span><span class="s1">f</span><span class="s3">]:</span>
+                    <span class="s2">if not </span><span class="s3">(</span><span class="s1">call_args </span><span class="s2">and </span><span class="s1">f </span><span class="s2">in </span><span class="s1">call_args </span><span class="s2">and </span><span class="s1">call_args</span><span class="s3">[</span><span class="s1">f</span><span class="s3">]):</span>
+                        <span class="s1">args </span><span class="s3">= </span><span class="s4">''</span>
+                    <span class="s2">else</span><span class="s3">:</span>
+                        <span class="s1">args </span><span class="s3">= </span><span class="s1">call_args</span><span class="s3">[</span><span class="s1">f</span><span class="s3">]</span>
+                    <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;  %s(%s);&quot; </span><span class="s3">% (</span><span class="s1">f</span><span class="s3">, </span><span class="s1">args</span><span class="s3">))</span>
+                <span class="s2">else</span><span class="s3">:</span>
+                    <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;  %s;&quot; </span><span class="s3">% </span><span class="s1">f</span><span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">for </span><span class="s1">f </span><span class="s2">in </span><span class="s1">funcs</span><span class="s3">:</span>
+                <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;  %s;&quot; </span><span class="s3">% </span><span class="s1">f</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;  return 0;&quot;</span><span class="s3">)</span>
+        <span class="s1">body</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">&quot;}&quot;</span><span class="s3">)</span>
+        <span class="s1">body </span><span class="s3">= </span><span class="s4">'</span><span class="s2">\n</span><span class="s4">'</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">body</span><span class="s3">) + </span><span class="s4">&quot;</span><span class="s2">\n</span><span class="s4">&quot;</span>
+
+        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">try_link</span><span class="s3">(</span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">,</span>
+                             <span class="s1">libraries</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_inline</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Return the inline keyword recognized by the compiler, empty string 
+        otherwise.&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">check_inline</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_restrict</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Return the restrict keyword recognized by the compiler, empty string 
+        otherwise.&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">check_restrict</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_compiler_gcc</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Return True if the C compiler is gcc&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">check_compiler_gcc</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_gcc_function_attribute</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">attribute</span><span class="s3">, </span><span class="s1">name</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">check_gcc_function_attribute</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">attribute</span><span class="s3">, </span><span class="s1">name</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_gcc_function_attribute_with_intrinsics</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">attribute</span><span class="s3">, </span><span class="s1">name</span><span class="s3">,</span>
+                                                     <span class="s1">code</span><span class="s3">, </span><span class="s1">include</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">check_gcc_function_attribute_with_intrinsics</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">attribute</span><span class="s3">,</span>
+                                                            <span class="s1">name</span><span class="s3">, </span><span class="s1">code</span><span class="s3">, </span><span class="s1">include</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_gcc_variable_attribute</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">attribute</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s1">check_gcc_variable_attribute</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">attribute</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">check_gcc_version_at_least</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">major</span><span class="s3">, </span><span class="s1">minor</span><span class="s3">=</span><span class="s5">0</span><span class="s3">, </span><span class="s1">patchlevel</span><span class="s3">=</span><span class="s5">0</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Return True if the GCC version is greater than or equal to the 
+        specified version.&quot;&quot;&quot;</span>
+        <span class="s2">return </span><span class="s1">check_gcc_version_at_least</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">major</span><span class="s3">, </span><span class="s1">minor</span><span class="s3">, </span><span class="s1">patchlevel</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">get_output</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+                   <span class="s1">libraries</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+                   <span class="s1">lang</span><span class="s3">=</span><span class="s4">&quot;c&quot;</span><span class="s3">, </span><span class="s1">use_tee</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+        <span class="s6">&quot;&quot;&quot;Try to compile, link to an executable, and run a program 
+        built from 'body' and 'headers'. Returns the exit status code 
+        of the program and its output. 
+        &quot;&quot;&quot;</span>
+        <span class="s0"># 2008-11-16, RemoveMe</span>
+        <span class="s1">warnings</span><span class="s3">.</span><span class="s1">warn</span><span class="s3">(</span><span class="s4">&quot;</span><span class="s2">\n</span><span class="s4">+++++++++++++++++++++++++++++++++++++++++++++++++</span><span class="s2">\n</span><span class="s4">&quot;</span>
+                      <span class="s4">&quot;Usage of get_output is deprecated: please do not </span><span class="s2">\n</span><span class="s4">&quot;</span>
+                      <span class="s4">&quot;use it anymore, and avoid configuration checks </span><span class="s2">\n</span><span class="s4">&quot;</span>
+                      <span class="s4">&quot;involving running executable on the target machine.</span><span class="s2">\n</span><span class="s4">&quot;</span>
+                      <span class="s4">&quot;+++++++++++++++++++++++++++++++++++++++++++++++++</span><span class="s2">\n</span><span class="s4">&quot;</span><span class="s3">,</span>
+                      <span class="s1">DeprecationWarning</span><span class="s3">, </span><span class="s1">stacklevel</span><span class="s3">=</span><span class="s5">2</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_check_compiler</span><span class="s3">()</span>
+        <span class="s1">exitcode</span><span class="s3">, </span><span class="s1">output </span><span class="s3">= </span><span class="s5">255</span><span class="s3">, </span><span class="s4">''</span>
+        <span class="s2">try</span><span class="s3">:</span>
+            <span class="s1">grabber </span><span class="s3">= </span><span class="s1">GrabStdout</span><span class="s3">()</span>
+            <span class="s2">try</span><span class="s3">:</span>
+                <span class="s1">src</span><span class="s3">, </span><span class="s1">obj</span><span class="s3">, </span><span class="s1">exe </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_link</span><span class="s3">(</span><span class="s1">body</span><span class="s3">, </span><span class="s1">headers</span><span class="s3">, </span><span class="s1">include_dirs</span><span class="s3">,</span>
+                                           <span class="s1">libraries</span><span class="s3">, </span><span class="s1">library_dirs</span><span class="s3">, </span><span class="s1">lang</span><span class="s3">)</span>
+                <span class="s1">grabber</span><span class="s3">.</span><span class="s1">restore</span><span class="s3">()</span>
+            <span class="s2">except </span><span class="s1">Exception</span><span class="s3">:</span>
+                <span class="s1">output </span><span class="s3">= </span><span class="s1">grabber</span><span class="s3">.</span><span class="s1">data</span>
+                <span class="s1">grabber</span><span class="s3">.</span><span class="s1">restore</span><span class="s3">()</span>
+                <span class="s2">raise</span>
+            <span class="s1">exe </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s4">'.'</span><span class="s3">, </span><span class="s1">exe</span><span class="s3">)</span>
+            <span class="s2">try</span><span class="s3">:</span>
+                <span class="s0"># specify cwd arg for consistency with</span>
+                <span class="s0"># historic usage pattern of exec_command()</span>
+                <span class="s0"># also, note that exe appears to be a string,</span>
+                <span class="s0"># which exec_command() handled, but we now</span>
+                <span class="s0"># use a list for check_output() -- this assumes</span>
+                <span class="s0"># that exe is always a single command</span>
+                <span class="s1">output </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">check_output</span><span class="s3">([</span><span class="s1">exe</span><span class="s3">], </span><span class="s1">cwd</span><span class="s3">=</span><span class="s4">'.'</span><span class="s3">)</span>
+            <span class="s2">except </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">CalledProcessError </span><span class="s2">as </span><span class="s1">exc</span><span class="s3">:</span>
+                <span class="s1">exitstatus </span><span class="s3">= </span><span class="s1">exc</span><span class="s3">.</span><span class="s1">returncode</span>
+                <span class="s1">output </span><span class="s3">= </span><span class="s4">''</span>
+            <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+                <span class="s0"># preserve the EnvironmentError exit status</span>
+                <span class="s0"># used historically in exec_command()</span>
+                <span class="s1">exitstatus </span><span class="s3">= </span><span class="s5">127</span>
+                <span class="s1">output </span><span class="s3">= </span><span class="s4">''</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s1">output </span><span class="s3">= </span><span class="s1">filepath_from_subprocess_output</span><span class="s3">(</span><span class="s1">output</span><span class="s3">)</span>
+            <span class="s2">if </span><span class="s1">hasattr</span><span class="s3">(</span><span class="s1">os</span><span class="s3">, </span><span class="s4">'WEXITSTATUS'</span><span class="s3">):</span>
+                <span class="s1">exitcode </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">WEXITSTATUS</span><span class="s3">(</span><span class="s1">exitstatus</span><span class="s3">)</span>
+                <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">WIFSIGNALED</span><span class="s3">(</span><span class="s1">exitstatus</span><span class="s3">):</span>
+                    <span class="s1">sig </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">WTERMSIG</span><span class="s3">(</span><span class="s1">exitstatus</span><span class="s3">)</span>
+                    <span class="s1">log</span><span class="s3">.</span><span class="s1">error</span><span class="s3">(</span><span class="s4">'subprocess exited with signal %d' </span><span class="s3">% (</span><span class="s1">sig</span><span class="s3">,))</span>
+                    <span class="s2">if </span><span class="s1">sig </span><span class="s3">== </span><span class="s1">signal</span><span class="s3">.</span><span class="s1">SIGINT</span><span class="s3">:</span>
+                        <span class="s0"># control-C</span>
+                        <span class="s2">raise </span><span class="s1">KeyboardInterrupt</span>
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s1">exitcode </span><span class="s3">= </span><span class="s1">exitstatus</span>
+            <span class="s1">log</span><span class="s3">.</span><span class="s1">info</span><span class="s3">(</span><span class="s4">&quot;success!&quot;</span><span class="s3">)</span>
+        <span class="s2">except </span><span class="s3">(</span><span class="s1">CompileError</span><span class="s3">, </span><span class="s1">LinkError</span><span class="s3">):</span>
+            <span class="s1">log</span><span class="s3">.</span><span class="s1">info</span><span class="s3">(</span><span class="s4">&quot;failure.&quot;</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">_clean</span><span class="s3">()</span>
+        <span class="s2">return </span><span class="s1">exitcode</span><span class="s3">, </span><span class="s1">output</span>
+
+<span class="s2">class </span><span class="s1">GrabStdout</span><span class="s3">:</span>
+
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">sys_stdout </span><span class="s3">= </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">stdout</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">data </span><span class="s3">= </span><span class="s4">''</span>
+        <span class="s1">sys</span><span class="s3">.</span><span class="s1">stdout </span><span class="s3">= </span><span class="s1">self</span>
+
+    <span class="s2">def </span><span class="s1">write </span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">data</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">sys_stdout</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">data</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">data </span><span class="s3">+= </span><span class="s1">data</span>
+
+    <span class="s2">def </span><span class="s1">flush </span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">sys_stdout</span><span class="s3">.</span><span class="s1">flush</span><span class="s3">()</span>
+
+    <span class="s2">def </span><span class="s1">restore</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">sys</span><span class="s3">.</span><span class="s1">stdout </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">sys_stdout</span>
+</pre>
+</body>
+</html>

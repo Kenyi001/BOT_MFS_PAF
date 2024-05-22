@@ -1,0 +1,788 @@
+<html>
+<head>
+<title>_elementwise_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_elementwise_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_dtypes </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">_boolean_dtypes</span><span class="s2">,</span>
+    <span class="s1">_floating_dtypes</span><span class="s2">,</span>
+    <span class="s1">_real_floating_dtypes</span><span class="s2">,</span>
+    <span class="s1">_complex_floating_dtypes</span><span class="s2">,</span>
+    <span class="s1">_integer_dtypes</span><span class="s2">,</span>
+    <span class="s1">_integer_or_boolean_dtypes</span><span class="s2">,</span>
+    <span class="s1">_real_numeric_dtypes</span><span class="s2">,</span>
+    <span class="s1">_numeric_dtypes</span><span class="s2">,</span>
+    <span class="s1">_result_type</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s2">.</span><span class="s1">_array_object </span><span class="s0">import </span><span class="s1">Array</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+
+<span class="s0">def </span><span class="s1">abs</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.abs &lt;numpy.abs&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in abs&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">abs</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">acos</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.arccos &lt;numpy.arccos&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in acos&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arccos</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">acosh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.arccosh &lt;numpy.arccosh&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in acosh&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arccosh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">add</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.add &lt;numpy.add&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in add&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">add</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">asin</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.arcsin &lt;numpy.arcsin&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in asin&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arcsin</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">asinh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.arcsinh &lt;numpy.arcsinh&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in asinh&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arcsinh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">atan</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.arctan &lt;numpy.arctan&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in atan&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arctan</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">atan2</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.arctan2 &lt;numpy.arctan2&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_floating_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real floating-point dtypes are allowed in atan2&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arctan2</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">atanh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.arctanh &lt;numpy.arctanh&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in atanh&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arctanh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">bitwise_and</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.bitwise_and &lt;numpy.bitwise_and&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s2">(</span>
+        <span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_or_boolean_dtypes</span>
+        <span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_or_boolean_dtypes</span>
+    <span class="s2">):</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only integer or boolean dtypes are allowed in bitwise_and&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bitwise_and</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">bitwise_left_shift</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.left_shift &lt;numpy.left_shift&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only integer dtypes are allowed in bitwise_left_shift&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s5"># Note: bitwise_left_shift is only defined for x2 nonnegative.</span>
+    <span class="s0">if </span><span class="s1">np</span><span class="s2">.</span><span class="s1">any</span><span class="s2">(</span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array </span><span class="s2">&lt; </span><span class="s6">0</span><span class="s2">):</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;bitwise_left_shift(x1, x2) is only defined for x2 &gt;= 0&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">left_shift</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">bitwise_invert</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.invert &lt;numpy.invert&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_or_boolean_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only integer or boolean dtypes are allowed in bitwise_invert&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">invert</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">bitwise_or</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.bitwise_or &lt;numpy.bitwise_or&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s2">(</span>
+        <span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_or_boolean_dtypes</span>
+        <span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_or_boolean_dtypes</span>
+    <span class="s2">):</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only integer or boolean dtypes are allowed in bitwise_or&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bitwise_or</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">bitwise_right_shift</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.right_shift &lt;numpy.right_shift&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only integer dtypes are allowed in bitwise_right_shift&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s5"># Note: bitwise_right_shift is only defined for x2 nonnegative.</span>
+    <span class="s0">if </span><span class="s1">np</span><span class="s2">.</span><span class="s1">any</span><span class="s2">(</span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array </span><span class="s2">&lt; </span><span class="s6">0</span><span class="s2">):</span>
+        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;bitwise_right_shift(x1, x2) is only defined for x2 &gt;= 0&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">right_shift</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">bitwise_xor</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.bitwise_xor &lt;numpy.bitwise_xor&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s2">(</span>
+        <span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_or_boolean_dtypes</span>
+        <span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_integer_or_boolean_dtypes</span>
+    <span class="s2">):</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only integer or boolean dtypes are allowed in bitwise_xor&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bitwise_xor</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">ceil</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.ceil &lt;numpy.ceil&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in ceil&quot;</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">in </span><span class="s1">_integer_dtypes</span><span class="s2">:</span>
+        <span class="s5"># Note: The return dtype of ceil is the same as the input</span>
+        <span class="s0">return </span><span class="s1">x</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ceil</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">conj</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.conj &lt;numpy.conj&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_complex_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only complex floating-point dtypes are allowed in conj&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">conj</span><span class="s2">(</span><span class="s1">x</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">cos</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.cos &lt;numpy.cos&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in cos&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">cos</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">cosh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.cosh &lt;numpy.cosh&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in cosh&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">cosh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">divide</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.divide &lt;numpy.divide&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in divide&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">divide</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.equal &lt;numpy.equal&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">exp</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.exp &lt;numpy.exp&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in exp&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">exp</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">expm1</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.expm1 &lt;numpy.expm1&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in expm1&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">expm1</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">floor</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.floor &lt;numpy.floor&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in floor&quot;</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">in </span><span class="s1">_integer_dtypes</span><span class="s2">:</span>
+        <span class="s5"># Note: The return dtype of floor is the same as the input</span>
+        <span class="s0">return </span><span class="s1">x</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">floor</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">floor_divide</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.floor_divide &lt;numpy.floor_divide&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in floor_divide&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">floor_divide</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">greater</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.greater &lt;numpy.greater&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in greater&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">greater</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">greater_equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.greater_equal &lt;numpy.greater_equal&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in greater_equal&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">greater_equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">imag</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.imag &lt;numpy.imag&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_complex_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only complex floating-point dtypes are allowed in imag&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">imag</span><span class="s2">(</span><span class="s1">x</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">isfinite</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.isfinite &lt;numpy.isfinite&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in isfinite&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">isfinite</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">isinf</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.isinf &lt;numpy.isinf&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in isinf&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">isinf</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">isnan</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.isnan &lt;numpy.isnan&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in isnan&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">isnan</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">less</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.less &lt;numpy.less&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in less&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">less</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">less_equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.less_equal &lt;numpy.less_equal&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in less_equal&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">less_equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">log</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.log &lt;numpy.log&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in log&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">log</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">log1p</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.log1p &lt;numpy.log1p&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in log1p&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">log1p</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">log2</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.log2 &lt;numpy.log2&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in log2&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">log2</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">log10</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.log10 &lt;numpy.log10&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in log10&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">log10</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">logaddexp</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.logaddexp &lt;numpy.logaddexp&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_floating_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real floating-point dtypes are allowed in logaddexp&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">logaddexp</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">logical_and</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.logical_and &lt;numpy.logical_and&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_boolean_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_boolean_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only boolean dtypes are allowed in logical_and&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">logical_and</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">logical_not</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.logical_not &lt;numpy.logical_not&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_boolean_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only boolean dtypes are allowed in logical_not&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">logical_not</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">logical_or</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.logical_or &lt;numpy.logical_or&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_boolean_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_boolean_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only boolean dtypes are allowed in logical_or&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">logical_or</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">logical_xor</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.logical_xor &lt;numpy.logical_xor&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_boolean_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_boolean_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only boolean dtypes are allowed in logical_xor&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">logical_xor</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">multiply</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.multiply &lt;numpy.multiply&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in multiply&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">multiply</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">negative</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.negative &lt;numpy.negative&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in negative&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">negative</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">not_equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.not_equal &lt;numpy.not_equal&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">not_equal</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">positive</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.positive &lt;numpy.positive&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in positive&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">positive</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s5"># Note: the function name is different here</span>
+<span class="s0">def </span><span class="s1">pow</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.power &lt;numpy.power&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in pow&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">power</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">real</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.real &lt;numpy.real&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_complex_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only complex floating-point dtypes are allowed in real&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">real</span><span class="s2">(</span><span class="s1">x</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">remainder</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.remainder &lt;numpy.remainder&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in remainder&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">remainder</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">round</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.round &lt;numpy.round&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in round&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">round</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">sign</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.sign &lt;numpy.sign&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in sign&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sign</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">sin</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.sin &lt;numpy.sin&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in sin&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sin</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">sinh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.sinh &lt;numpy.sinh&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in sinh&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sinh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">square</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.square &lt;numpy.square&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in square&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">square</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">sqrt</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.sqrt &lt;numpy.sqrt&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in sqrt&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sqrt</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">subtract</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.subtract &lt;numpy.subtract&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes </span><span class="s0">or </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only numeric dtypes are allowed in subtract&quot;</span><span class="s2">)</span>
+    <span class="s5"># Call result type here just to raise on disallowed type combinations</span>
+    <span class="s1">_result_type</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+    <span class="s1">x1</span><span class="s2">, </span><span class="s1">x2 </span><span class="s2">= </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_normalize_two_args</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">subtract</span><span class="s2">(</span><span class="s1">x1</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">x2</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">tan</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.tan &lt;numpy.tan&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in tan&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">tan</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">tanh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.tanh &lt;numpy.tanh&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_floating_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only floating-point dtypes are allowed in tanh&quot;</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">tanh</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+
+
+<span class="s0">def </span><span class="s1">trunc</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Array API compatible wrapper for :py:func:`np.trunc &lt;numpy.trunc&gt;`. 
+ 
+    See its docstring for more information. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">not in </span><span class="s1">_real_numeric_dtypes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Only real numeric dtypes are allowed in trunc&quot;</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype </span><span class="s0">in </span><span class="s1">_integer_dtypes</span><span class="s2">:</span>
+        <span class="s5"># Note: The return dtype of trunc is the same as the input</span>
+        <span class="s0">return </span><span class="s1">x</span>
+    <span class="s0">return </span><span class="s1">Array</span><span class="s2">.</span><span class="s1">_new</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">trunc</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">))</span>
+</pre>
+</body>
+</html>

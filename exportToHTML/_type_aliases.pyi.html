@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>_type_aliases.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_type_aliases.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span><span class="s2">, </span><span class="s1">TypedDict</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">generic</span><span class="s2">, </span><span class="s1">signedinteger</span><span class="s2">, </span><span class="s1">unsignedinteger</span><span class="s2">, </span><span class="s1">floating</span><span class="s2">, </span><span class="s1">complexfloating</span>
+
+<span class="s0">class </span><span class="s1">_SCTypes</span><span class="s2">(</span><span class="s1">TypedDict</span><span class="s2">):</span>
+    <span class="s1">int</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">type</span><span class="s2">[</span><span class="s1">signedinteger</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]]]</span>
+    <span class="s1">uint</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">type</span><span class="s2">[</span><span class="s1">unsignedinteger</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]]]</span>
+    <span class="s1">float</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">type</span><span class="s2">[</span><span class="s1">floating</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">]]]</span>
+    <span class="s1">complex</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">type</span><span class="s2">[</span><span class="s1">complexfloating</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">]]]</span>
+    <span class="s1">others</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">type</span><span class="s2">]</span>
+
+<span class="s1">sctypeDict</span><span class="s2">: </span><span class="s1">dict</span><span class="s2">[</span><span class="s1">int </span><span class="s2">| </span><span class="s1">str</span><span class="s2">, </span><span class="s1">type</span><span class="s2">[</span><span class="s1">generic</span><span class="s2">]]</span>
+<span class="s1">sctypes</span><span class="s2">: </span><span class="s1">_SCTypes</span>
+</pre>
+</body>
+</html>

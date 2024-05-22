@@ -1,0 +1,158 @@
+<html>
+<head>
+<title>SourceProxy.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+SourceProxy.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2016 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Controls module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.2</span>
+
+<span class="s1">Item </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">rootItem</span>
+    <span class="s1">property variant input</span>
+    <span class="s1">property variant output</span>
+    <span class="s1">property variant sourceRect</span>
+    <span class="s1">visible</span><span class="s4">: </span><span class="s2">false</span>
+
+    <span class="s1">Component</span><span class="s4">.</span><span class="s1">onCompleted</span><span class="s4">: </span><span class="s1">evaluateInput</span><span class="s4">()</span>
+
+    <span class="s1">onInputChanged</span><span class="s4">: </span><span class="s1">evaluateInput</span><span class="s4">()</span>
+
+    <span class="s1">onSourceRectChanged</span><span class="s4">: </span><span class="s1">evaluateInput</span><span class="s4">()</span>
+
+    <span class="s2">function </span><span class="s1">evaluateInput</span><span class="s4">() {</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">input </span><span class="s4">== </span><span class="s1">undefined</span><span class="s4">) {</span>
+            <span class="s1">output </span><span class="s4">=  </span><span class="s1">input</span>
+        <span class="s4">}</span>
+        <span class="s2">else if </span><span class="s4">(</span><span class="s1">sourceRect </span><span class="s4">!= </span><span class="s1">undefined </span><span class="s4">&amp;&amp; </span><span class="s1">sourceRect </span><span class="s4">!= </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rect</span><span class="s4">(</span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">) &amp;&amp; !</span><span class="s1">isQQuickShaderEffectSource</span><span class="s4">(</span><span class="s1">input</span><span class="s4">)) {</span>
+            <span class="s1">proxySource</span><span class="s4">.</span><span class="s1">sourceItem </span><span class="s4">= </span><span class="s1">input</span>
+            <span class="s1">output </span><span class="s4">= </span><span class="s1">proxySource</span>
+            <span class="s1">proxySource</span><span class="s4">.</span><span class="s1">sourceRect </span><span class="s4">= </span><span class="s1">sourceRect</span>
+        <span class="s4">}</span>
+        <span class="s2">else if </span><span class="s4">(</span><span class="s1">isQQuickItemLayerEnabled</span><span class="s4">(</span><span class="s1">input</span><span class="s4">)) {</span>
+            <span class="s1">output </span><span class="s4">= </span><span class="s1">input</span>
+        <span class="s4">}</span>
+        <span class="s2">else if </span><span class="s4">((</span><span class="s1">isQQuickImage</span><span class="s4">(</span><span class="s1">input</span><span class="s4">) &amp;&amp; !</span><span class="s1">hasTileMode</span><span class="s4">(</span><span class="s1">input</span><span class="s4">) &amp;&amp; !</span><span class="s1">hasChildren</span><span class="s4">(</span><span class="s1">input</span><span class="s4">))) {</span>
+            <span class="s1">output </span><span class="s4">= </span><span class="s1">input</span>
+        <span class="s4">}</span>
+        <span class="s2">else if </span><span class="s4">(</span><span class="s1">isQQuickShaderEffectSource</span><span class="s4">(</span><span class="s1">input</span><span class="s4">)) {</span>
+            <span class="s1">output </span><span class="s4">= </span><span class="s1">input</span>
+        <span class="s4">}</span>
+        <span class="s2">else </span><span class="s4">{</span>
+            <span class="s1">proxySource</span><span class="s4">.</span><span class="s1">sourceItem </span><span class="s4">= </span><span class="s1">input</span>
+            <span class="s1">output </span><span class="s4">= </span><span class="s1">proxySource</span>
+            <span class="s1">proxySource</span><span class="s4">.</span><span class="s1">sourceRect </span><span class="s4">= </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rect</span><span class="s4">(</span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">)</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s2">function </span><span class="s1">isQQuickItemLayerEnabled</span><span class="s4">(</span><span class="s1">item</span><span class="s4">) {</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">.</span><span class="s1">hasOwnProperty</span><span class="s4">(</span><span class="s5">&quot;layer&quot;</span><span class="s4">)) {</span>
+            <span class="s2">var </span><span class="s1">l </span><span class="s4">= </span><span class="s1">item</span><span class="s4">[</span><span class="s5">&quot;layer&quot;</span><span class="s4">]</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">l</span><span class="s4">.</span><span class="s1">hasOwnProperty</span><span class="s4">(</span><span class="s5">&quot;enabled&quot;</span><span class="s4">) &amp;&amp; </span><span class="s1">l</span><span class="s4">[</span><span class="s5">&quot;enabled&quot;</span><span class="s4">].</span><span class="s1">toString</span><span class="s4">() == </span><span class="s5">&quot;true&quot;</span><span class="s4">)</span>
+                <span class="s2">return true</span>
+        <span class="s4">}</span>
+        <span class="s2">return false</span>
+    <span class="s4">}</span>
+
+    <span class="s2">function </span><span class="s1">isQQuickImage</span><span class="s4">(</span><span class="s1">item</span><span class="s4">) {</span>
+        <span class="s2">var </span><span class="s1">imageProperties </span><span class="s4">= [ </span><span class="s5">&quot;fillMode&quot;</span><span class="s4">, </span><span class="s5">&quot;progress&quot;</span><span class="s4">, </span><span class="s5">&quot;asynchronous&quot;</span><span class="s4">, </span><span class="s5">&quot;sourceSize&quot;</span><span class="s4">, </span><span class="s5">&quot;status&quot;</span><span class="s4">, </span><span class="s5">&quot;smooth&quot; </span><span class="s4">]</span>
+        <span class="s2">return </span><span class="s1">hasProperties</span><span class="s4">(</span><span class="s1">item</span><span class="s4">, </span><span class="s1">imageProperties</span><span class="s4">)</span>
+    <span class="s4">}</span>
+
+    <span class="s2">function </span><span class="s1">isQQuickShaderEffectSource</span><span class="s4">(</span><span class="s1">item</span><span class="s4">) {</span>
+        <span class="s2">var </span><span class="s1">shaderEffectSourceProperties </span><span class="s4">= [ </span><span class="s5">&quot;hideSource&quot;</span><span class="s4">, </span><span class="s5">&quot;format&quot;</span><span class="s4">, </span><span class="s5">&quot;sourceItem&quot;</span><span class="s4">, </span><span class="s5">&quot;mipmap&quot;</span><span class="s4">, </span><span class="s5">&quot;wrapMode&quot;</span><span class="s4">, </span><span class="s5">&quot;live&quot;</span><span class="s4">, </span><span class="s5">&quot;recursive&quot;</span><span class="s4">, </span><span class="s5">&quot;sourceRect&quot; </span><span class="s4">]</span>
+        <span class="s2">return </span><span class="s1">hasProperties</span><span class="s4">(</span><span class="s1">item</span><span class="s4">, </span><span class="s1">shaderEffectSourceProperties</span><span class="s4">)</span>
+    <span class="s4">}</span>
+
+    <span class="s2">function </span><span class="s1">hasProperties</span><span class="s4">(</span><span class="s1">item</span><span class="s4">, </span><span class="s1">properties</span><span class="s4">) {</span>
+        <span class="s2">var </span><span class="s1">counter </span><span class="s4">= </span><span class="s3">0</span>
+            <span class="s2">for </span><span class="s4">(</span><span class="s2">var </span><span class="s1">j </span><span class="s4">= </span><span class="s3">0</span><span class="s4">; </span><span class="s1">j </span><span class="s4">&lt; </span><span class="s1">properties</span><span class="s4">.</span><span class="s1">length</span><span class="s4">; </span><span class="s1">j</span><span class="s4">++) {</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">.</span><span class="s1">hasOwnProperty</span><span class="s4">(</span><span class="s1">properties </span><span class="s4">[</span><span class="s1">j</span><span class="s4">]))</span>
+                    <span class="s1">counter</span><span class="s4">++</span>
+            <span class="s4">}</span>
+        <span class="s2">return </span><span class="s1">properties</span><span class="s4">.</span><span class="s1">length </span><span class="s4">== </span><span class="s1">counter</span>
+    <span class="s4">}</span>
+
+    <span class="s2">function </span><span class="s1">hasChildren</span><span class="s4">(</span><span class="s1">item</span><span class="s4">) {</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">.</span><span class="s1">hasOwnProperty</span><span class="s4">(</span><span class="s5">&quot;childrenRect&quot;</span><span class="s4">)) {</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">[</span><span class="s5">&quot;childrenRect&quot;</span><span class="s4">].</span><span class="s1">toString</span><span class="s4">() != </span><span class="s5">&quot;QRectF(0, 0, 0, 0)&quot;</span><span class="s4">)</span>
+                <span class="s2">return true</span>
+            <span class="s2">else</span>
+                <span class="s2">return false</span>
+        <span class="s4">}</span>
+        <span class="s2">return false</span>
+    <span class="s4">}</span>
+
+    <span class="s2">function </span><span class="s1">hasTileMode</span><span class="s4">(</span><span class="s1">item</span><span class="s4">) {</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">.</span><span class="s1">hasOwnProperty</span><span class="s4">(</span><span class="s5">&quot;fillMode&quot;</span><span class="s4">)) {</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">[</span><span class="s5">&quot;fillMode&quot;</span><span class="s4">].</span><span class="s1">toString</span><span class="s4">() != </span><span class="s5">&quot;0&quot;</span><span class="s4">)</span>
+                <span class="s2">return true</span>
+            <span class="s2">else</span>
+                <span class="s2">return false</span>
+        <span class="s4">}</span>
+        <span class="s2">return false</span>
+    <span class="s4">}</span>
+
+    <span class="s1">ShaderEffectSource </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">proxySource</span>
+        <span class="s1">live</span><span class="s4">: </span><span class="s1">rootItem</span><span class="s4">.</span><span class="s1">input </span><span class="s4">!= </span><span class="s1">rootItem</span><span class="s4">.</span><span class="s1">output</span>
+        <span class="s1">hideSource</span><span class="s4">: </span><span class="s2">false</span>
+        <span class="s1">smooth</span><span class="s4">: </span><span class="s2">true</span>
+        <span class="s1">visible</span><span class="s4">: </span><span class="s2">false</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+
+</pre>
+</body>
+</html>

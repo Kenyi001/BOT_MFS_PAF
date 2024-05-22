@@ -1,0 +1,352 @@
+<html>
+<head>
+<title>zipp.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #6aab73;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+zipp.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">io</span>
+<span class="s0">import </span><span class="s1">posixpath</span>
+<span class="s0">import </span><span class="s1">zipfile</span>
+<span class="s0">import </span><span class="s1">itertools</span>
+<span class="s0">import </span><span class="s1">contextlib</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">pathlib</span>
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&lt; (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">7</span><span class="s2">):</span>
+    <span class="s0">from </span><span class="s1">collections </span><span class="s0">import </span><span class="s1">OrderedDict</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s1">OrderedDict </span><span class="s2">= </span><span class="s1">dict</span>
+
+
+<span class="s1">__all__ </span><span class="s2">= [</span><span class="s4">'Path'</span><span class="s2">]</span>
+
+
+<span class="s0">def </span><span class="s1">_parents</span><span class="s2">(</span><span class="s1">path</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Given a path with elements separated by 
+    posixpath.sep, generate all parents of that path. 
+ 
+    &gt;&gt;&gt; list(_parents('b/d')) 
+    ['b'] 
+    &gt;&gt;&gt; list(_parents('/b/d/')) 
+    ['/b'] 
+    &gt;&gt;&gt; list(_parents('b/d/f/')) 
+    ['b/d', 'b'] 
+    &gt;&gt;&gt; list(_parents('b')) 
+    [] 
+    &gt;&gt;&gt; list(_parents('')) 
+    [] 
+    &quot;&quot;&quot;</span>
+    <span class="s0">return </span><span class="s1">itertools</span><span class="s2">.</span><span class="s1">islice</span><span class="s2">(</span><span class="s1">_ancestry</span><span class="s2">(</span><span class="s1">path</span><span class="s2">), </span><span class="s3">1</span><span class="s2">, </span><span class="s0">None</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">_ancestry</span><span class="s2">(</span><span class="s1">path</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Given a path with elements separated by 
+    posixpath.sep, generate all elements of that path 
+ 
+    &gt;&gt;&gt; list(_ancestry('b/d')) 
+    ['b/d', 'b'] 
+    &gt;&gt;&gt; list(_ancestry('/b/d/')) 
+    ['/b/d', '/b'] 
+    &gt;&gt;&gt; list(_ancestry('b/d/f/')) 
+    ['b/d/f', 'b/d', 'b'] 
+    &gt;&gt;&gt; list(_ancestry('b')) 
+    ['b'] 
+    &gt;&gt;&gt; list(_ancestry('')) 
+    [] 
+    &quot;&quot;&quot;</span>
+    <span class="s1">path </span><span class="s2">= </span><span class="s1">path</span><span class="s2">.</span><span class="s1">rstrip</span><span class="s2">(</span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">sep</span><span class="s2">)</span>
+    <span class="s0">while </span><span class="s1">path </span><span class="s0">and </span><span class="s1">path </span><span class="s2">!= </span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">sep</span><span class="s2">:</span>
+        <span class="s0">yield </span><span class="s1">path</span>
+        <span class="s1">path</span><span class="s2">, </span><span class="s1">tail </span><span class="s2">= </span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">split</span><span class="s2">(</span><span class="s1">path</span><span class="s2">)</span>
+
+
+<span class="s1">_dedupe </span><span class="s2">= </span><span class="s1">OrderedDict</span><span class="s2">.</span><span class="s1">fromkeys</span>
+<span class="s4">&quot;&quot;&quot;Deduplicate an iterable in original order&quot;&quot;&quot;</span>
+
+
+<span class="s0">def </span><span class="s1">_difference</span><span class="s2">(</span><span class="s1">minuend</span><span class="s2">, </span><span class="s1">subtrahend</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Return items in minuend not in subtrahend, retaining order 
+    with O(1) lookup. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">return </span><span class="s1">itertools</span><span class="s2">.</span><span class="s1">filterfalse</span><span class="s2">(</span><span class="s1">set</span><span class="s2">(</span><span class="s1">subtrahend</span><span class="s2">).</span><span class="s1">__contains__</span><span class="s2">, </span><span class="s1">minuend</span><span class="s2">)</span>
+
+
+<span class="s0">class </span><span class="s1">CompleteDirs</span><span class="s2">(</span><span class="s1">zipfile</span><span class="s2">.</span><span class="s1">ZipFile</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    A ZipFile subclass that ensures that implied directories 
+    are always included in the namelist. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s2">@</span><span class="s1">staticmethod</span>
+    <span class="s0">def </span><span class="s1">_implied_dirs</span><span class="s2">(</span><span class="s1">names</span><span class="s2">):</span>
+        <span class="s1">parents </span><span class="s2">= </span><span class="s1">itertools</span><span class="s2">.</span><span class="s1">chain</span><span class="s2">.</span><span class="s1">from_iterable</span><span class="s2">(</span><span class="s1">map</span><span class="s2">(</span><span class="s1">_parents</span><span class="s2">, </span><span class="s1">names</span><span class="s2">))</span>
+        <span class="s1">as_dirs </span><span class="s2">= (</span><span class="s1">p </span><span class="s2">+ </span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">sep </span><span class="s0">for </span><span class="s1">p </span><span class="s0">in </span><span class="s1">parents</span><span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">_dedupe</span><span class="s2">(</span><span class="s1">_difference</span><span class="s2">(</span><span class="s1">as_dirs</span><span class="s2">, </span><span class="s1">names</span><span class="s2">))</span>
+
+    <span class="s0">def </span><span class="s1">namelist</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">names </span><span class="s2">= </span><span class="s1">super</span><span class="s2">(</span><span class="s1">CompleteDirs</span><span class="s2">, </span><span class="s1">self</span><span class="s2">).</span><span class="s1">namelist</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">names </span><span class="s2">+ </span><span class="s1">list</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_implied_dirs</span><span class="s2">(</span><span class="s1">names</span><span class="s2">))</span>
+
+    <span class="s0">def </span><span class="s1">_name_set</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">set</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">namelist</span><span class="s2">())</span>
+
+    <span class="s0">def </span><span class="s1">resolve_dir</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">name</span><span class="s2">):</span>
+        <span class="s5">&quot;&quot;&quot; 
+        If the name represents a directory, return that name 
+        as a directory (with the trailing slash). 
+        &quot;&quot;&quot;</span>
+        <span class="s1">names </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_name_set</span><span class="s2">()</span>
+        <span class="s1">dirname </span><span class="s2">= </span><span class="s1">name </span><span class="s2">+ </span><span class="s4">'/'</span>
+        <span class="s1">dir_match </span><span class="s2">= </span><span class="s1">name </span><span class="s0">not in </span><span class="s1">names </span><span class="s0">and </span><span class="s1">dirname </span><span class="s0">in </span><span class="s1">names</span>
+        <span class="s0">return </span><span class="s1">dirname </span><span class="s0">if </span><span class="s1">dir_match </span><span class="s0">else </span><span class="s1">name</span>
+
+    <span class="s2">@</span><span class="s1">classmethod</span>
+    <span class="s0">def </span><span class="s1">make</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">source</span><span class="s2">):</span>
+        <span class="s5">&quot;&quot;&quot; 
+        Given a source (filename or zipfile), return an 
+        appropriate CompleteDirs subclass. 
+        &quot;&quot;&quot;</span>
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">source</span><span class="s2">, </span><span class="s1">CompleteDirs</span><span class="s2">):</span>
+            <span class="s0">return </span><span class="s1">source</span>
+
+        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">source</span><span class="s2">, </span><span class="s1">zipfile</span><span class="s2">.</span><span class="s1">ZipFile</span><span class="s2">):</span>
+            <span class="s0">return </span><span class="s1">cls</span><span class="s2">(</span><span class="s1">_pathlib_compat</span><span class="s2">(</span><span class="s1">source</span><span class="s2">))</span>
+
+        <span class="s6"># Only allow for FastLookup when supplied zipfile is read-only</span>
+        <span class="s0">if </span><span class="s4">'r' </span><span class="s0">not in </span><span class="s1">source</span><span class="s2">.</span><span class="s1">mode</span><span class="s2">:</span>
+            <span class="s1">cls </span><span class="s2">= </span><span class="s1">CompleteDirs</span>
+
+        <span class="s1">source</span><span class="s2">.</span><span class="s1">__class__ </span><span class="s2">= </span><span class="s1">cls</span>
+        <span class="s0">return </span><span class="s1">source</span>
+
+
+<span class="s0">class </span><span class="s1">FastLookup</span><span class="s2">(</span><span class="s1">CompleteDirs</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    ZipFile subclass to ensure implicit 
+    dirs exist and are resolved rapidly. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s0">def </span><span class="s1">namelist</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">with </span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">suppress</span><span class="s2">(</span><span class="s1">AttributeError</span><span class="s2">):</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__names</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">__names </span><span class="s2">= </span><span class="s1">super</span><span class="s2">(</span><span class="s1">FastLookup</span><span class="s2">, </span><span class="s1">self</span><span class="s2">).</span><span class="s1">namelist</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__names</span>
+
+    <span class="s0">def </span><span class="s1">_name_set</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">with </span><span class="s1">contextlib</span><span class="s2">.</span><span class="s1">suppress</span><span class="s2">(</span><span class="s1">AttributeError</span><span class="s2">):</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__lookup</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">__lookup </span><span class="s2">= </span><span class="s1">super</span><span class="s2">(</span><span class="s1">FastLookup</span><span class="s2">, </span><span class="s1">self</span><span class="s2">).</span><span class="s1">_name_set</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__lookup</span>
+
+
+<span class="s0">def </span><span class="s1">_pathlib_compat</span><span class="s2">(</span><span class="s1">path</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    For path-like objects, convert to a filename for compatibility 
+    on Python 3.6.1 and earlier. 
+    &quot;&quot;&quot;</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">path</span><span class="s2">.</span><span class="s1">__fspath__</span><span class="s2">()</span>
+    <span class="s0">except </span><span class="s1">AttributeError</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">str</span><span class="s2">(</span><span class="s1">path</span><span class="s2">)</span>
+
+
+<span class="s0">class </span><span class="s1">Path</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot; 
+    A pathlib-compatible interface for zip files. 
+ 
+    Consider a zip file with this structure:: 
+ 
+        . 
+        ├── a.txt 
+        └── b 
+            ├── c.txt 
+            └── d 
+                └── e.txt 
+ 
+    &gt;&gt;&gt; data = io.BytesIO() 
+    &gt;&gt;&gt; zf = zipfile.ZipFile(data, 'w') 
+    &gt;&gt;&gt; zf.writestr('a.txt', 'content of a') 
+    &gt;&gt;&gt; zf.writestr('b/c.txt', 'content of c') 
+    &gt;&gt;&gt; zf.writestr('b/d/e.txt', 'content of e') 
+    &gt;&gt;&gt; zf.filename = 'mem/abcde.zip' 
+ 
+    Path accepts the zipfile object itself or a filename 
+ 
+    &gt;&gt;&gt; root = Path(zf) 
+ 
+    From there, several path operations are available. 
+ 
+    Directory iteration (including the zip file itself): 
+ 
+    &gt;&gt;&gt; a, b = root.iterdir() 
+    &gt;&gt;&gt; a 
+    Path('mem/abcde.zip', 'a.txt') 
+    &gt;&gt;&gt; b 
+    Path('mem/abcde.zip', 'b/') 
+ 
+    name property: 
+ 
+    &gt;&gt;&gt; b.name 
+    'b' 
+ 
+    join with divide operator: 
+ 
+    &gt;&gt;&gt; c = b / 'c.txt' 
+    &gt;&gt;&gt; c 
+    Path('mem/abcde.zip', 'b/c.txt') 
+    &gt;&gt;&gt; c.name 
+    'c.txt' 
+ 
+    Read text: 
+ 
+    &gt;&gt;&gt; c.read_text() 
+    'content of c' 
+ 
+    existence: 
+ 
+    &gt;&gt;&gt; c.exists() 
+    True 
+    &gt;&gt;&gt; (b / 'missing.txt').exists() 
+    False 
+ 
+    Coercion to string: 
+ 
+    &gt;&gt;&gt; import os 
+    &gt;&gt;&gt; str(c).replace(os.sep, posixpath.sep) 
+    'mem/abcde.zip/b/c.txt' 
+ 
+    At the root, ``name``, ``filename``, and ``parent`` 
+    resolve to the zipfile. Note these attributes are not 
+    valid and will raise a ``ValueError`` if the zipfile 
+    has no filename. 
+ 
+    &gt;&gt;&gt; root.name 
+    'abcde.zip' 
+    &gt;&gt;&gt; str(root.filename).replace(os.sep, posixpath.sep) 
+    'mem/abcde.zip' 
+    &gt;&gt;&gt; str(root.parent) 
+    'mem' 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">__repr </span><span class="s2">= </span><span class="s4">&quot;{self.__class__.__name__}({self.root.filename!r}, {self.at!r})&quot;</span>
+
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">root</span><span class="s2">, </span><span class="s1">at</span><span class="s2">=</span><span class="s4">&quot;&quot;</span><span class="s2">):</span>
+        <span class="s5">&quot;&quot;&quot; 
+        Construct a Path from a ZipFile or filename. 
+ 
+        Note: When the source is an existing ZipFile object, 
+        its type (__class__) will be mutated to a 
+        specialized type. If the caller wishes to retain the 
+        original type, the caller should either create a 
+        separate ZipFile object or pass a filename. 
+        &quot;&quot;&quot;</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">root </span><span class="s2">= </span><span class="s1">FastLookup</span><span class="s2">.</span><span class="s1">make</span><span class="s2">(</span><span class="s1">root</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">at </span><span class="s2">= </span><span class="s1">at</span>
+
+    <span class="s0">def </span><span class="s1">open</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mode</span><span class="s2">=</span><span class="s4">'r'</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, </span><span class="s1">pwd</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+        <span class="s5">&quot;&quot;&quot; 
+        Open this entry as text or binary following the semantics 
+        of ``pathlib.Path.open()`` by passing arguments through 
+        to io.TextIOWrapper(). 
+        &quot;&quot;&quot;</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">is_dir</span><span class="s2">():</span>
+            <span class="s0">raise </span><span class="s1">IsADirectoryError</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+        <span class="s1">zip_mode </span><span class="s2">= </span><span class="s1">mode</span><span class="s2">[</span><span class="s3">0</span><span class="s2">]</span>
+        <span class="s0">if not </span><span class="s1">self</span><span class="s2">.</span><span class="s1">exists</span><span class="s2">() </span><span class="s0">and </span><span class="s1">zip_mode </span><span class="s2">== </span><span class="s4">'r'</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">FileNotFoundError</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+        <span class="s1">stream </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">root</span><span class="s2">.</span><span class="s1">open</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">, </span><span class="s1">zip_mode</span><span class="s2">, </span><span class="s1">pwd</span><span class="s2">=</span><span class="s1">pwd</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s4">'b' </span><span class="s0">in </span><span class="s1">mode</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">args </span><span class="s0">or </span><span class="s1">kwargs</span><span class="s2">:</span>
+                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;encoding args invalid for binary operation&quot;</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">stream</span>
+        <span class="s0">return </span><span class="s1">io</span><span class="s2">.</span><span class="s1">TextIOWrapper</span><span class="s2">(</span><span class="s1">stream</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">name</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">pathlib</span><span class="s2">.</span><span class="s1">Path</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">).</span><span class="s1">name </span><span class="s0">or </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">.</span><span class="s1">name</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">suffix</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">pathlib</span><span class="s2">.</span><span class="s1">Path</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">).</span><span class="s1">suffix </span><span class="s0">or </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">.</span><span class="s1">suffix</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">suffixes</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">pathlib</span><span class="s2">.</span><span class="s1">Path</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">).</span><span class="s1">suffixes </span><span class="s0">or </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">.</span><span class="s1">suffixes</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">stem</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">pathlib</span><span class="s2">.</span><span class="s1">Path</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">).</span><span class="s1">stem </span><span class="s0">or </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">.</span><span class="s1">stem</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">filename</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">pathlib</span><span class="s2">.</span><span class="s1">Path</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">root</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">).</span><span class="s1">joinpath</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">read_text</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+        <span class="s0">with </span><span class="s1">self</span><span class="s2">.</span><span class="s1">open</span><span class="s2">(</span><span class="s4">'r'</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">) </span><span class="s0">as </span><span class="s1">strm</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">strm</span><span class="s2">.</span><span class="s1">read</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">read_bytes</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">with </span><span class="s1">self</span><span class="s2">.</span><span class="s1">open</span><span class="s2">(</span><span class="s4">'rb'</span><span class="s2">) </span><span class="s0">as </span><span class="s1">strm</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">strm</span><span class="s2">.</span><span class="s1">read</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">_is_child</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">path</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">path</span><span class="s2">.</span><span class="s1">at</span><span class="s2">.</span><span class="s1">rstrip</span><span class="s2">(</span><span class="s4">&quot;/&quot;</span><span class="s2">)) == </span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">.</span><span class="s1">rstrip</span><span class="s2">(</span><span class="s4">&quot;/&quot;</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">_next</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">at</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__class__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">root</span><span class="s2">, </span><span class="s1">at</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">is_dir</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return not </span><span class="s1">self</span><span class="s2">.</span><span class="s1">at </span><span class="s0">or </span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">.</span><span class="s1">endswith</span><span class="s2">(</span><span class="s4">&quot;/&quot;</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">is_file</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">exists</span><span class="s2">() </span><span class="s0">and not </span><span class="s1">self</span><span class="s2">.</span><span class="s1">is_dir</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">exists</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">at </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">root</span><span class="s2">.</span><span class="s1">_name_set</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">iterdir</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">if not </span><span class="s1">self</span><span class="s2">.</span><span class="s1">is_dir</span><span class="s2">():</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;Can't listdir a file&quot;</span><span class="s2">)</span>
+        <span class="s1">subs </span><span class="s2">= </span><span class="s1">map</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_next</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">root</span><span class="s2">.</span><span class="s1">namelist</span><span class="s2">())</span>
+        <span class="s0">return </span><span class="s1">filter</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_is_child</span><span class="s2">, </span><span class="s1">subs</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">__str__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">root</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">__repr__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__repr</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span><span class="s1">self</span><span class="s2">=</span><span class="s1">self</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">joinpath</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">other</span><span class="s2">):</span>
+        <span class="s1">next </span><span class="s2">= </span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">, *</span><span class="s1">map</span><span class="s2">(</span><span class="s1">_pathlib_compat</span><span class="s2">, </span><span class="s1">other</span><span class="s2">))</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_next</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">root</span><span class="s2">.</span><span class="s1">resolve_dir</span><span class="s2">(</span><span class="s1">next</span><span class="s2">))</span>
+
+    <span class="s1">__truediv__ </span><span class="s2">= </span><span class="s1">joinpath</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">parent</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">if not </span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">.</span><span class="s1">parent</span>
+        <span class="s1">parent_at </span><span class="s2">= </span><span class="s1">posixpath</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">at</span><span class="s2">.</span><span class="s1">rstrip</span><span class="s2">(</span><span class="s4">'/'</span><span class="s2">))</span>
+        <span class="s0">if </span><span class="s1">parent_at</span><span class="s2">:</span>
+            <span class="s1">parent_at </span><span class="s2">+= </span><span class="s4">'/'</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_next</span><span class="s2">(</span><span class="s1">parent_at</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

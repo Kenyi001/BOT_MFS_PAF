@@ -1,0 +1,102 @@
+<html>
+<head>
+<title>install.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.s3 { color: #bcbec4;}
+.s4 { color: #7a7e85;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+install.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">if </span><span class="s2">'setuptools' </span><span class="s0">in </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">modules</span><span class="s3">:</span>
+    <span class="s0">import </span><span class="s1">setuptools</span><span class="s3">.</span><span class="s1">command</span><span class="s3">.</span><span class="s1">install </span><span class="s0">as </span><span class="s1">old_install_mod</span>
+    <span class="s1">have_setuptools </span><span class="s3">= </span><span class="s0">True</span>
+<span class="s0">else</span><span class="s3">:</span>
+    <span class="s0">import </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">command</span><span class="s3">.</span><span class="s1">install </span><span class="s0">as </span><span class="s1">old_install_mod</span>
+    <span class="s1">have_setuptools </span><span class="s3">= </span><span class="s0">False</span>
+<span class="s0">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">file_util </span><span class="s0">import </span><span class="s1">write_file</span>
+
+<span class="s1">old_install </span><span class="s3">= </span><span class="s1">old_install_mod</span><span class="s3">.</span><span class="s1">install</span>
+
+<span class="s0">class </span><span class="s1">install</span><span class="s3">(</span><span class="s1">old_install</span><span class="s3">):</span>
+
+    <span class="s4"># Always run install_clib - the command is cheap, so no need to bypass it;</span>
+    <span class="s4"># but it's not run by setuptools -- so it's run again in install_data</span>
+    <span class="s1">sub_commands </span><span class="s3">= </span><span class="s1">old_install</span><span class="s3">.</span><span class="s1">sub_commands </span><span class="s3">+ [</span>
+        <span class="s3">(</span><span class="s2">'install_clib'</span><span class="s3">, </span><span class="s0">lambda </span><span class="s1">x</span><span class="s3">: </span><span class="s0">True</span><span class="s3">)</span>
+    <span class="s3">]</span>
+
+    <span class="s0">def </span><span class="s1">finalize_options </span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">old_install</span><span class="s3">.</span><span class="s1">finalize_options</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">install_lib </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">install_libbase</span>
+
+    <span class="s0">def </span><span class="s1">setuptools_run</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s5">&quot;&quot;&quot; The setuptools version of the .run() method. 
+ 
+        We must pull in the entire code so we can override the level used in the 
+        _getframe() call since we wrap this call by one more level. 
+        &quot;&quot;&quot;</span>
+        <span class="s0">from </span><span class="s1">distutils</span><span class="s3">.</span><span class="s1">command</span><span class="s3">.</span><span class="s1">install </span><span class="s0">import </span><span class="s1">install </span><span class="s0">as </span><span class="s1">distutils_install</span>
+
+        <span class="s4"># Explicit request for old-style install?  Just do it</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">old_and_unmanageable </span><span class="s0">or </span><span class="s1">self</span><span class="s3">.</span><span class="s1">single_version_externally_managed</span><span class="s3">:</span>
+            <span class="s0">return </span><span class="s1">distutils_install</span><span class="s3">.</span><span class="s1">run</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+
+        <span class="s4"># Attempt to detect whether we were called from setup() or by another</span>
+        <span class="s4"># command.  If we were called by setup(), our caller will be the</span>
+        <span class="s4"># 'run_command' method in 'distutils.dist', and *its* caller will be</span>
+        <span class="s4"># the 'run_commands' method.  If we were called any other way, our</span>
+        <span class="s4"># immediate caller *might* be 'run_command', but it won't have been</span>
+        <span class="s4"># called by 'run_commands'.  This is slightly kludgy, but seems to</span>
+        <span class="s4"># work.</span>
+        <span class="s4">#</span>
+        <span class="s1">caller </span><span class="s3">= </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">_getframe</span><span class="s3">(</span><span class="s6">3</span><span class="s3">)</span>
+        <span class="s1">caller_module </span><span class="s3">= </span><span class="s1">caller</span><span class="s3">.</span><span class="s1">f_globals</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s2">'__name__'</span><span class="s3">, </span><span class="s2">''</span><span class="s3">)</span>
+        <span class="s1">caller_name </span><span class="s3">= </span><span class="s1">caller</span><span class="s3">.</span><span class="s1">f_code</span><span class="s3">.</span><span class="s1">co_name</span>
+
+        <span class="s0">if </span><span class="s1">caller_module </span><span class="s3">!= </span><span class="s2">'distutils.dist' </span><span class="s0">or </span><span class="s1">caller_name</span><span class="s3">!=</span><span class="s2">'run_commands'</span><span class="s3">:</span>
+            <span class="s4"># We weren't called from the command line or setup(), so we</span>
+            <span class="s4"># should run in backward-compatibility mode to support bdist_*</span>
+            <span class="s4"># commands.</span>
+            <span class="s1">distutils_install</span><span class="s3">.</span><span class="s1">run</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+        <span class="s0">else</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">do_egg_install</span><span class="s3">()</span>
+
+    <span class="s0">def </span><span class="s1">run</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s0">if not </span><span class="s1">have_setuptools</span><span class="s3">:</span>
+            <span class="s1">r </span><span class="s3">= </span><span class="s1">old_install</span><span class="s3">.</span><span class="s1">run</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+        <span class="s0">else</span><span class="s3">:</span>
+            <span class="s1">r </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">setuptools_run</span><span class="s3">()</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">record</span><span class="s3">:</span>
+            <span class="s4"># bdist_rpm fails when INSTALLED_FILES contains</span>
+            <span class="s4"># paths with spaces. Such paths must be enclosed</span>
+            <span class="s4"># with double-quotes.</span>
+            <span class="s0">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">record</span><span class="s3">) </span><span class="s0">as </span><span class="s1">f</span><span class="s3">:</span>
+                <span class="s1">lines </span><span class="s3">= []</span>
+                <span class="s1">need_rewrite </span><span class="s3">= </span><span class="s0">False</span>
+                <span class="s0">for </span><span class="s1">l </span><span class="s0">in </span><span class="s1">f</span><span class="s3">:</span>
+                    <span class="s1">l </span><span class="s3">= </span><span class="s1">l</span><span class="s3">.</span><span class="s1">rstrip</span><span class="s3">()</span>
+                    <span class="s0">if </span><span class="s2">' ' </span><span class="s0">in </span><span class="s1">l</span><span class="s3">:</span>
+                        <span class="s1">need_rewrite </span><span class="s3">= </span><span class="s0">True</span>
+                        <span class="s1">l </span><span class="s3">= </span><span class="s2">'&quot;%s&quot;' </span><span class="s3">% (</span><span class="s1">l</span><span class="s3">)</span>
+                    <span class="s1">lines</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">l</span><span class="s3">)</span>
+            <span class="s0">if </span><span class="s1">need_rewrite</span><span class="s3">:</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">execute</span><span class="s3">(</span><span class="s1">write_file</span><span class="s3">,</span>
+                             <span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">record</span><span class="s3">, </span><span class="s1">lines</span><span class="s3">),</span>
+                             <span class="s2">&quot;re-writing list of installed files to '%s'&quot; </span><span class="s3">%</span>
+                             <span class="s1">self</span><span class="s3">.</span><span class="s1">record</span><span class="s3">)</span>
+        <span class="s0">return </span><span class="s1">r</span>
+</pre>
+</body>
+</html>

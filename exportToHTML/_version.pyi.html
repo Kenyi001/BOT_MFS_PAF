@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>_version.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_version.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">__all__</span><span class="s1">: </span><span class="s0">list</span><span class="s1">[</span><span class="s0">str</span><span class="s1">]</span>
+
+<span class="s2">class </span><span class="s0">NumpyVersion</span><span class="s1">:</span>
+    <span class="s0">vstring</span><span class="s1">: </span><span class="s0">str</span>
+    <span class="s0">version</span><span class="s1">: </span><span class="s0">str</span>
+    <span class="s0">major</span><span class="s1">: </span><span class="s0">int</span>
+    <span class="s0">minor</span><span class="s1">: </span><span class="s0">int</span>
+    <span class="s0">bugfix</span><span class="s1">: </span><span class="s0">int</span>
+    <span class="s0">pre_release</span><span class="s1">: </span><span class="s0">str</span>
+    <span class="s0">is_devversion</span><span class="s1">: </span><span class="s0">bool</span>
+    <span class="s2">def </span><span class="s0">__init__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">vstring</span><span class="s1">: </span><span class="s0">str</span><span class="s1">) </span><span class="s0">-&gt; </span><span class="s2">None</span><span class="s1">: ...</span>
+    <span class="s2">def </span><span class="s0">__lt__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">other</span><span class="s1">: </span><span class="s0">str </span><span class="s1">| </span><span class="s0">NumpyVersion</span><span class="s1">) </span><span class="s0">-&gt; bool</span><span class="s1">: ...</span>
+    <span class="s2">def </span><span class="s0">__le__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">other</span><span class="s1">: </span><span class="s0">str </span><span class="s1">| </span><span class="s0">NumpyVersion</span><span class="s1">) </span><span class="s0">-&gt; bool</span><span class="s1">: ...</span>
+    <span class="s2">def </span><span class="s0">__eq__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">other</span><span class="s1">: </span><span class="s0">str </span><span class="s1">| </span><span class="s0">NumpyVersion</span><span class="s1">) </span><span class="s0">-&gt; bool</span><span class="s1">: ...  </span><span class="s3"># type: ignore[override]</span>
+    <span class="s2">def </span><span class="s0">__ne__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">other</span><span class="s1">: </span><span class="s0">str </span><span class="s1">| </span><span class="s0">NumpyVersion</span><span class="s1">) </span><span class="s0">-&gt; bool</span><span class="s1">: ...  </span><span class="s3"># type: ignore[override]</span>
+    <span class="s2">def </span><span class="s0">__gt__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">other</span><span class="s1">: </span><span class="s0">str </span><span class="s1">| </span><span class="s0">NumpyVersion</span><span class="s1">) </span><span class="s0">-&gt; bool</span><span class="s1">: ...</span>
+    <span class="s2">def </span><span class="s0">__ge__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">other</span><span class="s1">: </span><span class="s0">str </span><span class="s1">| </span><span class="s0">NumpyVersion</span><span class="s1">) </span><span class="s0">-&gt; bool</span><span class="s1">: ...</span>
+</pre>
+</body>
+</html>

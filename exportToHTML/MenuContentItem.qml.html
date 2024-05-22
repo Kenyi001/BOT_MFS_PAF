@@ -1,0 +1,305 @@
+<html>
+<head>
+<title>MenuContentItem.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+MenuContentItem.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2016 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Controls module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQml </span><span class="s3">2.14 </span><span class="s4">as </span><span class="s1">Qml</span>
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.2</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls </span><span class="s3">1.2</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Styles </span><span class="s3">1.1</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Private </span><span class="s3">1.0</span>
+
+<span class="s1">Loader </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">menuFrameLoader</span>
+
+    <span class="s1">property </span><span class="s2">var </span><span class="s1">__menu</span>
+
+    <span class="s1">Accessible</span><span class="s4">.</span><span class="s1">role</span><span class="s4">: </span><span class="s1">Accessible</span><span class="s4">.</span><span class="s1">PopupMenu</span>
+
+    <span class="s1">visible</span><span class="s4">: </span><span class="s1">status </span><span class="s4">=== </span><span class="s1">Loader</span><span class="s4">.</span><span class="s1">Ready</span>
+    <span class="s1">width</span><span class="s4">: </span><span class="s1">content</span><span class="s4">.</span><span class="s1">width </span><span class="s4">+ (</span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">? </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">left </span><span class="s4">+ </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">right </span><span class="s4">: </span><span class="s3">0</span><span class="s4">)</span>
+    <span class="s1">height</span><span class="s4">: </span><span class="s1">content</span><span class="s4">.</span><span class="s1">height </span><span class="s4">+ (</span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">? </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">top </span><span class="s4">+ </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">bottom </span><span class="s4">: </span><span class="s3">0</span><span class="s4">)</span>
+
+    <span class="s1">Loader </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">styleLoader</span>
+        <span class="s1">active</span><span class="s4">: !</span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">isNative</span>
+        <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">style</span>
+        <span class="s1">property alias __control</span><span class="s4">: </span><span class="s1">menuFrameLoader</span>
+        <span class="s1">onStatusChanged</span><span class="s4">: {</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">status </span><span class="s4">=== </span><span class="s1">Loader</span><span class="s4">.</span><span class="s1">Error</span><span class="s4">)</span>
+                <span class="s1">console</span><span class="s4">.</span><span class="s1">error</span><span class="s4">(</span><span class="s5">&quot;Failed to load Style for&quot;</span><span class="s4">, </span><span class="s1">__menu</span><span class="s4">)</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+    <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">? </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">frame </span><span class="s4">: </span><span class="s1">undefined</span>
+
+    <span class="s1">QtObject </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">d</span>
+        <span class="s1">property </span><span class="s2">var </span><span class="s1">mnemonicsMap</span><span class="s4">: ({})</span>
+        <span class="s1">readonly property Style style</span><span class="s4">: </span><span class="s1">styleLoader</span><span class="s4">.</span><span class="s1">item</span>
+        <span class="s1">readonly property Component menuItemPanel</span><span class="s4">: </span><span class="s1">style </span><span class="s4">? </span><span class="s1">style</span><span class="s4">.</span><span class="s1">menuItemPanel </span><span class="s4">: </span><span class="s2">null</span>
+
+        <span class="s2">function </span><span class="s1">canBeHovered</span><span class="s4">(</span><span class="s1">index</span><span class="s4">) {</span>
+            <span class="s2">var </span><span class="s1">item </span><span class="s4">= </span><span class="s1">content</span><span class="s4">.</span><span class="s1">menuItemAt</span><span class="s4">(</span><span class="s1">index</span><span class="s4">)</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">item </span><span class="s4">&amp;&amp; </span><span class="s1">item</span><span class="s4">.</span><span class="s1">visible </span><span class="s4">&amp;&amp; </span><span class="s1">item</span><span class="s4">.</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">type </span><span class="s4">!== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Separator </span><span class="s4">&amp;&amp; </span><span class="s1">item</span><span class="s4">.</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">enabled</span><span class="s4">) {</span>
+                <span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">= </span><span class="s1">index</span>
+                <span class="s2">return true</span>
+            <span class="s4">}</span>
+            <span class="s2">return false</span>
+        <span class="s4">}</span>
+
+        <span class="s2">function </span><span class="s1">triggerCurrent</span><span class="s4">() {</span>
+            <span class="s2">var </span><span class="s1">item </span><span class="s4">= </span><span class="s1">content</span><span class="s4">.</span><span class="s1">menuItemAt</span><span class="s4">(</span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex</span><span class="s4">)</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">)</span>
+                <span class="s1">triggerAndDismiss</span><span class="s4">(</span><span class="s1">item</span><span class="s4">)</span>
+        <span class="s4">}</span>
+
+        <span class="s2">function </span><span class="s1">triggerAndDismiss</span><span class="s4">(</span><span class="s1">item</span><span class="s4">) {</span>
+            <span class="s2">if </span><span class="s4">(!</span><span class="s1">item</span><span class="s4">)</span>
+                <span class="s2">return</span><span class="s4">;</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">.</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Separator</span><span class="s4">)</span>
+                <span class="s1">__menu</span><span class="s4">.</span><span class="s1">__dismissAndDestroy</span><span class="s4">()</span>
+            <span class="s2">else if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">.</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Item</span><span class="s4">)</span>
+                <span class="s1">item</span><span class="s4">.</span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">trigger</span><span class="s4">()</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">focus</span><span class="s4">: </span><span class="s2">true</span>
+
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onPressed</span><span class="s4">: {</span>
+        <span class="s2">var </span><span class="s1">item </span><span class="s4">= </span><span class="s2">null</span>
+        <span class="s2">if </span><span class="s4">(!(</span><span class="s1">event</span><span class="s4">.</span><span class="s1">modifiers </span><span class="s4">&amp; </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">AltModifier</span><span class="s4">)</span>
+                <span class="s4">&amp;&amp; (</span><span class="s1">item </span><span class="s4">= </span><span class="s1">d</span><span class="s4">.</span><span class="s1">mnemonicsMap</span><span class="s4">[</span><span class="s1">event</span><span class="s4">.</span><span class="s1">text</span><span class="s4">.</span><span class="s1">toUpperCase</span><span class="s4">()])) {</span>
+            <span class="s2">if </span><span class="s4">(</span><span class="s1">item</span><span class="s4">.</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Menu</span><span class="s4">) {</span>
+                <span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">= </span><span class="s1">item</span><span class="s4">.</span><span class="s1">__menuItemIndex</span>
+                <span class="s1">item</span><span class="s4">.</span><span class="s1">__showSubMenu</span><span class="s4">(</span><span class="s2">true</span><span class="s4">)</span>
+                <span class="s1">item</span><span class="s4">.</span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">= </span><span class="s3">0</span>
+            <span class="s4">} </span><span class="s2">else </span><span class="s4">{</span>
+                <span class="s1">d</span><span class="s4">.</span><span class="s1">triggerAndDismiss</span><span class="s4">(</span><span class="s1">item</span><span class="s4">)</span>
+            <span class="s4">}</span>
+            <span class="s1">event</span><span class="s4">.</span><span class="s1">accepted </span><span class="s4">= </span><span class="s2">true</span>
+        <span class="s4">} </span><span class="s2">else </span><span class="s4">{</span>
+            <span class="s1">event</span><span class="s4">.</span><span class="s1">accepted </span><span class="s4">= </span><span class="s2">false</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onEscapePressed</span><span class="s4">: </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__dismissAndDestroy</span><span class="s4">()</span>
+
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onDownPressed</span><span class="s4">: {</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">&lt; </span><span class="s3">0</span><span class="s4">)</span>
+            <span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">= -</span><span class="s3">1</span>
+
+        <span class="s2">for </span><span class="s4">(</span><span class="s2">var </span><span class="s1">i </span><span class="s4">= </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">+ </span><span class="s3">1</span><span class="s4">;</span>
+             <span class="s1">i </span><span class="s4">&lt; </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">items</span><span class="s4">.</span><span class="s1">length </span><span class="s4">&amp;&amp; !</span><span class="s1">d</span><span class="s4">.</span><span class="s1">canBeHovered</span><span class="s4">(</span><span class="s1">i</span><span class="s4">); </span><span class="s1">i</span><span class="s4">++)</span>
+            <span class="s4">;</span>
+        <span class="s1">event</span><span class="s4">.</span><span class="s1">accepted </span><span class="s4">= </span><span class="s2">true</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onUpPressed</span><span class="s4">: {</span>
+        <span class="s2">for </span><span class="s4">(</span><span class="s2">var </span><span class="s1">i </span><span class="s4">= </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">- </span><span class="s3">1</span><span class="s4">;</span>
+             <span class="s1">i </span><span class="s4">&gt;= </span><span class="s3">0 </span><span class="s4">&amp;&amp; !</span><span class="s1">d</span><span class="s4">.</span><span class="s1">canBeHovered</span><span class="s4">(</span><span class="s1">i</span><span class="s4">); </span><span class="s1">i</span><span class="s4">--)</span>
+            <span class="s4">;</span>
+        <span class="s1">event</span><span class="s4">.</span><span class="s1">accepted </span><span class="s4">= </span><span class="s2">true</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onLeftPressed</span><span class="s4">: {</span>
+        <span class="s2">if </span><span class="s4">((</span><span class="s1">event</span><span class="s4">.</span><span class="s1">accepted </span><span class="s4">= </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__parentMenu</span><span class="s4">.</span><span class="s1">hasOwnProperty</span><span class="s4">(</span><span class="s5">&quot;title&quot;</span><span class="s4">)))</span>
+            <span class="s1">__menu</span><span class="s4">.</span><span class="s1">__closeAndDestroy</span><span class="s4">()</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onRightPressed</span><span class="s4">: {</span>
+        <span class="s2">var </span><span class="s1">item </span><span class="s4">= </span><span class="s1">content</span><span class="s4">.</span><span class="s1">menuItemAt</span><span class="s4">(</span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex</span><span class="s4">)</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">item </span><span class="s4">&amp;&amp; </span><span class="s1">item</span><span class="s4">.</span><span class="s1">styleData</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Menu</span>
+                 <span class="s4">&amp;&amp; !</span><span class="s1">item</span><span class="s4">.</span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__popupVisible</span><span class="s4">) {</span>
+            <span class="s1">item</span><span class="s4">.</span><span class="s1">__showSubMenu</span><span class="s4">(</span><span class="s2">true</span><span class="s4">)</span>
+            <span class="s1">item</span><span class="s4">.</span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">= </span><span class="s3">0</span>
+            <span class="s1">event</span><span class="s4">.</span><span class="s1">accepted </span><span class="s4">= </span><span class="s2">true</span>
+        <span class="s4">} </span><span class="s2">else </span><span class="s4">{</span>
+            <span class="s1">event</span><span class="s4">.</span><span class="s1">accepted </span><span class="s4">= </span><span class="s2">false</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onSpacePressed</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">triggerCurrent</span><span class="s4">()</span>
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onReturnPressed</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">triggerCurrent</span><span class="s4">()</span>
+    <span class="s1">Keys</span><span class="s4">.</span><span class="s1">onEnterPressed</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">triggerCurrent</span><span class="s4">()</span>
+
+    <span class="s1">Qml</span><span class="s4">.</span><span class="s1">Binding </span><span class="s4">{</span>
+        <span class="s6">// Make sure the styled frame is in the background</span>
+        <span class="s1">target</span><span class="s4">: </span><span class="s1">item</span>
+        <span class="s1">property</span><span class="s4">: </span><span class="s5">&quot;z&quot;</span>
+        <span class="s1">value</span><span class="s4">: </span><span class="s1">content</span><span class="s4">.</span><span class="s1">z </span><span class="s4">- </span><span class="s3">1</span>
+        <span class="s1">restoreMode</span><span class="s4">: </span><span class="s1">Binding</span><span class="s4">.</span><span class="s1">RestoreBinding</span>
+    <span class="s4">}</span>
+
+    <span class="s1">ColumnMenuContent </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">content</span>
+        <span class="s1">x</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">? </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">left </span><span class="s4">: </span><span class="s3">0</span>
+        <span class="s1">y</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">? </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">top </span><span class="s4">: </span><span class="s3">0</span>
+        <span class="s1">menuItemDelegate</span><span class="s4">: </span><span class="s1">menuItemComponent</span>
+        <span class="s1">scrollIndicatorStyle</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">&amp;&amp; </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">scrollIndicator </span><span class="s4">|| </span><span class="s2">null</span>
+        <span class="s1">scrollerStyle</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">&amp;&amp; </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">__scrollerStyle</span>
+        <span class="s1">itemsModel</span><span class="s4">: </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">items</span>
+        <span class="s1">minWidth</span><span class="s4">: </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__minimumWidth</span>
+        <span class="s1">maxHeight</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style </span><span class="s4">? </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">__maxPopupHeight </span><span class="s4">: </span><span class="s3">0</span>
+        <span class="s1">onTriggered</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">triggerAndDismiss</span><span class="s4">(</span><span class="s1">item</span><span class="s4">)</span>
+    <span class="s4">}</span>
+
+    <span class="s1">Component </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">menuItemComponent</span>
+        <span class="s1">Loader </span><span class="s4">{</span>
+            <span class="s1">id</span><span class="s4">: </span><span class="s1">menuItemLoader</span>
+
+            <span class="s1">Accessible</span><span class="s4">.</span><span class="s1">role</span><span class="s4">: </span><span class="s1">opts</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Item </span><span class="s4">|| </span><span class="s1">opts</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Menu </span><span class="s4">?</span>
+                                 <span class="s1">Accessible</span><span class="s4">.</span><span class="s1">MenuItem </span><span class="s4">: </span><span class="s1">Accessible</span><span class="s4">.</span><span class="s1">NoRole</span>
+            <span class="s1">Accessible</span><span class="s4">.</span><span class="s1">name</span><span class="s4">: </span><span class="s1">StyleHelpers</span><span class="s4">.</span><span class="s1">removeMnemonics</span><span class="s4">(</span><span class="s1">opts</span><span class="s4">.</span><span class="s1">text</span><span class="s4">)</span>
+            <span class="s1">Accessible</span><span class="s4">.</span><span class="s1">checkable</span><span class="s4">: </span><span class="s1">opts</span><span class="s4">.</span><span class="s1">checkable</span>
+            <span class="s1">Accessible</span><span class="s4">.</span><span class="s1">checked</span><span class="s4">: </span><span class="s1">opts</span><span class="s4">.</span><span class="s1">checked</span>
+            <span class="s1">Accessible</span><span class="s4">.</span><span class="s1">onPressAction</span><span class="s4">: {</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">opts</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Item</span><span class="s4">) {</span>
+                    <span class="s1">d</span><span class="s4">.</span><span class="s1">triggerAndDismiss</span><span class="s4">(</span><span class="s1">menuItemLoader</span><span class="s4">)</span>
+                <span class="s4">} </span><span class="s2">else if </span><span class="s4">(</span><span class="s1">opts</span><span class="s4">.</span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Menu</span><span class="s4">) {</span>
+                    <span class="s1">__showSubMenu</span><span class="s4">(</span><span class="s2">true </span><span class="s6">/*immediately*/</span><span class="s4">)</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+
+            <span class="s1">property QtObject styleData</span><span class="s4">: </span><span class="s1">QtObject </span><span class="s4">{</span>
+                <span class="s1">id</span><span class="s4">: </span><span class="s1">opts</span>
+                <span class="s1">readonly property int index</span><span class="s4">: </span><span class="s1">__menuItemIndex</span>
+                <span class="s1">readonly property int type</span><span class="s4">: </span><span class="s1">__menuItem </span><span class="s4">? </span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">type </span><span class="s4">: -</span><span class="s3">1</span>
+                <span class="s1">readonly property bool selected</span><span class="s4">: </span><span class="s1">type </span><span class="s4">!== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Separator </span><span class="s4">&amp;&amp; </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">=== </span><span class="s1">index</span>
+                <span class="s1">readonly property bool pressed</span><span class="s4">: </span><span class="s1">type </span><span class="s4">!== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Separator </span><span class="s4">&amp;&amp; </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">=== </span><span class="s1">index</span>
+                                                <span class="s4">&amp;&amp; </span><span class="s1">content</span><span class="s4">.</span><span class="s1">mousePressed </span><span class="s6">// TODO Add key pressed condition once we get delayed menu closing</span>
+                <span class="s1">readonly property string text</span><span class="s4">: </span><span class="s1">type </span><span class="s4">=== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Menu </span><span class="s4">? </span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">title </span><span class="s4">:</span>
+                                               <span class="s1">type </span><span class="s4">!== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Separator </span><span class="s4">? </span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">text </span><span class="s4">: </span><span class="s5">&quot;&quot;</span>
+                <span class="s1">readonly property bool underlineMnemonic</span><span class="s4">: </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__contentItem</span><span class="s4">.</span><span class="s1">altPressed</span>
+                <span class="s1">readonly property string shortcut</span><span class="s4">: !!</span><span class="s1">__menuItem </span><span class="s4">&amp;&amp; </span><span class="s1">__menuItem</span><span class="s4">[</span><span class="s5">&quot;shortcut&quot;</span><span class="s4">] || </span><span class="s5">&quot;&quot;</span>
+                <span class="s1">readonly property </span><span class="s2">var </span><span class="s1">iconSource</span><span class="s4">: !!</span><span class="s1">__menuItem </span><span class="s4">&amp;&amp; </span><span class="s1">__menuItem</span><span class="s4">[</span><span class="s5">&quot;iconSource&quot;</span><span class="s4">] || </span><span class="s1">undefined</span>
+                <span class="s1">readonly property bool enabled</span><span class="s4">: </span><span class="s1">type </span><span class="s4">!== </span><span class="s1">MenuItemType</span><span class="s4">.</span><span class="s1">Separator </span><span class="s4">&amp;&amp; !!</span><span class="s1">__menuItem </span><span class="s4">&amp;&amp; </span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">enabled</span>
+                <span class="s1">readonly property bool checked</span><span class="s4">: !!</span><span class="s1">__menuItem </span><span class="s4">&amp;&amp; !!</span><span class="s1">__menuItem</span><span class="s4">[</span><span class="s5">&quot;checked&quot;</span><span class="s4">]</span>
+                <span class="s1">readonly property bool checkable</span><span class="s4">: !!</span><span class="s1">__menuItem </span><span class="s4">&amp;&amp; !!</span><span class="s1">__menuItem</span><span class="s4">[</span><span class="s5">&quot;checkable&quot;</span><span class="s4">]</span>
+                <span class="s1">readonly property bool exclusive</span><span class="s4">: !!</span><span class="s1">__menuItem </span><span class="s4">&amp;&amp; !!</span><span class="s1">__menuItem</span><span class="s4">[</span><span class="s5">&quot;exclusiveGroup&quot;</span><span class="s4">]</span>
+                <span class="s1">readonly property int scrollerDirection</span><span class="s4">: </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">NoArrow</span>
+            <span class="s4">}</span>
+
+            <span class="s1">readonly property </span><span class="s2">var </span><span class="s1">__menuItem</span><span class="s4">: </span><span class="s1">modelData</span>
+            <span class="s1">readonly property int __menuItemIndex</span><span class="s4">: </span><span class="s1">index</span>
+
+            <span class="s1">sourceComponent</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">menuItemPanel</span>
+            <span class="s1">enabled</span><span class="s4">: </span><span class="s1">visible </span><span class="s4">&amp;&amp; </span><span class="s1">opts</span><span class="s4">.</span><span class="s1">enabled</span>
+            <span class="s1">visible</span><span class="s4">: !!</span><span class="s1">__menuItem </span><span class="s4">&amp;&amp; </span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">visible</span>
+            <span class="s1">active</span><span class="s4">: </span><span class="s1">visible</span>
+
+            <span class="s2">function </span><span class="s1">__showSubMenu</span><span class="s4">(</span><span class="s1">immediately</span><span class="s4">) {</span>
+                <span class="s2">if </span><span class="s4">(!</span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">enabled</span><span class="s4">)</span>
+                    <span class="s2">return</span><span class="s4">;</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">immediately</span><span class="s4">) {</span>
+                    <span class="s2">if </span><span class="s4">(</span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">=== </span><span class="s1">__menuItemIndex</span><span class="s4">) {</span>
+                        <span class="s2">if </span><span class="s4">(</span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__usingDefaultStyle</span><span class="s4">)</span>
+                            <span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">style </span><span class="s4">= </span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">style</span>
+                        <span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__popup</span><span class="s4">(</span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rect</span><span class="s4">(</span><span class="s1">menuFrameLoader</span><span class="s4">.</span><span class="s1">width </span><span class="s4">- (</span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">submenuOverlap </span><span class="s4">+ </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">right</span><span class="s4">), -</span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">padding</span><span class="s4">.</span><span class="s1">top</span><span class="s4">, </span><span class="s3">0</span><span class="s4">, </span><span class="s3">0</span><span class="s4">), -</span><span class="s3">1</span><span class="s4">)</span>
+                    <span class="s4">}</span>
+                <span class="s4">} </span><span class="s2">else </span><span class="s4">{</span>
+                    <span class="s1">openMenuTimer</span><span class="s4">.</span><span class="s1">start</span><span class="s4">()</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+
+            <span class="s1">Timer </span><span class="s4">{</span>
+                <span class="s1">id</span><span class="s4">: </span><span class="s1">openMenuTimer</span>
+                <span class="s1">interval</span><span class="s4">: </span><span class="s1">d</span><span class="s4">.</span><span class="s1">style</span><span class="s4">.</span><span class="s1">submenuPopupDelay</span>
+                <span class="s1">onTriggered</span><span class="s4">: </span><span class="s1">menuItemLoader</span><span class="s4">.</span><span class="s1">__showSubMenu</span><span class="s4">(</span><span class="s2">true</span><span class="s4">)</span>
+            <span class="s4">}</span>
+
+            <span class="s2">function </span><span class="s1">__closeSubMenu</span><span class="s4">() {</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">openMenuTimer</span><span class="s4">.</span><span class="s1">running</span><span class="s4">)</span>
+                    <span class="s1">openMenuTimer</span><span class="s4">.</span><span class="s1">stop</span><span class="s4">()</span>
+                <span class="s2">else if </span><span class="s4">(</span><span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__popupVisible</span><span class="s4">)</span>
+                    <span class="s1">closeMenuTimer</span><span class="s4">.</span><span class="s1">start</span><span class="s4">()</span>
+            <span class="s4">}</span>
+
+            <span class="s1">Timer </span><span class="s4">{</span>
+                <span class="s1">id</span><span class="s4">: </span><span class="s1">closeMenuTimer</span>
+                <span class="s1">interval</span><span class="s4">: </span><span class="s3">1</span>
+                <span class="s1">onTriggered</span><span class="s4">: {</span>
+                    <span class="s2">if </span><span class="s4">(</span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__currentIndex </span><span class="s4">!== </span><span class="s1">__menuItemIndex</span><span class="s4">)</span>
+                        <span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__closeAndDestroy</span><span class="s4">()</span>
+                <span class="s4">}</span>
+            <span class="s4">}</span>
+
+            <span class="s1">onLoaded</span><span class="s4">: {</span>
+                <span class="s1">__menuItem</span><span class="s4">.</span><span class="s1">__visualItem </span><span class="s4">= </span><span class="s1">menuItemLoader</span>
+
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">content</span><span class="s4">.</span><span class="s1">width </span><span class="s4">&lt; </span><span class="s1">item</span><span class="s4">.</span><span class="s1">implicitWidth</span><span class="s4">)</span>
+                    <span class="s1">content</span><span class="s4">.</span><span class="s1">width </span><span class="s4">= </span><span class="s1">item</span><span class="s4">.</span><span class="s1">implicitWidth</span>
+
+                <span class="s2">var </span><span class="s1">title </span><span class="s4">= </span><span class="s1">opts</span><span class="s4">.</span><span class="s1">text</span>
+                <span class="s2">var </span><span class="s1">ampersandPos </span><span class="s4">= </span><span class="s1">title</span><span class="s4">.</span><span class="s1">indexOf</span><span class="s4">(</span><span class="s5">&quot;&amp;&quot;</span><span class="s4">)</span>
+                <span class="s2">if </span><span class="s4">(</span><span class="s1">ampersandPos </span><span class="s4">!== -</span><span class="s3">1</span><span class="s4">)</span>
+                    <span class="s1">d</span><span class="s4">.</span><span class="s1">mnemonicsMap</span><span class="s4">[</span><span class="s1">title</span><span class="s4">[</span><span class="s1">ampersandPos </span><span class="s4">+ </span><span class="s3">1</span><span class="s4">].</span><span class="s1">toUpperCase</span><span class="s4">()] = </span><span class="s1">menuItemLoader</span>
+            <span class="s4">}</span>
+
+            <span class="s1">Qml</span><span class="s4">.</span><span class="s1">Binding </span><span class="s4">{</span>
+                <span class="s1">target</span><span class="s4">: </span><span class="s1">menuItemLoader</span><span class="s4">.</span><span class="s1">item</span>
+                <span class="s1">property</span><span class="s4">: </span><span class="s5">&quot;width&quot;</span>
+                <span class="s1">property alias menuItem</span><span class="s4">: </span><span class="s1">menuItemLoader</span><span class="s4">.</span><span class="s1">item</span>
+                <span class="s1">value</span><span class="s4">: </span><span class="s1">menuItem </span><span class="s4">? </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">max</span><span class="s4">(</span><span class="s1">__menu</span><span class="s4">.</span><span class="s1">__minimumWidth</span><span class="s4">, </span><span class="s1">content</span><span class="s4">.</span><span class="s1">width</span><span class="s4">) - </span><span class="s3">2 </span><span class="s4">* </span><span class="s1">menuItem</span><span class="s4">.</span><span class="s1">x </span><span class="s4">: </span><span class="s3">0</span>
+                <span class="s1">restoreMode</span><span class="s4">: </span><span class="s1">Binding</span><span class="s4">.</span><span class="s1">RestoreBinding</span>
+            <span class="s4">}</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

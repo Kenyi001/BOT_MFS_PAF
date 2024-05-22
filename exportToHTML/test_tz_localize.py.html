@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>test_tz_localize.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_tz_localize.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">datetime </span><span class="s0">import </span><span class="s1">timezone</span>
+
+<span class="s0">import </span><span class="s1">pytest</span>
+<span class="s0">import </span><span class="s1">pytz</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_libs</span><span class="s2">.</span><span class="s1">tslibs </span><span class="s0">import </span><span class="s1">timezones</span>
+
+<span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">DatetimeIndex</span><span class="s2">,</span>
+    <span class="s1">NaT</span><span class="s2">,</span>
+    <span class="s1">Series</span><span class="s2">,</span>
+    <span class="s1">Timestamp</span><span class="s2">,</span>
+    <span class="s1">date_range</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">import </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_testing </span><span class="s0">as </span><span class="s1">tm</span>
+
+
+<span class="s0">class </span><span class="s1">TestTZLocalize</span><span class="s2">:</span>
+    <span class="s0">def </span><span class="s1">test_series_tz_localize_ambiguous_bool</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s3"># make sure that we are correctly accepting bool values as ambiguous</span>
+
+        <span class="s3"># GH#14402</span>
+        <span class="s1">ts </span><span class="s2">= </span><span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2015-11-01 01:00:03&quot;</span><span class="s2">)</span>
+        <span class="s1">expected0 </span><span class="s2">= </span><span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2015-11-01 01:00:03-0500&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s4">&quot;US/Central&quot;</span><span class="s2">)</span>
+        <span class="s1">expected1 </span><span class="s2">= </span><span class="s1">Timestamp</span><span class="s2">(</span><span class="s4">&quot;2015-11-01 01:00:03-0600&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s4">&quot;US/Central&quot;</span><span class="s2">)</span>
+
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s1">ts</span><span class="s2">])</span>
+        <span class="s1">expected0 </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s1">expected0</span><span class="s2">])</span>
+        <span class="s1">expected1 </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">([</span><span class="s1">expected1</span><span class="s2">])</span>
+
+        <span class="s0">with </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">external_error_raised</span><span class="s2">(</span><span class="s1">pytz</span><span class="s2">.</span><span class="s1">AmbiguousTimeError</span><span class="s2">):</span>
+            <span class="s1">ser</span><span class="s2">.</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s4">&quot;US/Central&quot;</span><span class="s2">)</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s4">&quot;US/Central&quot;</span><span class="s2">, </span><span class="s1">ambiguous</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected0</span><span class="s2">)</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s4">&quot;US/Central&quot;</span><span class="s2">, </span><span class="s1">ambiguous</span><span class="s2">=[</span><span class="s0">True</span><span class="s2">])</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected0</span><span class="s2">)</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s4">&quot;US/Central&quot;</span><span class="s2">, </span><span class="s1">ambiguous</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected1</span><span class="s2">)</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s4">&quot;US/Central&quot;</span><span class="s2">, </span><span class="s1">ambiguous</span><span class="s2">=[</span><span class="s0">False</span><span class="s2">])</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected1</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_series_tz_localize_matching_index</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s3"># Matching the index of the result with that of the original series</span>
+        <span class="s3"># GH 43080</span>
+        <span class="s1">dt_series </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s1">date_range</span><span class="s2">(</span><span class="s1">start</span><span class="s2">=</span><span class="s4">&quot;2021-01-01T02:00:00&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s5">5</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s4">&quot;1D&quot;</span><span class="s2">),</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s5">2</span><span class="s2">, </span><span class="s5">6</span><span class="s2">, </span><span class="s5">7</span><span class="s2">, </span><span class="s5">8</span><span class="s2">, </span><span class="s5">11</span><span class="s2">],</span>
+            <span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;category&quot;</span><span class="s2">,</span>
+        <span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">dt_series</span><span class="s2">.</span><span class="s1">dt</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s4">&quot;Europe/Berlin&quot;</span><span class="s2">)</span>
+        <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span>
+            <span class="s1">date_range</span><span class="s2">(</span>
+                <span class="s1">start</span><span class="s2">=</span><span class="s4">&quot;2021-01-01T02:00:00&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s5">5</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s4">&quot;1D&quot;</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s4">&quot;Europe/Berlin&quot;</span>
+            <span class="s2">),</span>
+            <span class="s1">index</span><span class="s2">=[</span><span class="s5">2</span><span class="s2">, </span><span class="s5">6</span><span class="s2">, </span><span class="s5">7</span><span class="s2">, </span><span class="s5">8</span><span class="s2">, </span><span class="s5">11</span><span class="s2">],</span>
+        <span class="s2">)</span>
+        <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span>
+        <span class="s4">&quot;method, exp&quot;</span><span class="s2">,</span>
+        <span class="s2">[</span>
+            <span class="s2">[</span><span class="s4">&quot;shift_forward&quot;</span><span class="s2">, </span><span class="s4">&quot;2015-03-29 03:00:00&quot;</span><span class="s2">],</span>
+            <span class="s2">[</span><span class="s4">&quot;shift_backward&quot;</span><span class="s2">, </span><span class="s4">&quot;2015-03-29 01:59:59.999999999&quot;</span><span class="s2">],</span>
+            <span class="s2">[</span><span class="s4">&quot;NaT&quot;</span><span class="s2">, </span><span class="s1">NaT</span><span class="s2">],</span>
+            <span class="s2">[</span><span class="s4">&quot;raise&quot;</span><span class="s2">, </span><span class="s0">None</span><span class="s2">],</span>
+            <span class="s2">[</span><span class="s4">&quot;foo&quot;</span><span class="s2">, </span><span class="s4">&quot;invalid&quot;</span><span class="s2">],</span>
+        <span class="s2">],</span>
+    <span class="s2">)</span>
+    <span class="s0">def </span><span class="s1">test_tz_localize_nonexistent</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">warsaw</span><span class="s2">, </span><span class="s1">method</span><span class="s2">, </span><span class="s1">exp</span><span class="s2">):</span>
+        <span class="s3"># GH 8917</span>
+        <span class="s1">tz </span><span class="s2">= </span><span class="s1">warsaw</span>
+        <span class="s1">n </span><span class="s2">= </span><span class="s5">60</span>
+        <span class="s1">dti </span><span class="s2">= </span><span class="s1">date_range</span><span class="s2">(</span><span class="s1">start</span><span class="s2">=</span><span class="s4">&quot;2015-03-29 02:00:00&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s1">n</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">=</span><span class="s4">&quot;min&quot;</span><span class="s2">)</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s5">1</span><span class="s2">, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">dti</span><span class="s2">)</span>
+        <span class="s1">df </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">to_frame</span><span class="s2">()</span>
+
+        <span class="s0">if </span><span class="s1">method </span><span class="s2">== </span><span class="s4">&quot;raise&quot;</span><span class="s2">:</span>
+            <span class="s0">with </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">external_error_raised</span><span class="s2">(</span><span class="s1">pytz</span><span class="s2">.</span><span class="s1">NonExistentTimeError</span><span class="s2">):</span>
+                <span class="s1">dti</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+            <span class="s0">with </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">external_error_raised</span><span class="s2">(</span><span class="s1">pytz</span><span class="s2">.</span><span class="s1">NonExistentTimeError</span><span class="s2">):</span>
+                <span class="s1">ser</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+            <span class="s0">with </span><span class="s1">tm</span><span class="s2">.</span><span class="s1">external_error_raised</span><span class="s2">(</span><span class="s1">pytz</span><span class="s2">.</span><span class="s1">NonExistentTimeError</span><span class="s2">):</span>
+                <span class="s1">df</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+
+        <span class="s0">elif </span><span class="s1">exp </span><span class="s2">== </span><span class="s4">&quot;invalid&quot;</span><span class="s2">:</span>
+            <span class="s1">msg </span><span class="s2">= (</span>
+                <span class="s4">&quot;The nonexistent argument must be one of &quot;</span>
+                <span class="s4">&quot;'raise', 'NaT', 'shift_forward', 'shift_backward' &quot;</span>
+                <span class="s4">&quot;or a timedelta object&quot;</span>
+            <span class="s2">)</span>
+            <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">msg</span><span class="s2">):</span>
+                <span class="s1">dti</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+            <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">msg</span><span class="s2">):</span>
+                <span class="s1">ser</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+            <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">msg</span><span class="s2">):</span>
+                <span class="s1">df</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+            <span class="s1">expected </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s5">1</span><span class="s2">, </span><span class="s1">index</span><span class="s2">=</span><span class="s1">DatetimeIndex</span><span class="s2">([</span><span class="s1">exp</span><span class="s2">] * </span><span class="s1">n</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s1">tz</span><span class="s2">))</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_series_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">df</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+            <span class="s1">expected </span><span class="s2">= </span><span class="s1">expected</span><span class="s2">.</span><span class="s1">to_frame</span><span class="s2">()</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">)</span>
+
+            <span class="s1">res_index </span><span class="s2">= </span><span class="s1">dti</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">nonexistent</span><span class="s2">=</span><span class="s1">method</span><span class="s2">)</span>
+            <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_index_equal</span><span class="s2">(</span><span class="s1">res_index</span><span class="s2">, </span><span class="s1">expected</span><span class="s2">.</span><span class="s1">index</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s4">&quot;tzstr&quot;</span><span class="s2">, [</span><span class="s4">&quot;US/Eastern&quot;</span><span class="s2">, </span><span class="s4">&quot;dateutil/US/Eastern&quot;</span><span class="s2">])</span>
+    <span class="s0">def </span><span class="s1">test_series_tz_localize_empty</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">tzstr</span><span class="s2">):</span>
+        <span class="s3"># GH#2248</span>
+        <span class="s1">ser </span><span class="s2">= </span><span class="s1">Series</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">object</span><span class="s2">)</span>
+
+        <span class="s1">ser2 </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s4">&quot;utc&quot;</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">ser2</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">tz </span><span class="s2">== </span><span class="s1">timezone</span><span class="s2">.</span><span class="s1">utc</span>
+
+        <span class="s1">ser2 </span><span class="s2">= </span><span class="s1">ser</span><span class="s2">.</span><span class="s1">tz_localize</span><span class="s2">(</span><span class="s1">tzstr</span><span class="s2">)</span>
+        <span class="s1">timezones</span><span class="s2">.</span><span class="s1">tz_compare</span><span class="s2">(</span><span class="s1">ser2</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">tz</span><span class="s2">, </span><span class="s1">timezones</span><span class="s2">.</span><span class="s1">maybe_get_tz</span><span class="s2">(</span><span class="s1">tzstr</span><span class="s2">))</span>
+</pre>
+</body>
+</html>

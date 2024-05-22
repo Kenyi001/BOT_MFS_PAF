@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>test_shell_utils.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_shell_utils.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pytest</span>
+<span class="s0">import </span><span class="s1">subprocess</span>
+<span class="s0">import </span><span class="s1">json</span>
+<span class="s0">import </span><span class="s1">sys</span>
+
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils </span><span class="s0">import </span><span class="s1">_shell_utils</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">IS_WASM</span>
+
+<span class="s1">argv_cases </span><span class="s2">= [</span>
+    <span class="s2">[</span><span class="s3">r'exe'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path/exe'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path\exe'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'\\server\path\exe'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path to/exe'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path to\exe'</span><span class="s2">],</span>
+
+    <span class="s2">[</span><span class="s3">r'exe'</span><span class="s2">, </span><span class="s3">'--flag'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path/exe'</span><span class="s2">, </span><span class="s3">'--flag'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path\exe'</span><span class="s2">, </span><span class="s3">'--flag'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path to/exe'</span><span class="s2">, </span><span class="s3">'--flag'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path to\exe'</span><span class="s2">, </span><span class="s3">'--flag'</span><span class="s2">],</span>
+
+    <span class="s4"># flags containing literal quotes in their name</span>
+    <span class="s2">[</span><span class="s3">r'path to/exe'</span><span class="s2">, </span><span class="s3">'--flag-&quot;quoted&quot;'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path to\exe'</span><span class="s2">, </span><span class="s3">'--flag-&quot;quoted&quot;'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path to/exe'</span><span class="s2">, </span><span class="s3">'&quot;--flag-quoted&quot;'</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s3">r'path to\exe'</span><span class="s2">, </span><span class="s3">'&quot;--flag-quoted&quot;'</span><span class="s2">],</span>
+<span class="s2">]</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">fixture</span><span class="s2">(</span><span class="s1">params</span><span class="s2">=[</span>
+    <span class="s1">_shell_utils</span><span class="s2">.</span><span class="s1">WindowsParser</span><span class="s2">,</span>
+    <span class="s1">_shell_utils</span><span class="s2">.</span><span class="s1">PosixParser</span>
+<span class="s2">])</span>
+<span class="s0">def </span><span class="s1">Parser</span><span class="s2">(</span><span class="s1">request</span><span class="s2">):</span>
+    <span class="s0">return </span><span class="s1">request</span><span class="s2">.</span><span class="s1">param</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">fixture</span>
+<span class="s0">def </span><span class="s1">runner</span><span class="s2">(</span><span class="s1">Parser</span><span class="s2">):</span>
+    <span class="s0">if </span><span class="s1">Parser </span><span class="s2">!= </span><span class="s1">_shell_utils</span><span class="s2">.</span><span class="s1">NativeParser</span><span class="s2">:</span>
+        <span class="s1">pytest</span><span class="s2">.</span><span class="s1">skip</span><span class="s2">(</span><span class="s3">'Unable to run with non-native parser'</span><span class="s2">)</span>
+
+    <span class="s0">if </span><span class="s1">Parser </span><span class="s2">== </span><span class="s1">_shell_utils</span><span class="s2">.</span><span class="s1">WindowsParser</span><span class="s2">:</span>
+        <span class="s0">return lambda </span><span class="s1">cmd</span><span class="s2">: </span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">check_output</span><span class="s2">(</span><span class="s1">cmd</span><span class="s2">)</span>
+    <span class="s0">elif </span><span class="s1">Parser </span><span class="s2">== </span><span class="s1">_shell_utils</span><span class="s2">.</span><span class="s1">PosixParser</span><span class="s2">:</span>
+        <span class="s4"># posix has no non-shell string parsing</span>
+        <span class="s0">return lambda </span><span class="s1">cmd</span><span class="s2">: </span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">check_output</span><span class="s2">(</span><span class="s1">cmd</span><span class="s2">, </span><span class="s1">shell</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">skipif</span><span class="s2">(</span><span class="s1">IS_WASM</span><span class="s2">, </span><span class="s1">reason</span><span class="s2">=</span><span class="s3">&quot;Cannot start subprocess&quot;</span><span class="s2">)</span>
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s3">'argv'</span><span class="s2">, </span><span class="s1">argv_cases</span><span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_join_matches_subprocess</span><span class="s2">(</span><span class="s1">Parser</span><span class="s2">, </span><span class="s1">runner</span><span class="s2">, </span><span class="s1">argv</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Test that join produces strings understood by subprocess 
+    &quot;&quot;&quot;</span>
+    <span class="s4"># invoke python to return its arguments as json</span>
+    <span class="s1">cmd </span><span class="s2">= [</span>
+        <span class="s1">sys</span><span class="s2">.</span><span class="s1">executable</span><span class="s2">, </span><span class="s3">'-c'</span><span class="s2">,</span>
+        <span class="s3">'import json, sys; print(json.dumps(sys.argv[1:]))'</span>
+    <span class="s2">]</span>
+    <span class="s1">joined </span><span class="s2">= </span><span class="s1">Parser</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">cmd </span><span class="s2">+ </span><span class="s1">argv</span><span class="s2">)</span>
+    <span class="s1">json_out </span><span class="s2">= </span><span class="s1">runner</span><span class="s2">(</span><span class="s1">joined</span><span class="s2">).</span><span class="s1">decode</span><span class="s2">()</span>
+    <span class="s0">assert </span><span class="s1">json</span><span class="s2">.</span><span class="s1">loads</span><span class="s2">(</span><span class="s1">json_out</span><span class="s2">) == </span><span class="s1">argv</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">skipif</span><span class="s2">(</span><span class="s1">IS_WASM</span><span class="s2">, </span><span class="s1">reason</span><span class="s2">=</span><span class="s3">&quot;Cannot start subprocess&quot;</span><span class="s2">)</span>
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s3">'argv'</span><span class="s2">, </span><span class="s1">argv_cases</span><span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_roundtrip</span><span class="s2">(</span><span class="s1">Parser</span><span class="s2">, </span><span class="s1">argv</span><span class="s2">):</span>
+    <span class="s5">&quot;&quot;&quot; 
+    Test that split is the inverse operation of join 
+    &quot;&quot;&quot;</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">joined </span><span class="s2">= </span><span class="s1">Parser</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">argv</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">argv </span><span class="s2">== </span><span class="s1">Parser</span><span class="s2">.</span><span class="s1">split</span><span class="s2">(</span><span class="s1">joined</span><span class="s2">)</span>
+    <span class="s0">except </span><span class="s1">NotImplementedError</span><span class="s2">:</span>
+        <span class="s1">pytest</span><span class="s2">.</span><span class="s1">skip</span><span class="s2">(</span><span class="s3">&quot;Not implemented&quot;</span><span class="s2">)</span>
+</pre>
+</body>
+</html>

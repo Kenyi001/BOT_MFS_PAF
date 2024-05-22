@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>legendre.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+legendre.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">ndarray</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">int_</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">_polybase </span><span class="s0">import </span><span class="s1">ABCPolyBase</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">polyutils </span><span class="s0">import </span><span class="s1">trimcoef</span>
+
+<span class="s1">__all__</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]</span>
+
+<span class="s1">legtrim </span><span class="s2">= </span><span class="s1">trimcoef</span>
+
+<span class="s0">def </span><span class="s1">poly2leg</span><span class="s2">(</span><span class="s1">pol</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">leg2poly</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+
+<span class="s1">legdomain</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">legzero</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">legone</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">legx</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+
+<span class="s0">def </span><span class="s1">legline</span><span class="s2">(</span><span class="s1">off</span><span class="s2">, </span><span class="s1">scl</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legfromroots</span><span class="s2">(</span><span class="s1">roots</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legadd</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legsub</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legmulx</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legmul</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legdiv</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legpow</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">pow</span><span class="s2">, </span><span class="s1">maxpower</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">legder</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">legint</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">k </span><span class="s2">= ..., </span><span class="s1">lbnd</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">legval</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">c</span><span class="s2">, </span><span class="s1">tensor</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">legval2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">leggrid2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legval3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">leggrid3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legvander</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legvander2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legvander3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legfit</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">, </span><span class="s1">rcond</span><span class="s2">=..., </span><span class="s1">full</span><span class="s2">=..., </span><span class="s1">w</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">legcompanion</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legroots</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">leggauss</span><span class="s2">(</span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">legweight</span><span class="s2">(</span><span class="s1">x</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">Legendre</span><span class="s2">(</span><span class="s1">ABCPolyBase</span><span class="s2">):</span>
+    <span class="s1">domain</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">window</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">basis_name</span><span class="s2">: </span><span class="s1">Any</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>build_py.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+build_py.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">command</span><span class="s2">.</span><span class="s1">build_py </span><span class="s0">import </span><span class="s1">build_py </span><span class="s0">as </span><span class="s1">old_build_py</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">distutils</span><span class="s2">.</span><span class="s1">misc_util </span><span class="s0">import </span><span class="s1">is_string</span>
+
+<span class="s0">class </span><span class="s1">build_py</span><span class="s2">(</span><span class="s1">old_build_py</span><span class="s2">):</span>
+
+    <span class="s0">def </span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">build_src </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s3">'build_src'</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">build_src</span><span class="s2">.</span><span class="s1">py_modules_dict </span><span class="s0">and </span><span class="s1">self</span><span class="s2">.</span><span class="s1">packages </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">packages </span><span class="s2">= </span><span class="s1">list</span><span class="s2">(</span><span class="s1">build_src</span><span class="s2">.</span><span class="s1">py_modules_dict</span><span class="s2">.</span><span class="s1">keys </span><span class="s2">())</span>
+        <span class="s1">old_build_py</span><span class="s2">.</span><span class="s1">run</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">find_package_modules</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">package</span><span class="s2">, </span><span class="s1">package_dir</span><span class="s2">):</span>
+        <span class="s1">modules </span><span class="s2">= </span><span class="s1">old_build_py</span><span class="s2">.</span><span class="s1">find_package_modules</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">package</span><span class="s2">, </span><span class="s1">package_dir</span><span class="s2">)</span>
+
+        <span class="s4"># Find build_src generated *.py files.</span>
+        <span class="s1">build_src </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">get_finalized_command</span><span class="s2">(</span><span class="s3">'build_src'</span><span class="s2">)</span>
+        <span class="s1">modules </span><span class="s2">+= </span><span class="s1">build_src</span><span class="s2">.</span><span class="s1">py_modules_dict</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s1">package</span><span class="s2">, [])</span>
+
+        <span class="s0">return </span><span class="s1">modules</span>
+
+    <span class="s0">def </span><span class="s1">find_modules</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">old_py_modules </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">py_modules</span><span class="s2">[:]</span>
+        <span class="s1">new_py_modules </span><span class="s2">= [</span><span class="s1">_m </span><span class="s0">for </span><span class="s1">_m </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">py_modules </span><span class="s0">if </span><span class="s1">is_string</span><span class="s2">(</span><span class="s1">_m</span><span class="s2">)]</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">py_modules</span><span class="s2">[:] = </span><span class="s1">new_py_modules</span>
+        <span class="s1">modules </span><span class="s2">= </span><span class="s1">old_build_py</span><span class="s2">.</span><span class="s1">find_modules</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">py_modules</span><span class="s2">[:] = </span><span class="s1">old_py_modules</span>
+
+        <span class="s0">return </span><span class="s1">modules</span>
+
+    <span class="s4"># XXX: Fix find_source_files for item in py_modules such that item is 3-tuple</span>
+    <span class="s4"># and item[2] is source file.</span>
+</pre>
+</body>
+</html>

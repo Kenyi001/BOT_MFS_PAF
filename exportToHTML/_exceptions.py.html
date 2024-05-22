@@ -1,0 +1,195 @@
+<html>
+<head>
+<title>_exceptions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.s6 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_exceptions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+Various richly-typed exceptions, that also help us deal with string formatting 
+in python where it's easier. 
+ 
+By putting the formatting in `__str__`, we also avoid paying the cost for 
+users who silence the exceptions. 
+&quot;&quot;&quot;</span>
+<span class="s2">from </span><span class="s3">..</span><span class="s1">_utils </span><span class="s2">import </span><span class="s1">set_module</span>
+
+<span class="s2">def </span><span class="s1">_unpack_tuple</span><span class="s3">(</span><span class="s1">tup</span><span class="s3">):</span>
+    <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">tup</span><span class="s3">) == </span><span class="s4">1</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">tup</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]</span>
+    <span class="s2">else</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">tup</span>
+
+
+<span class="s2">def </span><span class="s1">_display_as_base</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; 
+    A decorator that makes an exception class look like its base. 
+ 
+    We use this to hide subclasses that are implementation details - the user 
+    should catch the base type, which is what the traceback will show them. 
+ 
+    Classes decorated with this decorator are subject to removal without a 
+    deprecation warning. 
+    &quot;&quot;&quot;</span>
+    <span class="s2">assert </span><span class="s1">issubclass</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">, </span><span class="s1">Exception</span><span class="s3">)</span>
+    <span class="s1">cls</span><span class="s3">.</span><span class="s1">__name__ </span><span class="s3">= </span><span class="s1">cls</span><span class="s3">.</span><span class="s1">__base__</span><span class="s3">.</span><span class="s1">__name__</span>
+    <span class="s2">return </span><span class="s1">cls</span>
+
+
+<span class="s2">class </span><span class="s1">UFuncTypeError</span><span class="s3">(</span><span class="s1">TypeError</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; Base class for all ufunc exceptions &quot;&quot;&quot;</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">ufunc</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc </span><span class="s3">= </span><span class="s1">ufunc</span>
+
+
+<span class="s3">@</span><span class="s1">_display_as_base</span>
+<span class="s2">class </span><span class="s1">_UFuncNoLoopError</span><span class="s3">(</span><span class="s1">UFuncTypeError</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; Thrown when a ufunc loop cannot be found &quot;&quot;&quot;</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">dtypes</span><span class="s3">):</span>
+        <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">ufunc</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">dtypes </span><span class="s3">= </span><span class="s1">tuple</span><span class="s3">(</span><span class="s1">dtypes</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">__str__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s3">(</span>
+            <span class="s5">&quot;ufunc {!r} did not contain a loop with signature matching types &quot;</span>
+            <span class="s5">&quot;{!r} -&gt; {!r}&quot;</span>
+        <span class="s3">).</span><span class="s1">format</span><span class="s3">(</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">__name__</span><span class="s3">,</span>
+            <span class="s1">_unpack_tuple</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">[:</span><span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">nin</span><span class="s3">]),</span>
+            <span class="s1">_unpack_tuple</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">[</span><span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">nin</span><span class="s3">:])</span>
+        <span class="s3">)</span>
+
+
+<span class="s3">@</span><span class="s1">_display_as_base</span>
+<span class="s2">class </span><span class="s1">_UFuncBinaryResolutionError</span><span class="s3">(</span><span class="s1">_UFuncNoLoopError</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; Thrown when a binary resolution fails &quot;&quot;&quot;</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">dtypes</span><span class="s3">):</span>
+        <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">dtypes</span><span class="s3">)</span>
+        <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtypes</span><span class="s3">) == </span><span class="s4">2</span>
+
+    <span class="s2">def </span><span class="s1">__str__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">return </span><span class="s3">(</span>
+            <span class="s5">&quot;ufunc {!r} cannot use operands with types {!r} and {!r}&quot;</span>
+        <span class="s3">).</span><span class="s1">format</span><span class="s3">(</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">__name__</span><span class="s3">, *</span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtypes</span>
+        <span class="s3">)</span>
+
+
+<span class="s3">@</span><span class="s1">_display_as_base</span>
+<span class="s2">class </span><span class="s1">_UFuncCastingError</span><span class="s3">(</span><span class="s1">UFuncTypeError</span><span class="s3">):</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">casting</span><span class="s3">, </span><span class="s1">from_</span><span class="s3">, </span><span class="s1">to</span><span class="s3">):</span>
+        <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">ufunc</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">casting </span><span class="s3">= </span><span class="s1">casting</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">from_ </span><span class="s3">= </span><span class="s1">from_</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">to </span><span class="s3">= </span><span class="s1">to</span>
+
+
+<span class="s3">@</span><span class="s1">_display_as_base</span>
+<span class="s2">class </span><span class="s1">_UFuncInputCastingError</span><span class="s3">(</span><span class="s1">_UFuncCastingError</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; Thrown when a ufunc input cannot be casted &quot;&quot;&quot;</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">casting</span><span class="s3">, </span><span class="s1">from_</span><span class="s3">, </span><span class="s1">to</span><span class="s3">, </span><span class="s1">i</span><span class="s3">):</span>
+        <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">casting</span><span class="s3">, </span><span class="s1">from_</span><span class="s3">, </span><span class="s1">to</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">in_i </span><span class="s3">= </span><span class="s1">i</span>
+
+    <span class="s2">def </span><span class="s1">__str__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s6"># only show the number if more than one input exists</span>
+        <span class="s1">i_str </span><span class="s3">= </span><span class="s5">&quot;{} &quot;</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">in_i</span><span class="s3">) </span><span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">nin </span><span class="s3">!= </span><span class="s4">1 </span><span class="s2">else </span><span class="s5">&quot;&quot;</span>
+        <span class="s2">return </span><span class="s3">(</span>
+            <span class="s5">&quot;Cannot cast ufunc {!r} input {}from {!r} to {!r} with casting &quot;</span>
+            <span class="s5">&quot;rule {!r}&quot;</span>
+        <span class="s3">).</span><span class="s1">format</span><span class="s3">(</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">__name__</span><span class="s3">, </span><span class="s1">i_str</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">from_</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">to</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">casting</span>
+        <span class="s3">)</span>
+
+
+<span class="s3">@</span><span class="s1">_display_as_base</span>
+<span class="s2">class </span><span class="s1">_UFuncOutputCastingError</span><span class="s3">(</span><span class="s1">_UFuncCastingError</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; Thrown when a ufunc output cannot be casted &quot;&quot;&quot;</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">casting</span><span class="s3">, </span><span class="s1">from_</span><span class="s3">, </span><span class="s1">to</span><span class="s3">, </span><span class="s1">i</span><span class="s3">):</span>
+        <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">ufunc</span><span class="s3">, </span><span class="s1">casting</span><span class="s3">, </span><span class="s1">from_</span><span class="s3">, </span><span class="s1">to</span><span class="s3">)</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">out_i </span><span class="s3">= </span><span class="s1">i</span>
+
+    <span class="s2">def </span><span class="s1">__str__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s6"># only show the number if more than one output exists</span>
+        <span class="s1">i_str </span><span class="s3">= </span><span class="s5">&quot;{} &quot;</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">out_i</span><span class="s3">) </span><span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">nout </span><span class="s3">!= </span><span class="s4">1 </span><span class="s2">else </span><span class="s5">&quot;&quot;</span>
+        <span class="s2">return </span><span class="s3">(</span>
+            <span class="s5">&quot;Cannot cast ufunc {!r} output {}from {!r} to {!r} with casting &quot;</span>
+            <span class="s5">&quot;rule {!r}&quot;</span>
+        <span class="s3">).</span><span class="s1">format</span><span class="s3">(</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">ufunc</span><span class="s3">.</span><span class="s1">__name__</span><span class="s3">, </span><span class="s1">i_str</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">from_</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">to</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">casting</span>
+        <span class="s3">)</span>
+
+
+<span class="s3">@</span><span class="s1">_display_as_base</span>
+<span class="s2">class </span><span class="s1">_ArrayMemoryError</span><span class="s3">(</span><span class="s1">MemoryError</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; Thrown when an array cannot be allocated&quot;&quot;&quot;</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">shape</span><span class="s3">, </span><span class="s1">dtype</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">shape </span><span class="s3">= </span><span class="s1">shape</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">dtype </span><span class="s3">= </span><span class="s1">dtype</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">_total_size</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">num_bytes </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">.</span><span class="s1">itemsize</span>
+        <span class="s2">for </span><span class="s1">dim </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">:</span>
+            <span class="s1">num_bytes </span><span class="s3">*= </span><span class="s1">dim</span>
+        <span class="s2">return </span><span class="s1">num_bytes</span>
+
+    <span class="s3">@</span><span class="s1">staticmethod</span>
+    <span class="s2">def </span><span class="s1">_size_to_string</span><span class="s3">(</span><span class="s1">num_bytes</span><span class="s3">):</span>
+        <span class="s0">&quot;&quot;&quot; Convert a number of bytes into a binary size string &quot;&quot;&quot;</span>
+
+        <span class="s6"># https://en.wikipedia.org/wiki/Binary_prefix</span>
+        <span class="s1">LOG2_STEP </span><span class="s3">= </span><span class="s4">10</span>
+        <span class="s1">STEP </span><span class="s3">= </span><span class="s4">1024</span>
+        <span class="s1">units </span><span class="s3">= [</span><span class="s5">'bytes'</span><span class="s3">, </span><span class="s5">'KiB'</span><span class="s3">, </span><span class="s5">'MiB'</span><span class="s3">, </span><span class="s5">'GiB'</span><span class="s3">, </span><span class="s5">'TiB'</span><span class="s3">, </span><span class="s5">'PiB'</span><span class="s3">, </span><span class="s5">'EiB'</span><span class="s3">]</span>
+
+        <span class="s1">unit_i </span><span class="s3">= </span><span class="s1">max</span><span class="s3">(</span><span class="s1">num_bytes</span><span class="s3">.</span><span class="s1">bit_length</span><span class="s3">() - </span><span class="s4">1</span><span class="s3">, </span><span class="s4">1</span><span class="s3">) // </span><span class="s1">LOG2_STEP</span>
+        <span class="s1">unit_val </span><span class="s3">= </span><span class="s4">1 </span><span class="s3">&lt;&lt; (</span><span class="s1">unit_i </span><span class="s3">* </span><span class="s1">LOG2_STEP</span><span class="s3">)</span>
+        <span class="s1">n_units </span><span class="s3">= </span><span class="s1">num_bytes </span><span class="s3">/ </span><span class="s1">unit_val</span>
+        <span class="s2">del </span><span class="s1">unit_val</span>
+
+        <span class="s6"># ensure we pick a unit that is correct after rounding</span>
+        <span class="s2">if </span><span class="s1">round</span><span class="s3">(</span><span class="s1">n_units</span><span class="s3">) == </span><span class="s1">STEP</span><span class="s3">:</span>
+            <span class="s1">unit_i </span><span class="s3">+= </span><span class="s4">1</span>
+            <span class="s1">n_units </span><span class="s3">/= </span><span class="s1">STEP</span>
+
+        <span class="s6"># deal with sizes so large that we don't have units for them</span>
+        <span class="s2">if </span><span class="s1">unit_i </span><span class="s3">&gt;= </span><span class="s1">len</span><span class="s3">(</span><span class="s1">units</span><span class="s3">):</span>
+            <span class="s1">new_unit_i </span><span class="s3">= </span><span class="s1">len</span><span class="s3">(</span><span class="s1">units</span><span class="s3">) - </span><span class="s4">1</span>
+            <span class="s1">n_units </span><span class="s3">*= </span><span class="s4">1 </span><span class="s3">&lt;&lt; ((</span><span class="s1">unit_i </span><span class="s3">- </span><span class="s1">new_unit_i</span><span class="s3">) * </span><span class="s1">LOG2_STEP</span><span class="s3">)</span>
+            <span class="s1">unit_i </span><span class="s3">= </span><span class="s1">new_unit_i</span>
+
+        <span class="s1">unit_name </span><span class="s3">= </span><span class="s1">units</span><span class="s3">[</span><span class="s1">unit_i</span><span class="s3">]</span>
+        <span class="s6"># format with a sensible number of digits</span>
+        <span class="s2">if </span><span class="s1">unit_i </span><span class="s3">== </span><span class="s4">0</span><span class="s3">:</span>
+            <span class="s6"># no decimal point on bytes</span>
+            <span class="s2">return </span><span class="s5">'{:.0f} {}'</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">n_units</span><span class="s3">, </span><span class="s1">unit_name</span><span class="s3">)</span>
+        <span class="s2">elif </span><span class="s1">round</span><span class="s3">(</span><span class="s1">n_units</span><span class="s3">) &lt; </span><span class="s4">1000</span><span class="s3">:</span>
+            <span class="s6"># 3 significant figures, if none are dropped to the left of the .</span>
+            <span class="s2">return </span><span class="s5">'{:#.3g} {}'</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">n_units</span><span class="s3">, </span><span class="s1">unit_name</span><span class="s3">)</span>
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s6"># just give all the digits otherwise</span>
+            <span class="s2">return </span><span class="s5">'{:#.0f} {}'</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">n_units</span><span class="s3">, </span><span class="s1">unit_name</span><span class="s3">)</span>
+
+    <span class="s2">def </span><span class="s1">__str__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">size_str </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_size_to_string</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_total_size</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s3">(</span>
+            <span class="s5">&quot;Unable to allocate {} for an array with shape {} and data type {}&quot;</span>
+            <span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">size_str</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">)</span>
+        <span class="s3">)</span>
+</pre>
+</body>
+</html>

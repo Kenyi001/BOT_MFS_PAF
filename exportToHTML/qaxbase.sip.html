@@ -1,0 +1,175 @@
+<html>
+<head>
+<title>qaxbase.sip</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qaxbase.sip</font>
+</center></td></tr></table>
+<pre><span class="s0">// This is the SIP interface definition for QAxBase.</span>
+<span class="s0">//</span>
+<span class="s0">// Copyright (c) 2023 Riverbank Computing Limited &lt;info@riverbankcomputing.com&gt;</span>
+<span class="s0">// </span>
+<span class="s0">// This file is part of PyQt5.</span>
+<span class="s0">// </span>
+<span class="s0">// This file may be used under the terms of the GNU General Public License</span>
+<span class="s0">// version 3.0 as published by the Free Software Foundation and appearing in</span>
+<span class="s0">// the file LICENSE included in the packaging of this file.  Please review the</span>
+<span class="s0">// following information to ensure the GNU General Public License version 3.0</span>
+<span class="s0">// requirements will be met: http://www.gnu.org/copyleft/gpl.html.</span>
+<span class="s0">// </span>
+<span class="s0">// If you do not wish to use this file under the terms of the GPL version 3.0</span>
+<span class="s0">// then you may purchase a commercial license.  For more information contact</span>
+<span class="s0">// info@riverbankcomputing.com.</span>
+<span class="s0">// </span>
+<span class="s0">// This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE</span>
+<span class="s0">// WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</span>
+
+
+<span class="s0">class QAxBase /Abstract, PyQtNoQMetaObject/</span>
+<span class="s0">{</span>
+<span class="s0">%TypeHeaderCode</span>
+<span class="s0">#include &lt;qaxbase.h&gt;</span>
+<span class="s0">%End</span>
+
+<span class="s0">public:</span>
+    <span class="s0">//QAxBase(IUnknown *iface = 0);</span>
+    <span class="s0">virtual ~QAxBase();</span>
+
+    <span class="s0">QString control() const;</span>
+
+    <span class="s0">//long queryInterface(const QUuid &amp;, void **) const;</span>
+
+    <span class="s0">// Note that the order of these overloads is significant.</span>
+    <span class="s0">QVariant dynamicCall(const char *, QList&lt;QVariant&gt; &amp; /GetWrapper/);</span>
+<span class="s0">%MethodCode</span>
+        <span class="s0">Py_BEGIN_ALLOW_THREADS</span>
+        <span class="s0">sipRes = new QVariant(sipCpp-&gt;dynamicCall(a0, *a1));</span>
+        <span class="s0">Py_END_ALLOW_THREADS</span>
+
+        <span class="s0">// Update the input list with the (possibly) new values.</span>
+        <span class="s0">for (Py_ssize_t i = 0; i &lt; PyList_Size(a1Wrapper); ++i)</span>
+        <span class="s0">{</span>
+            <span class="s0">QVariant *v = new QVariant(a1-&gt;at(i));</span>
+            <span class="s0">PyObject *v_obj = sipConvertFromNewType(v, sipType_QVariant, NULL);</span>
+
+            <span class="s0">if (!v_obj)</span>
+            <span class="s0">{</span>
+                <span class="s0">delete v;</span>
+                <span class="s0">sipIsErr = 1;</span>
+                <span class="s0">break;</span>
+            <span class="s0">}</span>
+
+            <span class="s0">if (PyList_SetItem(a1Wrapper, i, v_obj) &lt; 0)</span>
+            <span class="s0">{</span>
+                <span class="s0">Py_DECREF(v_obj);</span>
+                <span class="s0">sipIsErr = 1;</span>
+                <span class="s0">break;</span>
+            <span class="s0">}</span>
+        <span class="s0">}</span>
+<span class="s0">%End</span>
+
+    <span class="s0">QVariant dynamicCall(const char *,</span>
+            <span class="s0">const QVariant &amp;value1 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value2 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value3 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value4 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value5 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value6 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value7 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value8 = QVariant());</span>
+
+    <span class="s0">// Note that the order of these overloads is significant.</span>
+    <span class="s0">QAxObject *querySubObject(const char *, QList&lt;QVariant&gt; &amp; /GetWrapper/);</span>
+<span class="s0">%MethodCode</span>
+        <span class="s0">Py_BEGIN_ALLOW_THREADS</span>
+        <span class="s0">sipRes = sipCpp-&gt;querySubObject(a0, *a1);</span>
+        <span class="s0">Py_END_ALLOW_THREADS</span>
+
+        <span class="s0">// Update the input list with the (possibly) new values.</span>
+        <span class="s0">for (Py_ssize_t i = 0; i &lt; PyList_Size(a1Wrapper); ++i)</span>
+        <span class="s0">{</span>
+            <span class="s0">QVariant *v = new QVariant(a1-&gt;at(i));</span>
+            <span class="s0">PyObject *v_obj = sipConvertFromNewType(v, sipType_QVariant, NULL);</span>
+
+            <span class="s0">if (!v_obj)</span>
+            <span class="s0">{</span>
+                <span class="s0">delete v;</span>
+                <span class="s0">sipIsErr = 1;</span>
+                <span class="s0">break;</span>
+            <span class="s0">}</span>
+
+            <span class="s0">if (PyList_SetItem(a1Wrapper, i, v_obj) &lt; 0)</span>
+            <span class="s0">{</span>
+                <span class="s0">Py_DECREF(v_obj);</span>
+                <span class="s0">sipIsErr = 1;</span>
+                <span class="s0">break;</span>
+            <span class="s0">}</span>
+        <span class="s0">}</span>
+<span class="s0">%End</span>
+
+    <span class="s0">QAxObject *querySubObject(const char *,</span>
+            <span class="s0">const QVariant &amp;value1 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value2 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value3 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value4 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value5 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value6 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value7 = QVariant(),</span>
+            <span class="s0">const QVariant &amp;value8 = QVariant());</span>
+
+    <span class="s0">// SIP has a bug triggered by a template definition being the subject of</span>
+    <span class="s0">// multiple typedefs.  It only really matters when building everything as</span>
+    <span class="s0">// one big module (the code that implements the type is duplicated in</span>
+    <span class="s0">// other cases).  Until it is fixed we just avoid the problematic typedef.</span>
+    <span class="s0">//typedef QMap&lt;QString, QVariant&gt; PropertyBag;</span>
+    <span class="s0">//PropertyBag propertyBag() const;</span>
+    <span class="s0">//void setPropertyBag(const PropertyBag &amp;);</span>
+    <span class="s0">QVariantMap propertyBag() const;</span>
+    <span class="s0">void setPropertyBag(const QVariantMap &amp;);</span>
+
+    <span class="s0">QString generateDocumentation();</span>
+
+    <span class="s0">virtual bool propertyWritable(const char *) const;</span>
+    <span class="s0">virtual void setPropertyWritable(const char *, bool);</span>
+
+    <span class="s0">bool isNull() const;</span>
+
+    <span class="s0">QStringList verbs() const;</span>
+
+    <span class="s0">QVariant asVariant() const;</span>
+
+<span class="s0">signals:</span>
+    <span class="s0">void signal(const QString &amp;, int, void *);</span>
+    <span class="s0">void propertyChanged(const QString &amp;);</span>
+    <span class="s0">void exception(int, const QString &amp;, const QString &amp;, const QString &amp;);</span>
+
+<span class="s0">public:</span>
+    <span class="s0">virtual void clear();</span>
+    <span class="s0">bool setControl(const QString &amp;);</span>
+
+    <span class="s0">void disableMetaObject();</span>
+    <span class="s0">void disableClassInfo();</span>
+    <span class="s0">void disableEventSink();</span>
+
+<span class="s0">%If (Qt_5_13_0 -)</span>
+    <span class="s0">unsigned long classContext() const;</span>
+    <span class="s0">void setClassContext(unsigned long classContext);</span>
+<span class="s0">%End</span>
+
+<span class="s0">protected:</span>
+    <span class="s0">//virtual bool initialize(IUnknown** ptr);</span>
+    <span class="s0">//bool initializeRemote(IUnknown** ptr);</span>
+    <span class="s0">//bool initializeLicensed(IUnknown** ptr);</span>
+    <span class="s0">//bool initializeActive(IUnknown** ptr);</span>
+    <span class="s0">//bool initializeFromFile(IUnknown** ptr);</span>
+<span class="s0">};</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>test_numpy_2_0_compat.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #7a7e85;}
+.s6 { color: #a5c261;}
+.s7 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_numpy_2_0_compat.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">os </span><span class="s0">import </span><span class="s1">path</span>
+<span class="s0">import </span><span class="s1">pickle</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+
+<span class="s0">class </span><span class="s1">TestNumPy2Compatibility</span><span class="s2">:</span>
+
+    <span class="s1">data_dir </span><span class="s2">= </span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">path</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">__file__</span><span class="s2">), </span><span class="s3">&quot;data&quot;</span><span class="s2">)</span>
+    <span class="s1">filename </span><span class="s2">= </span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">data_dir</span><span class="s2">, </span><span class="s3">&quot;numpy_2_0_array.pkl&quot;</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">test_importable__core_stubs</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s4">&quot;&quot;&quot; 
+        Checks if stubs for `numpy._core` are importable. 
+        &quot;&quot;&quot;</span>
+        <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">multiarray </span><span class="s0">import </span><span class="s1">_reconstruct</span>
+        <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">umath </span><span class="s0">import </span><span class="s1">cos</span>
+        <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">_multiarray_umath </span><span class="s0">import </span><span class="s1">exp</span>
+        <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">_internal </span><span class="s0">import </span><span class="s1">ndarray</span>
+        <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">_dtype </span><span class="s0">import </span><span class="s1">_construction_repr</span>
+        <span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_core</span><span class="s2">.</span><span class="s1">_dtype_ctypes </span><span class="s0">import </span><span class="s1">dtype_from_ctypes_type</span>
+
+    <span class="s0">def </span><span class="s1">test_unpickle_numpy_2_0_file</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s4">&quot;&quot;&quot; 
+        Checks that NumPy 1.26 and pickle is able to load pickles 
+        created with NumPy 2.0 without errors/warnings. 
+        &quot;&quot;&quot;</span>
+        <span class="s0">with </span><span class="s1">open</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">, </span><span class="s1">mode</span><span class="s2">=</span><span class="s3">&quot;rb&quot;</span><span class="s2">) </span><span class="s0">as </span><span class="s1">file</span><span class="s2">:</span>
+            <span class="s1">content </span><span class="s2">= </span><span class="s1">file</span><span class="s2">.</span><span class="s1">read</span><span class="s2">()</span>
+
+        <span class="s5"># Let's make sure that the pickle object we're loading</span>
+        <span class="s5"># was built with NumPy 2.0.</span>
+        <span class="s0">assert </span><span class="s6">b&quot;numpy._core.multiarray&quot; </span><span class="s0">in </span><span class="s1">content</span>
+
+        <span class="s1">arr </span><span class="s2">= </span><span class="s1">pickle</span><span class="s2">.</span><span class="s1">loads</span><span class="s2">(</span><span class="s1">content</span><span class="s2">, </span><span class="s1">encoding</span><span class="s2">=</span><span class="s3">&quot;latin1&quot;</span><span class="s2">)</span>
+
+        <span class="s0">assert </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">shape </span><span class="s2">== (</span><span class="s7">73</span><span class="s2">,) </span><span class="s0">and </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span>
+
+    <span class="s0">def </span><span class="s1">test_numpy_load_numpy_2_0_file</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s4">&quot;&quot;&quot; 
+        Checks that `numpy.load` for NumPy 1.26 is able to load pickles 
+        created with NumPy 2.0 without errors/warnings. 
+        &quot;&quot;&quot;</span>
+        <span class="s1">arr </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">load</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">filename</span><span class="s2">, </span><span class="s1">encoding</span><span class="s2">=</span><span class="s3">&quot;latin1&quot;</span><span class="s2">, </span><span class="s1">allow_pickle</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+        <span class="s0">assert </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">shape </span><span class="s2">== (</span><span class="s7">73</span><span class="s2">,) </span><span class="s0">and </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span>
+</pre>
+</body>
+</html>

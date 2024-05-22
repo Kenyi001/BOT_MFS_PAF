@@ -1,0 +1,666 @@
+<html>
+<head>
+<title>string_.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+string_.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">TYPE_CHECKING</span><span class="s2">,</span>
+    <span class="s1">Literal</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_config </span><span class="s0">import </span><span class="s1">get_option</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_libs </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">lib</span><span class="s2">,</span>
+    <span class="s1">missing </span><span class="s0">as </span><span class="s1">libmissing</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_libs</span><span class="s2">.</span><span class="s1">arrays </span><span class="s0">import </span><span class="s1">NDArrayBacked</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_libs</span><span class="s2">.</span><span class="s1">lib </span><span class="s0">import </span><span class="s1">ensure_string_array</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">compat </span><span class="s0">import </span><span class="s1">pa_version_under7p0</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">compat</span><span class="s2">.</span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">function </span><span class="s0">as </span><span class="s1">nv</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">util</span><span class="s2">.</span><span class="s1">_decorators </span><span class="s0">import </span><span class="s1">doc</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">dtypes</span><span class="s2">.</span><span class="s1">base </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">ExtensionDtype</span><span class="s2">,</span>
+    <span class="s1">StorageExtensionDtype</span><span class="s2">,</span>
+    <span class="s1">register_extension_dtype</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">dtypes</span><span class="s2">.</span><span class="s1">common </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">is_array_like</span><span class="s2">,</span>
+    <span class="s1">is_bool_dtype</span><span class="s2">,</span>
+    <span class="s1">is_integer_dtype</span><span class="s2">,</span>
+    <span class="s1">is_object_dtype</span><span class="s2">,</span>
+    <span class="s1">is_string_dtype</span><span class="s2">,</span>
+    <span class="s1">pandas_dtype</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core </span><span class="s0">import </span><span class="s1">ops</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">array_algos </span><span class="s0">import </span><span class="s1">masked_reductions</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">base </span><span class="s0">import </span><span class="s1">ExtensionArray</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">floating </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">FloatingArray</span><span class="s2">,</span>
+    <span class="s1">FloatingDtype</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">integer </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">IntegerArray</span><span class="s2">,</span>
+    <span class="s1">IntegerDtype</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">numpy_ </span><span class="s0">import </span><span class="s1">NumpyExtensionArray</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">construction </span><span class="s0">import </span><span class="s1">extract_array</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">indexers </span><span class="s0">import </span><span class="s1">check_array_indexer</span>
+<span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">missing </span><span class="s0">import </span><span class="s1">isna</span>
+
+<span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+    <span class="s0">import </span><span class="s1">pyarrow</span>
+
+    <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_typing </span><span class="s0">import </span><span class="s2">(</span>
+        <span class="s1">AxisInt</span><span class="s2">,</span>
+        <span class="s1">Dtype</span><span class="s2">,</span>
+        <span class="s1">NumpySorter</span><span class="s2">,</span>
+        <span class="s1">NumpyValueArrayLike</span><span class="s2">,</span>
+        <span class="s1">Scalar</span><span class="s2">,</span>
+        <span class="s1">npt</span><span class="s2">,</span>
+        <span class="s1">type_t</span><span class="s2">,</span>
+    <span class="s2">)</span>
+
+    <span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s1">Series</span>
+
+
+<span class="s2">@</span><span class="s1">register_extension_dtype</span>
+<span class="s0">class </span><span class="s1">StringDtype</span><span class="s2">(</span><span class="s1">StorageExtensionDtype</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Extension dtype for string data. 
+ 
+    .. warning:: 
+ 
+       StringDtype is considered experimental. The implementation and 
+       parts of the API may change without warning. 
+ 
+    Parameters 
+    ---------- 
+    storage : {&quot;python&quot;, &quot;pyarrow&quot;, &quot;pyarrow_numpy&quot;}, optional 
+        If not given, the value of ``pd.options.mode.string_storage``. 
+ 
+    Attributes 
+    ---------- 
+    None 
+ 
+    Methods 
+    ------- 
+    None 
+ 
+    Examples 
+    -------- 
+    &gt;&gt;&gt; pd.StringDtype() 
+    string[python] 
+ 
+    &gt;&gt;&gt; pd.StringDtype(storage=&quot;pyarrow&quot;) 
+    string[pyarrow] 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">name </span><span class="s2">= </span><span class="s4">&quot;string&quot;</span>
+
+    <span class="s5">#: StringDtype().na_value uses pandas.NA except the implementation that</span>
+    <span class="s5"># follows NumPy semantics, which uses nan.</span>
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">na_value</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; libmissing</span><span class="s2">.</span><span class="s1">NAType </span><span class="s2">| </span><span class="s1">float</span><span class="s2">:  </span><span class="s5"># type: ignore[override]</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">storage </span><span class="s2">== </span><span class="s4">&quot;pyarrow_numpy&quot;</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span>
+
+    <span class="s1">_metadata </span><span class="s2">= (</span><span class="s4">&quot;storage&quot;</span><span class="s2">,)</span>
+
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">storage</span><span class="s2">=</span><span class="s0">None</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">storage </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">infer_string </span><span class="s2">= </span><span class="s1">get_option</span><span class="s2">(</span><span class="s4">&quot;future.infer_string&quot;</span><span class="s2">)</span>
+            <span class="s0">if </span><span class="s1">infer_string</span><span class="s2">:</span>
+                <span class="s1">storage </span><span class="s2">= </span><span class="s4">&quot;pyarrow_numpy&quot;</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s1">storage </span><span class="s2">= </span><span class="s1">get_option</span><span class="s2">(</span><span class="s4">&quot;mode.string_storage&quot;</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">storage </span><span class="s0">not in </span><span class="s2">{</span><span class="s4">&quot;python&quot;</span><span class="s2">, </span><span class="s4">&quot;pyarrow&quot;</span><span class="s2">, </span><span class="s4">&quot;pyarrow_numpy&quot;</span><span class="s2">}:</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+                <span class="s4">f&quot;Storage must be 'python', 'pyarrow' or 'pyarrow_numpy'. &quot;</span>
+                <span class="s4">f&quot;Got </span><span class="s0">{</span><span class="s1">storage</span><span class="s0">} </span><span class="s4">instead.&quot;</span>
+            <span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">storage </span><span class="s0">in </span><span class="s2">(</span><span class="s4">&quot;pyarrow&quot;</span><span class="s2">, </span><span class="s4">&quot;pyarrow_numpy&quot;</span><span class="s2">) </span><span class="s0">and </span><span class="s1">pa_version_under7p0</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">ImportError</span><span class="s2">(</span>
+                <span class="s4">&quot;pyarrow&gt;=7.0.0 is required for PyArrow backed StringArray.&quot;</span>
+            <span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">storage </span><span class="s2">= </span><span class="s1">storage</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">type</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; type</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]:</span>
+        <span class="s0">return </span><span class="s1">str</span>
+
+    <span class="s2">@</span><span class="s1">classmethod</span>
+    <span class="s0">def </span><span class="s1">construct_from_string</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">string</span><span class="s2">):</span>
+        <span class="s3">&quot;&quot;&quot; 
+        Construct a StringDtype from a string. 
+ 
+        Parameters 
+        ---------- 
+        string : str 
+            The type of the name. The storage type will be taking from `string`. 
+            Valid options and their storage types are 
+ 
+            ========================== ============================================== 
+            string                     result storage 
+            ========================== ============================================== 
+            ``'string'``               pd.options.mode.string_storage, default python 
+            ``'string[python]'``       python 
+            ``'string[pyarrow]'``      pyarrow 
+            ========================== ============================================== 
+ 
+        Returns 
+        ------- 
+        StringDtype 
+ 
+        Raise 
+        ----- 
+        TypeError 
+            If the string is not a valid option. 
+        &quot;&quot;&quot;</span>
+        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">string</span><span class="s2">, </span><span class="s1">str</span><span class="s2">):</span>
+            <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span>
+                <span class="s4">f&quot;'construct_from_string' expects a string, got </span><span class="s0">{</span><span class="s1">type</span><span class="s2">(</span><span class="s1">string</span><span class="s2">)</span><span class="s0">}</span><span class="s4">&quot;</span>
+            <span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">string </span><span class="s2">== </span><span class="s4">&quot;string&quot;</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">cls</span><span class="s2">()</span>
+        <span class="s0">elif </span><span class="s1">string </span><span class="s2">== </span><span class="s4">&quot;string[python]&quot;</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">cls</span><span class="s2">(</span><span class="s1">storage</span><span class="s2">=</span><span class="s4">&quot;python&quot;</span><span class="s2">)</span>
+        <span class="s0">elif </span><span class="s1">string </span><span class="s2">== </span><span class="s4">&quot;string[pyarrow]&quot;</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">cls</span><span class="s2">(</span><span class="s1">storage</span><span class="s2">=</span><span class="s4">&quot;pyarrow&quot;</span><span class="s2">)</span>
+        <span class="s0">elif </span><span class="s1">string </span><span class="s2">== </span><span class="s4">&quot;string[pyarrow_numpy]&quot;</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">cls</span><span class="s2">(</span><span class="s1">storage</span><span class="s2">=</span><span class="s4">&quot;pyarrow_numpy&quot;</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">f&quot;Cannot construct a '</span><span class="s0">{</span><span class="s1">cls</span><span class="s2">.</span><span class="s1">__name__</span><span class="s0">}</span><span class="s4">' from '</span><span class="s0">{</span><span class="s1">string</span><span class="s0">}</span><span class="s4">'&quot;</span><span class="s2">)</span>
+
+    <span class="s5"># https://github.com/pandas-dev/pandas/issues/36126</span>
+    <span class="s5"># error: Signature of &quot;construct_array_type&quot; incompatible with supertype</span>
+    <span class="s5"># &quot;ExtensionDtype&quot;</span>
+    <span class="s0">def </span><span class="s1">construct_array_type</span><span class="s2">(  </span><span class="s5"># type: ignore[override]</span>
+        <span class="s1">self</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; type_t</span><span class="s2">[</span><span class="s1">BaseStringArray</span><span class="s2">]:</span>
+        <span class="s3">&quot;&quot;&quot; 
+        Return the array type associated with this dtype. 
+ 
+        Returns 
+        ------- 
+        type 
+        &quot;&quot;&quot;</span>
+        <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">string_arrow </span><span class="s0">import </span><span class="s2">(</span>
+            <span class="s1">ArrowStringArray</span><span class="s2">,</span>
+            <span class="s1">ArrowStringArrayNumpySemantics</span><span class="s2">,</span>
+        <span class="s2">)</span>
+
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">storage </span><span class="s2">== </span><span class="s4">&quot;python&quot;</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">StringArray</span>
+        <span class="s0">elif </span><span class="s1">self</span><span class="s2">.</span><span class="s1">storage </span><span class="s2">== </span><span class="s4">&quot;pyarrow&quot;</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">ArrowStringArray</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">ArrowStringArrayNumpySemantics</span>
+
+    <span class="s0">def </span><span class="s1">__from_arrow__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, </span><span class="s1">array</span><span class="s2">: </span><span class="s1">pyarrow</span><span class="s2">.</span><span class="s1">Array </span><span class="s2">| </span><span class="s1">pyarrow</span><span class="s2">.</span><span class="s1">ChunkedArray</span>
+    <span class="s2">) </span><span class="s1">-&gt; BaseStringArray</span><span class="s2">:</span>
+        <span class="s3">&quot;&quot;&quot; 
+        Construct StringArray from pyarrow Array/ChunkedArray. 
+        &quot;&quot;&quot;</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">storage </span><span class="s2">== </span><span class="s4">&quot;pyarrow&quot;</span><span class="s2">:</span>
+            <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">string_arrow </span><span class="s0">import </span><span class="s1">ArrowStringArray</span>
+
+            <span class="s0">return </span><span class="s1">ArrowStringArray</span><span class="s2">(</span><span class="s1">array</span><span class="s2">)</span>
+        <span class="s0">elif </span><span class="s1">self</span><span class="s2">.</span><span class="s1">storage </span><span class="s2">== </span><span class="s4">&quot;pyarrow_numpy&quot;</span><span class="s2">:</span>
+            <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">string_arrow </span><span class="s0">import </span><span class="s1">ArrowStringArrayNumpySemantics</span>
+
+            <span class="s0">return </span><span class="s1">ArrowStringArrayNumpySemantics</span><span class="s2">(</span><span class="s1">array</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">import </span><span class="s1">pyarrow</span>
+
+            <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">array</span><span class="s2">, </span><span class="s1">pyarrow</span><span class="s2">.</span><span class="s1">Array</span><span class="s2">):</span>
+                <span class="s1">chunks </span><span class="s2">= [</span><span class="s1">array</span><span class="s2">]</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s5"># pyarrow.ChunkedArray</span>
+                <span class="s1">chunks </span><span class="s2">= </span><span class="s1">array</span><span class="s2">.</span><span class="s1">chunks</span>
+
+            <span class="s1">results </span><span class="s2">= []</span>
+            <span class="s0">for </span><span class="s1">arr </span><span class="s0">in </span><span class="s1">chunks</span><span class="s2">:</span>
+                <span class="s5"># convert chunk by chunk to numpy and concatenate then, to avoid</span>
+                <span class="s5"># overflow for large string data when concatenating the pyarrow arrays</span>
+                <span class="s1">arr </span><span class="s2">= </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">to_numpy</span><span class="s2">(</span><span class="s1">zero_copy_only</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+                <span class="s1">arr </span><span class="s2">= </span><span class="s1">ensure_string_array</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">, </span><span class="s1">na_value</span><span class="s2">=</span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span><span class="s2">)</span>
+                <span class="s1">results</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">)</span>
+
+        <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">chunks</span><span class="s2">) == </span><span class="s6">0</span><span class="s2">:</span>
+            <span class="s1">arr </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">object</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">arr </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">concatenate</span><span class="s2">(</span><span class="s1">results</span><span class="s2">)</span>
+
+        <span class="s5"># Bypass validation inside StringArray constructor, see GH#47781</span>
+        <span class="s1">new_string_array </span><span class="s2">= </span><span class="s1">StringArray</span><span class="s2">.</span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">StringArray</span><span class="s2">)</span>
+        <span class="s1">NDArrayBacked</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">(</span>
+            <span class="s1">new_string_array</span><span class="s2">,</span>
+            <span class="s1">arr</span><span class="s2">,</span>
+            <span class="s1">StringDtype</span><span class="s2">(</span><span class="s1">storage</span><span class="s2">=</span><span class="s4">&quot;python&quot;</span><span class="s2">),</span>
+        <span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">new_string_array</span>
+
+
+<span class="s0">class </span><span class="s1">BaseStringArray</span><span class="s2">(</span><span class="s1">ExtensionArray</span><span class="s2">):</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Mixin class for StringArray, ArrowStringArray. 
+    &quot;&quot;&quot;</span>
+
+    <span class="s2">@</span><span class="s1">doc</span><span class="s2">(</span><span class="s1">ExtensionArray</span><span class="s2">.</span><span class="s1">tolist</span><span class="s2">)</span>
+    <span class="s0">def </span><span class="s1">tolist</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">&gt; </span><span class="s6">1</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s2">[</span><span class="s1">x</span><span class="s2">.</span><span class="s1">tolist</span><span class="s2">() </span><span class="s0">for </span><span class="s1">x </span><span class="s0">in </span><span class="s1">self</span><span class="s2">]</span>
+        <span class="s0">return </span><span class="s1">list</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">to_numpy</span><span class="s2">())</span>
+
+
+<span class="s5"># error: Definition of &quot;_concat_same_type&quot; in base class &quot;NDArrayBacked&quot; is</span>
+<span class="s5"># incompatible with definition in base class &quot;ExtensionArray&quot;</span>
+<span class="s0">class </span><span class="s1">StringArray</span><span class="s2">(</span><span class="s1">BaseStringArray</span><span class="s2">, </span><span class="s1">NumpyExtensionArray</span><span class="s2">):  </span><span class="s5"># type: ignore[misc]</span>
+    <span class="s3">&quot;&quot;&quot; 
+    Extension array for string data. 
+ 
+    .. warning:: 
+ 
+       StringArray is considered experimental. The implementation and 
+       parts of the API may change without warning. 
+ 
+    Parameters 
+    ---------- 
+    values : array-like 
+        The array of data. 
+ 
+        .. warning:: 
+ 
+           Currently, this expects an object-dtype ndarray 
+           where the elements are Python strings 
+           or nan-likes (``None``, ``np.nan``, ``NA``). 
+           This may change without warning in the future. Use 
+           :meth:`pandas.array` with ``dtype=&quot;string&quot;`` for a stable way of 
+           creating a `StringArray` from any sequence. 
+ 
+        .. versionchanged:: 1.5.0 
+ 
+           StringArray now accepts array-likes containing 
+           nan-likes(``None``, ``np.nan``) for the ``values`` parameter 
+           in addition to strings and :attr:`pandas.NA` 
+ 
+    copy : bool, default False 
+        Whether to copy the array of data. 
+ 
+    Attributes 
+    ---------- 
+    None 
+ 
+    Methods 
+    ------- 
+    None 
+ 
+    See Also 
+    -------- 
+    :func:`pandas.array` 
+        The recommended function for creating a StringArray. 
+    Series.str 
+        The string methods are available on Series backed by 
+        a StringArray. 
+ 
+    Notes 
+    ----- 
+    StringArray returns a BooleanArray for comparison methods. 
+ 
+    Examples 
+    -------- 
+    &gt;&gt;&gt; pd.array(['This is', 'some text', None, 'data.'], dtype=&quot;string&quot;) 
+    &lt;StringArray&gt; 
+    ['This is', 'some text', &lt;NA&gt;, 'data.'] 
+    Length: 4, dtype: string 
+ 
+    Unlike arrays instantiated with ``dtype=&quot;object&quot;``, ``StringArray`` 
+    will convert the values to strings. 
+ 
+    &gt;&gt;&gt; pd.array(['1', 1], dtype=&quot;object&quot;) 
+    &lt;NumpyExtensionArray&gt; 
+    ['1', 1] 
+    Length: 2, dtype: object 
+    &gt;&gt;&gt; pd.array(['1', 1], dtype=&quot;string&quot;) 
+    &lt;StringArray&gt; 
+    ['1', '1'] 
+    Length: 2, dtype: string 
+ 
+    However, instantiating StringArrays directly with non-strings will raise an error. 
+ 
+    For comparison methods, `StringArray` returns a :class:`pandas.BooleanArray`: 
+ 
+    &gt;&gt;&gt; pd.array([&quot;a&quot;, None, &quot;c&quot;], dtype=&quot;string&quot;) == &quot;a&quot; 
+    &lt;BooleanArray&gt; 
+    [True, &lt;NA&gt;, False] 
+    Length: 3, dtype: boolean 
+    &quot;&quot;&quot;</span>
+
+    <span class="s5"># undo the NumpyExtensionArray hack</span>
+    <span class="s1">_typ </span><span class="s2">= </span><span class="s4">&quot;extension&quot;</span>
+
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">values</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s1">values </span><span class="s2">= </span><span class="s1">extract_array</span><span class="s2">(</span><span class="s1">values</span><span class="s2">)</span>
+
+        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">values</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s1">copy</span><span class="s2">)</span>
+        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">values</span><span class="s2">, </span><span class="s1">type</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)):</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">_validate</span><span class="s2">()</span>
+        <span class="s1">NDArrayBacked</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">, </span><span class="s1">StringDtype</span><span class="s2">(</span><span class="s1">storage</span><span class="s2">=</span><span class="s4">&quot;python&quot;</span><span class="s2">))</span>
+
+    <span class="s0">def </span><span class="s1">_validate</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s3">&quot;&quot;&quot;Validate that we only store NA or strings.&quot;&quot;&quot;</span>
+        <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">) </span><span class="s0">and not </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">is_string_array</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">, </span><span class="s1">skipna</span><span class="s2">=</span><span class="s0">True</span><span class="s2">):</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;StringArray requires a sequence of strings or pandas.NA&quot;</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">dtype </span><span class="s2">!= </span><span class="s4">&quot;object&quot;</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+                <span class="s4">&quot;StringArray requires a sequence of strings or pandas.NA. Got &quot;</span>
+                <span class="s4">f&quot;'</span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">dtype</span><span class="s0">}</span><span class="s4">' dtype instead.&quot;</span>
+            <span class="s2">)</span>
+        <span class="s5"># Check to see if need to convert Na values to pd.NA</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">&gt; </span><span class="s6">2</span><span class="s2">:</span>
+            <span class="s5"># Ravel if ndims &gt; 2 b/c no cythonized version available</span>
+            <span class="s1">lib</span><span class="s2">.</span><span class="s1">convert_nans_to_NA</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">ravel</span><span class="s2">(</span><span class="s4">&quot;K&quot;</span><span class="s2">))</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">lib</span><span class="s2">.</span><span class="s1">convert_nans_to_NA</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">classmethod</span>
+    <span class="s0">def </span><span class="s1">_from_sequence</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">scalars</span><span class="s2">, *, </span><span class="s1">dtype</span><span class="s2">: </span><span class="s1">Dtype </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">dtype </span><span class="s0">and not </span><span class="s2">(</span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">str</span><span class="s2">) </span><span class="s0">and </span><span class="s1">dtype </span><span class="s2">== </span><span class="s4">&quot;string&quot;</span><span class="s2">):</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s1">pandas_dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">)</span>
+            <span class="s0">assert </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">StringDtype</span><span class="s2">) </span><span class="s0">and </span><span class="s1">dtype</span><span class="s2">.</span><span class="s1">storage </span><span class="s2">== </span><span class="s4">&quot;python&quot;</span>
+
+        <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">arrays</span><span class="s2">.</span><span class="s1">masked </span><span class="s0">import </span><span class="s1">BaseMaskedArray</span>
+
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">scalars</span><span class="s2">, </span><span class="s1">BaseMaskedArray</span><span class="s2">):</span>
+            <span class="s5"># avoid costly conversion to object dtype</span>
+            <span class="s1">na_values </span><span class="s2">= </span><span class="s1">scalars</span><span class="s2">.</span><span class="s1">_mask</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">scalars</span><span class="s2">.</span><span class="s1">_data</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">ensure_string_array</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s1">copy</span><span class="s2">, </span><span class="s1">convert_na_value</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+            <span class="s1">result</span><span class="s2">[</span><span class="s1">na_values</span><span class="s2">] = </span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span>
+
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">is_pyarrow_array</span><span class="s2">(</span><span class="s1">scalars</span><span class="s2">):</span>
+                <span class="s5"># pyarrow array; we cannot rely on the &quot;to_numpy&quot; check in</span>
+                <span class="s5">#  ensure_string_array because calling scalars.to_numpy would set</span>
+                <span class="s5">#  zero_copy_only to True which caused problems see GH#52076</span>
+                <span class="s1">scalars </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s1">scalars</span><span class="s2">)</span>
+            <span class="s5"># convert non-na-likes to str, and nan-likes to StringDtype().na_value</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">ensure_string_array</span><span class="s2">(</span><span class="s1">scalars</span><span class="s2">, </span><span class="s1">na_value</span><span class="s2">=</span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s1">copy</span><span class="s2">)</span>
+
+        <span class="s5"># Manually creating new array avoids the validation step in the __init__, so is</span>
+        <span class="s5"># faster. Refactor need for validation?</span>
+        <span class="s1">new_string_array </span><span class="s2">= </span><span class="s1">cls</span><span class="s2">.</span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">)</span>
+        <span class="s1">NDArrayBacked</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">new_string_array</span><span class="s2">, </span><span class="s1">result</span><span class="s2">, </span><span class="s1">StringDtype</span><span class="s2">(</span><span class="s1">storage</span><span class="s2">=</span><span class="s4">&quot;python&quot;</span><span class="s2">))</span>
+
+        <span class="s0">return </span><span class="s1">new_string_array</span>
+
+    <span class="s2">@</span><span class="s1">classmethod</span>
+    <span class="s0">def </span><span class="s1">_from_sequence_of_strings</span><span class="s2">(</span>
+        <span class="s1">cls</span><span class="s2">, </span><span class="s1">strings</span><span class="s2">, *, </span><span class="s1">dtype</span><span class="s2">: </span><span class="s1">Dtype </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span>
+    <span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">cls</span><span class="s2">.</span><span class="s1">_from_sequence</span><span class="s2">(</span><span class="s1">strings</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s1">copy</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">classmethod</span>
+    <span class="s0">def </span><span class="s1">_empty</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">shape</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">) </span><span class="s1">-&gt; StringArray</span><span class="s2">:</span>
+        <span class="s1">values </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">empty</span><span class="s2">(</span><span class="s1">shape</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">object</span><span class="s2">)</span>
+        <span class="s1">values</span><span class="s2">[:] = </span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span>
+        <span class="s0">return </span><span class="s1">cls</span><span class="s2">(</span><span class="s1">values</span><span class="s2">).</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">__arrow_array__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">type</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+        <span class="s3">&quot;&quot;&quot; 
+        Convert myself into a pyarrow Array. 
+        &quot;&quot;&quot;</span>
+        <span class="s0">import </span><span class="s1">pyarrow </span><span class="s0">as </span><span class="s1">pa</span>
+
+        <span class="s0">if </span><span class="s1">type </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">type </span><span class="s2">= </span><span class="s1">pa</span><span class="s2">.</span><span class="s1">string</span><span class="s2">()</span>
+
+        <span class="s1">values </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+        <span class="s1">values</span><span class="s2">[</span><span class="s1">self</span><span class="s2">.</span><span class="s1">isna</span><span class="s2">()] = </span><span class="s0">None</span>
+        <span class="s0">return </span><span class="s1">pa</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s1">values</span><span class="s2">, </span><span class="s1">type</span><span class="s2">=</span><span class="s1">type</span><span class="s2">, </span><span class="s1">from_pandas</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">_values_for_factorize</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s1">arr </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+        <span class="s1">mask </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">isna</span><span class="s2">()</span>
+        <span class="s1">arr</span><span class="s2">[</span><span class="s1">mask</span><span class="s2">] = </span><span class="s0">None</span>
+        <span class="s0">return </span><span class="s1">arr</span><span class="s2">, </span><span class="s0">None</span>
+
+    <span class="s0">def </span><span class="s1">__setitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">key</span><span class="s2">, </span><span class="s1">value</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s1">value </span><span class="s2">= </span><span class="s1">extract_array</span><span class="s2">(</span><span class="s1">value</span><span class="s2">, </span><span class="s1">extract_numpy</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">value</span><span class="s2">, </span><span class="s1">type</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)):</span>
+            <span class="s5"># extract_array doesn't extract NumpyExtensionArray subclasses</span>
+            <span class="s1">value </span><span class="s2">= </span><span class="s1">value</span><span class="s2">.</span><span class="s1">_ndarray</span>
+
+        <span class="s1">key </span><span class="s2">= </span><span class="s1">check_array_indexer</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">key</span><span class="s2">)</span>
+        <span class="s1">scalar_key </span><span class="s2">= </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">is_scalar</span><span class="s2">(</span><span class="s1">key</span><span class="s2">)</span>
+        <span class="s1">scalar_value </span><span class="s2">= </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">is_scalar</span><span class="s2">(</span><span class="s1">value</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">scalar_key </span><span class="s0">and not </span><span class="s1">scalar_value</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s4">&quot;setting an array element with a sequence.&quot;</span><span class="s2">)</span>
+
+        <span class="s5"># validate new items</span>
+        <span class="s0">if </span><span class="s1">scalar_value</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">isna</span><span class="s2">(</span><span class="s1">value</span><span class="s2">):</span>
+                <span class="s1">value </span><span class="s2">= </span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span>
+            <span class="s0">elif not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">value</span><span class="s2">, </span><span class="s1">str</span><span class="s2">):</span>
+                <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span>
+                    <span class="s4">f&quot;Cannot set non-string value '</span><span class="s0">{</span><span class="s1">value</span><span class="s0">}</span><span class="s4">' into a StringArray.&quot;</span>
+                <span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">if not </span><span class="s1">is_array_like</span><span class="s2">(</span><span class="s1">value</span><span class="s2">):</span>
+                <span class="s1">value </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">value</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">object</span><span class="s2">)</span>
+            <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">value</span><span class="s2">) </span><span class="s0">and not </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">is_string_array</span><span class="s2">(</span><span class="s1">value</span><span class="s2">, </span><span class="s1">skipna</span><span class="s2">=</span><span class="s0">True</span><span class="s2">):</span>
+                <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">&quot;Must provide strings.&quot;</span><span class="s2">)</span>
+
+            <span class="s1">mask </span><span class="s2">= </span><span class="s1">isna</span><span class="s2">(</span><span class="s1">value</span><span class="s2">)</span>
+            <span class="s0">if </span><span class="s1">mask</span><span class="s2">.</span><span class="s1">any</span><span class="s2">():</span>
+                <span class="s1">value </span><span class="s2">= </span><span class="s1">value</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+                <span class="s1">value</span><span class="s2">[</span><span class="s1">isna</span><span class="s2">(</span><span class="s1">value</span><span class="s2">)] = </span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span>
+
+        <span class="s1">super</span><span class="s2">().</span><span class="s1">__setitem__</span><span class="s2">(</span><span class="s1">key</span><span class="s2">, </span><span class="s1">value</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">_putmask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">: </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">bool_</span><span class="s2">], </span><span class="s1">value</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s5"># the super() method NDArrayBackedExtensionArray._putmask uses</span>
+        <span class="s5"># np.putmask which doesn't properly handle None/pd.NA, so using the</span>
+        <span class="s5"># base class implementation that uses __setitem__</span>
+        <span class="s1">ExtensionArray</span><span class="s2">.</span><span class="s1">_putmask</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">, </span><span class="s1">value</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">astype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span><span class="s2">):</span>
+        <span class="s1">dtype </span><span class="s2">= </span><span class="s1">pandas_dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">)</span>
+
+        <span class="s0">if </span><span class="s1">dtype </span><span class="s2">== </span><span class="s1">self</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">copy</span><span class="s2">:</span>
+                <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+            <span class="s0">return </span><span class="s1">self</span>
+
+        <span class="s0">elif </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">IntegerDtype</span><span class="s2">):</span>
+            <span class="s1">arr </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+            <span class="s1">mask </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">isna</span><span class="s2">()</span>
+            <span class="s1">arr</span><span class="s2">[</span><span class="s1">mask</span><span class="s2">] = </span><span class="s6">0</span>
+            <span class="s1">values </span><span class="s2">= </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">.</span><span class="s1">numpy_dtype</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">IntegerArray</span><span class="s2">(</span><span class="s1">values</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+        <span class="s0">elif </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">FloatingDtype</span><span class="s2">):</span>
+            <span class="s1">arr </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+            <span class="s1">mask </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">isna</span><span class="s2">()</span>
+            <span class="s1">arr</span><span class="s2">[</span><span class="s1">mask</span><span class="s2">] = </span><span class="s4">&quot;0&quot;</span>
+            <span class="s1">values </span><span class="s2">= </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">.</span><span class="s1">numpy_dtype</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">FloatingArray</span><span class="s2">(</span><span class="s1">values</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+        <span class="s0">elif </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">ExtensionDtype</span><span class="s2">):</span>
+            <span class="s5"># Skip the NumpyExtensionArray.astype method</span>
+            <span class="s0">return </span><span class="s1">ExtensionArray</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">)</span>
+        <span class="s0">elif </span><span class="s1">np</span><span class="s2">.</span><span class="s1">issubdtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">floating</span><span class="s2">):</span>
+            <span class="s1">arr </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+            <span class="s1">mask </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">isna</span><span class="s2">()</span>
+            <span class="s1">arr</span><span class="s2">[</span><span class="s1">mask</span><span class="s2">] = </span><span class="s6">0</span>
+            <span class="s1">values </span><span class="s2">= </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">)</span>
+            <span class="s1">values</span><span class="s2">[</span><span class="s1">mask</span><span class="s2">] = </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span>
+            <span class="s0">return </span><span class="s1">values</span>
+
+        <span class="s0">return </span><span class="s1">super</span><span class="s2">().</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">_reduce</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, </span><span class="s1">name</span><span class="s2">: </span><span class="s1">str</span><span class="s2">, *, </span><span class="s1">skipna</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">: </span><span class="s1">AxisInt </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s6">0</span><span class="s2">, **</span><span class="s1">kwargs</span>
+    <span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">name </span><span class="s0">in </span><span class="s2">[</span><span class="s4">&quot;min&quot;</span><span class="s2">, </span><span class="s4">&quot;max&quot;</span><span class="s2">]:</span>
+            <span class="s0">return </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">name</span><span class="s2">)(</span><span class="s1">skipna</span><span class="s2">=</span><span class="s1">skipna</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">)</span>
+
+        <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span><span class="s4">f&quot;Cannot perform reduction '</span><span class="s0">{</span><span class="s1">name</span><span class="s0">}</span><span class="s4">' with string dtype&quot;</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">min</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">skipna</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">) </span><span class="s1">-&gt; Scalar</span><span class="s2">:</span>
+        <span class="s1">nv</span><span class="s2">.</span><span class="s1">validate_min</span><span class="s2">((), </span><span class="s1">kwargs</span><span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">masked_reductions</span><span class="s2">.</span><span class="s1">min</span><span class="s2">(</span>
+            <span class="s1">values</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">to_numpy</span><span class="s2">(), </span><span class="s1">mask</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">isna</span><span class="s2">(), </span><span class="s1">skipna</span><span class="s2">=</span><span class="s1">skipna</span>
+        <span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_wrap_reduction_result</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">result</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">max</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">skipna</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">) </span><span class="s1">-&gt; Scalar</span><span class="s2">:</span>
+        <span class="s1">nv</span><span class="s2">.</span><span class="s1">validate_max</span><span class="s2">((), </span><span class="s1">kwargs</span><span class="s2">)</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">masked_reductions</span><span class="s2">.</span><span class="s1">max</span><span class="s2">(</span>
+            <span class="s1">values</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">to_numpy</span><span class="s2">(), </span><span class="s1">mask</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">isna</span><span class="s2">(), </span><span class="s1">skipna</span><span class="s2">=</span><span class="s1">skipna</span>
+        <span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_wrap_reduction_result</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">result</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">value_counts</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">dropna</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span><span class="s2">) </span><span class="s1">-&gt; Series</span><span class="s2">:</span>
+        <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">core</span><span class="s2">.</span><span class="s1">algorithms </span><span class="s0">import </span><span class="s1">value_counts_internal </span><span class="s0">as </span><span class="s1">value_counts</span>
+
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">value_counts</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">, </span><span class="s1">dropna</span><span class="s2">=</span><span class="s1">dropna</span><span class="s2">).</span><span class="s1">astype</span><span class="s2">(</span><span class="s4">&quot;Int64&quot;</span><span class="s2">)</span>
+        <span class="s1">result</span><span class="s2">.</span><span class="s1">index </span><span class="s2">= </span><span class="s1">result</span><span class="s2">.</span><span class="s1">index</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">result</span>
+
+    <span class="s0">def </span><span class="s1">memory_usage</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">deep</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s1">result </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">.</span><span class="s1">nbytes</span>
+        <span class="s0">if </span><span class="s1">deep</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">result </span><span class="s2">+ </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">memory_usage_of_objects</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">result</span>
+
+    <span class="s2">@</span><span class="s1">doc</span><span class="s2">(</span><span class="s1">ExtensionArray</span><span class="s2">.</span><span class="s1">searchsorted</span><span class="s2">)</span>
+    <span class="s0">def </span><span class="s1">searchsorted</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">value</span><span class="s2">: </span><span class="s1">NumpyValueArrayLike </span><span class="s2">| </span><span class="s1">ExtensionArray</span><span class="s2">,</span>
+        <span class="s1">side</span><span class="s2">: </span><span class="s1">Literal</span><span class="s2">[</span><span class="s4">&quot;left&quot;</span><span class="s2">, </span><span class="s4">&quot;right&quot;</span><span class="s2">] = </span><span class="s4">&quot;left&quot;</span><span class="s2">,</span>
+        <span class="s1">sorter</span><span class="s2">: </span><span class="s1">NumpySorter </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">intp</span><span class="s2">] | </span><span class="s1">np</span><span class="s2">.</span><span class="s1">intp</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_hasna</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+                <span class="s4">&quot;searchsorted requires array to be sorted, which is impossible &quot;</span>
+                <span class="s4">&quot;with NAs present.&quot;</span>
+            <span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">super</span><span class="s2">().</span><span class="s1">searchsorted</span><span class="s2">(</span><span class="s1">value</span><span class="s2">=</span><span class="s1">value</span><span class="s2">, </span><span class="s1">side</span><span class="s2">=</span><span class="s1">side</span><span class="s2">, </span><span class="s1">sorter</span><span class="s2">=</span><span class="s1">sorter</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">_cmp_method</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">, </span><span class="s1">op</span><span class="s2">):</span>
+        <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">arrays </span><span class="s0">import </span><span class="s1">BooleanArray</span>
+
+        <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">other</span><span class="s2">, </span><span class="s1">StringArray</span><span class="s2">):</span>
+            <span class="s1">other </span><span class="s2">= </span><span class="s1">other</span><span class="s2">.</span><span class="s1">_ndarray</span>
+
+        <span class="s1">mask </span><span class="s2">= </span><span class="s1">isna</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) | </span><span class="s1">isna</span><span class="s2">(</span><span class="s1">other</span><span class="s2">)</span>
+        <span class="s1">valid </span><span class="s2">= ~</span><span class="s1">mask</span>
+
+        <span class="s0">if not </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">is_scalar</span><span class="s2">(</span><span class="s1">other</span><span class="s2">):</span>
+            <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">other</span><span class="s2">) != </span><span class="s1">len</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+                <span class="s5"># prevent improper broadcasting when other is 2D</span>
+                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+                    <span class="s4">f&quot;Lengths of operands do not match: </span><span class="s0">{</span><span class="s1">len</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span><span class="s0">} </span><span class="s4">!= </span><span class="s0">{</span><span class="s1">len</span><span class="s2">(</span><span class="s1">other</span><span class="s2">)</span><span class="s0">}</span><span class="s4">&quot;</span>
+                <span class="s2">)</span>
+
+            <span class="s1">other </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">other</span><span class="s2">)</span>
+            <span class="s1">other </span><span class="s2">= </span><span class="s1">other</span><span class="s2">[</span><span class="s1">valid</span><span class="s2">]</span>
+
+        <span class="s0">if </span><span class="s1">op</span><span class="s2">.</span><span class="s1">__name__ </span><span class="s0">in </span><span class="s1">ops</span><span class="s2">.</span><span class="s1">ARITHMETIC_BINOPS</span><span class="s2">:</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">empty_like</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;object&quot;</span><span class="s2">)</span>
+            <span class="s1">result</span><span class="s2">[</span><span class="s1">mask</span><span class="s2">] = </span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA</span>
+            <span class="s1">result</span><span class="s2">[</span><span class="s1">valid</span><span class="s2">] = </span><span class="s1">op</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">[</span><span class="s1">valid</span><span class="s2">], </span><span class="s1">other</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">StringArray</span><span class="s2">(</span><span class="s1">result</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s5"># logical</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">), </span><span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;bool&quot;</span><span class="s2">)</span>
+            <span class="s1">result</span><span class="s2">[</span><span class="s1">valid</span><span class="s2">] = </span><span class="s1">op</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_ndarray</span><span class="s2">[</span><span class="s1">valid</span><span class="s2">], </span><span class="s1">other</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">BooleanArray</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">)</span>
+
+    <span class="s1">_arith_method </span><span class="s2">= </span><span class="s1">_cmp_method</span>
+
+    <span class="s5"># ------------------------------------------------------------------------</span>
+    <span class="s5"># String methods interface</span>
+    <span class="s5"># error: Incompatible types in assignment (expression has type &quot;NAType&quot;,</span>
+    <span class="s5"># base class &quot;NumpyExtensionArray&quot; defined the type as &quot;float&quot;)</span>
+    <span class="s1">_str_na_value </span><span class="s2">= </span><span class="s1">libmissing</span><span class="s2">.</span><span class="s1">NA  </span><span class="s5"># type: ignore[assignment]</span>
+
+    <span class="s0">def </span><span class="s1">_str_map</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, </span><span class="s1">f</span><span class="s2">, </span><span class="s1">na_value</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">: </span><span class="s1">Dtype </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">, </span><span class="s1">convert</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">True</span>
+    <span class="s2">):</span>
+        <span class="s0">from </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">arrays </span><span class="s0">import </span><span class="s1">BooleanArray</span>
+
+        <span class="s0">if </span><span class="s1">dtype </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">dtype </span><span class="s2">= </span><span class="s1">StringDtype</span><span class="s2">(</span><span class="s1">storage</span><span class="s2">=</span><span class="s4">&quot;python&quot;</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">na_value </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">na_value </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">.</span><span class="s1">na_value</span>
+
+        <span class="s1">mask </span><span class="s2">= </span><span class="s1">isna</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+        <span class="s1">arr </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+
+        <span class="s0">if </span><span class="s1">is_integer_dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">) </span><span class="s0">or </span><span class="s1">is_bool_dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">):</span>
+            <span class="s1">constructor</span><span class="s2">: </span><span class="s1">type</span><span class="s2">[</span><span class="s1">IntegerArray</span><span class="s2">] | </span><span class="s1">type</span><span class="s2">[</span><span class="s1">BooleanArray</span><span class="s2">]</span>
+            <span class="s0">if </span><span class="s1">is_integer_dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">):</span>
+                <span class="s1">constructor </span><span class="s2">= </span><span class="s1">IntegerArray</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s1">constructor </span><span class="s2">= </span><span class="s1">BooleanArray</span>
+
+            <span class="s1">na_value_is_na </span><span class="s2">= </span><span class="s1">isna</span><span class="s2">(</span><span class="s1">na_value</span><span class="s2">)</span>
+            <span class="s0">if </span><span class="s1">na_value_is_na</span><span class="s2">:</span>
+                <span class="s1">na_value </span><span class="s2">= </span><span class="s6">1</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">map_infer_mask</span><span class="s2">(</span>
+                <span class="s1">arr</span><span class="s2">,</span>
+                <span class="s1">f</span><span class="s2">,</span>
+                <span class="s1">mask</span><span class="s2">.</span><span class="s1">view</span><span class="s2">(</span><span class="s4">&quot;uint8&quot;</span><span class="s2">),</span>
+                <span class="s1">convert</span><span class="s2">=</span><span class="s0">False</span><span class="s2">,</span>
+                <span class="s1">na_value</span><span class="s2">=</span><span class="s1">na_value</span><span class="s2">,</span>
+                <span class="s5"># error: Argument 1 to &quot;dtype&quot; has incompatible type</span>
+                <span class="s5"># &quot;Union[ExtensionDtype, str, dtype[Any], Type[object]]&quot;; expected</span>
+                <span class="s5"># &quot;Type[object]&quot;</span>
+                <span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">),  </span><span class="s5"># type: ignore[arg-type]</span>
+            <span class="s2">)</span>
+
+            <span class="s0">if not </span><span class="s1">na_value_is_na</span><span class="s2">:</span>
+                <span class="s1">mask</span><span class="s2">[:] = </span><span class="s0">False</span>
+
+            <span class="s0">return </span><span class="s1">constructor</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">)</span>
+
+        <span class="s0">elif </span><span class="s1">is_string_dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">) </span><span class="s0">and not </span><span class="s1">is_object_dtype</span><span class="s2">(</span><span class="s1">dtype</span><span class="s2">):</span>
+            <span class="s5"># i.e. StringDtype</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">map_infer_mask</span><span class="s2">(</span>
+                <span class="s1">arr</span><span class="s2">, </span><span class="s1">f</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">.</span><span class="s1">view</span><span class="s2">(</span><span class="s4">&quot;uint8&quot;</span><span class="s2">), </span><span class="s1">convert</span><span class="s2">=</span><span class="s0">False</span><span class="s2">, </span><span class="s1">na_value</span><span class="s2">=</span><span class="s1">na_value</span>
+            <span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">StringArray</span><span class="s2">(</span><span class="s1">result</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s5"># This is when the result type is object. We reach this when</span>
+            <span class="s5"># -&gt; We know the result type is truly object (e.g. .encode returns bytes</span>
+            <span class="s5">#    or .findall returns a list).</span>
+            <span class="s5"># -&gt; We don't know the result type. E.g. `.get` can return anything.</span>
+            <span class="s0">return </span><span class="s1">lib</span><span class="s2">.</span><span class="s1">map_infer_mask</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">, </span><span class="s1">f</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">.</span><span class="s1">view</span><span class="s2">(</span><span class="s4">&quot;uint8&quot;</span><span class="s2">))</span>
+</pre>
+</body>
+</html>

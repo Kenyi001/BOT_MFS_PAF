@@ -1,0 +1,195 @@
+<html>
+<head>
+<title>lazy.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+lazy.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">threading </span><span class="s0">import </span><span class="s1">RLock</span>
+<span class="s0">try</span><span class="s2">:</span>
+    <span class="s0">from </span><span class="s1">collections</span><span class="s2">.</span><span class="s1">abc </span><span class="s0">import </span><span class="s1">Mapping </span><span class="s0">as </span><span class="s1">DictMixin</span>
+<span class="s0">except </span><span class="s1">ImportError</span><span class="s2">:  </span><span class="s3"># Python &lt; 3.3</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s0">from </span><span class="s1">UserDict </span><span class="s0">import </span><span class="s1">DictMixin  </span><span class="s3"># Python 2</span>
+    <span class="s0">except </span><span class="s1">ImportError</span><span class="s2">:  </span><span class="s3"># Python 3.0-3.3</span>
+        <span class="s0">from </span><span class="s1">collections </span><span class="s0">import </span><span class="s1">Mapping </span><span class="s0">as </span><span class="s1">DictMixin</span>
+
+
+<span class="s3"># With lazy loading, we might end up with multiple threads triggering</span>
+<span class="s3"># it at the same time. We need a lock.</span>
+<span class="s1">_fill_lock </span><span class="s2">= </span><span class="s1">RLock</span><span class="s2">()</span>
+
+
+<span class="s0">class </span><span class="s1">LazyDict</span><span class="s2">(</span><span class="s1">DictMixin</span><span class="s2">):</span>
+    <span class="s4">&quot;&quot;&quot;Dictionary populated on first use.&quot;&quot;&quot;</span>
+    <span class="s1">data </span><span class="s2">= </span><span class="s0">None</span>
+
+    <span class="s0">def </span><span class="s1">__getitem__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">key</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">acquire</span><span class="s2">()</span>
+            <span class="s0">try</span><span class="s2">:</span>
+                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+                    <span class="s1">self</span><span class="s2">.</span><span class="s1">_fill</span><span class="s2">()</span>
+            <span class="s0">finally</span><span class="s2">:</span>
+                <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">release</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data</span><span class="s2">[</span><span class="s1">key</span><span class="s2">.</span><span class="s1">upper</span><span class="s2">()]</span>
+
+    <span class="s0">def </span><span class="s1">__contains__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">key</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">acquire</span><span class="s2">()</span>
+            <span class="s0">try</span><span class="s2">:</span>
+                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+                    <span class="s1">self</span><span class="s2">.</span><span class="s1">_fill</span><span class="s2">()</span>
+            <span class="s0">finally</span><span class="s2">:</span>
+                <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">release</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">key </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data</span>
+
+    <span class="s0">def </span><span class="s1">__iter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">acquire</span><span class="s2">()</span>
+            <span class="s0">try</span><span class="s2">:</span>
+                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+                    <span class="s1">self</span><span class="s2">.</span><span class="s1">_fill</span><span class="s2">()</span>
+            <span class="s0">finally</span><span class="s2">:</span>
+                <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">release</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">iter</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">data</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">__len__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">acquire</span><span class="s2">()</span>
+            <span class="s0">try</span><span class="s2">:</span>
+                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+                    <span class="s1">self</span><span class="s2">.</span><span class="s1">_fill</span><span class="s2">()</span>
+            <span class="s0">finally</span><span class="s2">:</span>
+                <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">release</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">len</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">data</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">keys</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">acquire</span><span class="s2">()</span>
+            <span class="s0">try</span><span class="s2">:</span>
+                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data </span><span class="s0">is None</span><span class="s2">:</span>
+                    <span class="s1">self</span><span class="s2">.</span><span class="s1">_fill</span><span class="s2">()</span>
+            <span class="s0">finally</span><span class="s2">:</span>
+                <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">release</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">keys</span><span class="s2">()</span>
+
+
+<span class="s0">class </span><span class="s1">LazyList</span><span class="s2">(</span><span class="s1">list</span><span class="s2">):</span>
+    <span class="s4">&quot;&quot;&quot;List populated on first use.&quot;&quot;&quot;</span>
+
+    <span class="s1">_props </span><span class="s2">= [</span>
+        <span class="s5">'__str__'</span><span class="s2">, </span><span class="s5">'__repr__'</span><span class="s2">, </span><span class="s5">'__unicode__'</span><span class="s2">,</span>
+        <span class="s5">'__hash__'</span><span class="s2">, </span><span class="s5">'__sizeof__'</span><span class="s2">, </span><span class="s5">'__cmp__'</span><span class="s2">,</span>
+        <span class="s5">'__lt__'</span><span class="s2">, </span><span class="s5">'__le__'</span><span class="s2">, </span><span class="s5">'__eq__'</span><span class="s2">, </span><span class="s5">'__ne__'</span><span class="s2">, </span><span class="s5">'__gt__'</span><span class="s2">, </span><span class="s5">'__ge__'</span><span class="s2">,</span>
+        <span class="s5">'append'</span><span class="s2">, </span><span class="s5">'count'</span><span class="s2">, </span><span class="s5">'index'</span><span class="s2">, </span><span class="s5">'extend'</span><span class="s2">, </span><span class="s5">'insert'</span><span class="s2">, </span><span class="s5">'pop'</span><span class="s2">, </span><span class="s5">'remove'</span><span class="s2">,</span>
+        <span class="s5">'reverse'</span><span class="s2">, </span><span class="s5">'sort'</span><span class="s2">, </span><span class="s5">'__add__'</span><span class="s2">, </span><span class="s5">'__radd__'</span><span class="s2">, </span><span class="s5">'__iadd__'</span><span class="s2">, </span><span class="s5">'__mul__'</span><span class="s2">,</span>
+        <span class="s5">'__rmul__'</span><span class="s2">, </span><span class="s5">'__imul__'</span><span class="s2">, </span><span class="s5">'__contains__'</span><span class="s2">, </span><span class="s5">'__len__'</span><span class="s2">, </span><span class="s5">'__nonzero__'</span><span class="s2">,</span>
+        <span class="s5">'__getitem__'</span><span class="s2">, </span><span class="s5">'__setitem__'</span><span class="s2">, </span><span class="s5">'__delitem__'</span><span class="s2">, </span><span class="s5">'__iter__'</span><span class="s2">,</span>
+        <span class="s5">'__reversed__'</span><span class="s2">, </span><span class="s5">'__getslice__'</span><span class="s2">, </span><span class="s5">'__setslice__'</span><span class="s2">, </span><span class="s5">'__delslice__'</span><span class="s2">]</span>
+
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">fill_iter</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+
+        <span class="s0">if </span><span class="s1">fill_iter </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">list</span><span class="s2">()</span>
+
+        <span class="s3"># We need a new class as we will be dynamically messing with its</span>
+        <span class="s3"># methods.</span>
+        <span class="s0">class </span><span class="s1">LazyList</span><span class="s2">(</span><span class="s1">list</span><span class="s2">):</span>
+            <span class="s0">pass</span>
+
+        <span class="s1">fill_iter </span><span class="s2">= [</span><span class="s1">fill_iter</span><span class="s2">]</span>
+
+        <span class="s0">def </span><span class="s1">lazy</span><span class="s2">(</span><span class="s1">name</span><span class="s2">):</span>
+            <span class="s0">def </span><span class="s1">_lazy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kw</span><span class="s2">):</span>
+                <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">acquire</span><span class="s2">()</span>
+                <span class="s0">try</span><span class="s2">:</span>
+                    <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">fill_iter</span><span class="s2">) &gt; </span><span class="s6">0</span><span class="s2">:</span>
+                        <span class="s1">list</span><span class="s2">.</span><span class="s1">extend</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">fill_iter</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">())</span>
+                        <span class="s0">for </span><span class="s1">method_name </span><span class="s0">in </span><span class="s1">cls</span><span class="s2">.</span><span class="s1">_props</span><span class="s2">:</span>
+                            <span class="s1">delattr</span><span class="s2">(</span><span class="s1">LazyList</span><span class="s2">, </span><span class="s1">method_name</span><span class="s2">)</span>
+                <span class="s0">finally</span><span class="s2">:</span>
+                    <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">release</span><span class="s2">()</span>
+                <span class="s0">return </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">list</span><span class="s2">, </span><span class="s1">name</span><span class="s2">)(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kw</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">_lazy</span>
+
+        <span class="s0">for </span><span class="s1">name </span><span class="s0">in </span><span class="s1">cls</span><span class="s2">.</span><span class="s1">_props</span><span class="s2">:</span>
+            <span class="s1">setattr</span><span class="s2">(</span><span class="s1">LazyList</span><span class="s2">, </span><span class="s1">name</span><span class="s2">, </span><span class="s1">lazy</span><span class="s2">(</span><span class="s1">name</span><span class="s2">))</span>
+
+        <span class="s1">new_list </span><span class="s2">= </span><span class="s1">LazyList</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">new_list</span>
+
+<span class="s3"># Not all versions of Python declare the same magic methods.</span>
+<span class="s3"># Filter out properties that don't exist in this version of Python</span>
+<span class="s3"># from the list.</span>
+<span class="s1">LazyList</span><span class="s2">.</span><span class="s1">_props </span><span class="s2">= [</span><span class="s1">prop </span><span class="s0">for </span><span class="s1">prop </span><span class="s0">in </span><span class="s1">LazyList</span><span class="s2">.</span><span class="s1">_props </span><span class="s0">if </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">list</span><span class="s2">, </span><span class="s1">prop</span><span class="s2">)]</span>
+
+
+<span class="s0">class </span><span class="s1">LazySet</span><span class="s2">(</span><span class="s1">set</span><span class="s2">):</span>
+    <span class="s4">&quot;&quot;&quot;Set populated on first use.&quot;&quot;&quot;</span>
+
+    <span class="s1">_props </span><span class="s2">= (</span>
+        <span class="s5">'__str__'</span><span class="s2">, </span><span class="s5">'__repr__'</span><span class="s2">, </span><span class="s5">'__unicode__'</span><span class="s2">,</span>
+        <span class="s5">'__hash__'</span><span class="s2">, </span><span class="s5">'__sizeof__'</span><span class="s2">, </span><span class="s5">'__cmp__'</span><span class="s2">,</span>
+        <span class="s5">'__lt__'</span><span class="s2">, </span><span class="s5">'__le__'</span><span class="s2">, </span><span class="s5">'__eq__'</span><span class="s2">, </span><span class="s5">'__ne__'</span><span class="s2">, </span><span class="s5">'__gt__'</span><span class="s2">, </span><span class="s5">'__ge__'</span><span class="s2">,</span>
+        <span class="s5">'__contains__'</span><span class="s2">, </span><span class="s5">'__len__'</span><span class="s2">, </span><span class="s5">'__nonzero__'</span><span class="s2">,</span>
+        <span class="s5">'__getitem__'</span><span class="s2">, </span><span class="s5">'__setitem__'</span><span class="s2">, </span><span class="s5">'__delitem__'</span><span class="s2">, </span><span class="s5">'__iter__'</span><span class="s2">,</span>
+        <span class="s5">'__sub__'</span><span class="s2">, </span><span class="s5">'__and__'</span><span class="s2">, </span><span class="s5">'__xor__'</span><span class="s2">, </span><span class="s5">'__or__'</span><span class="s2">,</span>
+        <span class="s5">'__rsub__'</span><span class="s2">, </span><span class="s5">'__rand__'</span><span class="s2">, </span><span class="s5">'__rxor__'</span><span class="s2">, </span><span class="s5">'__ror__'</span><span class="s2">,</span>
+        <span class="s5">'__isub__'</span><span class="s2">, </span><span class="s5">'__iand__'</span><span class="s2">, </span><span class="s5">'__ixor__'</span><span class="s2">, </span><span class="s5">'__ior__'</span><span class="s2">,</span>
+        <span class="s5">'add'</span><span class="s2">, </span><span class="s5">'clear'</span><span class="s2">, </span><span class="s5">'copy'</span><span class="s2">, </span><span class="s5">'difference'</span><span class="s2">, </span><span class="s5">'difference_update'</span><span class="s2">,</span>
+        <span class="s5">'discard'</span><span class="s2">, </span><span class="s5">'intersection'</span><span class="s2">, </span><span class="s5">'intersection_update'</span><span class="s2">, </span><span class="s5">'isdisjoint'</span><span class="s2">,</span>
+        <span class="s5">'issubset'</span><span class="s2">, </span><span class="s5">'issuperset'</span><span class="s2">, </span><span class="s5">'pop'</span><span class="s2">, </span><span class="s5">'remove'</span><span class="s2">,</span>
+        <span class="s5">'symmetric_difference'</span><span class="s2">, </span><span class="s5">'symmetric_difference_update'</span><span class="s2">,</span>
+        <span class="s5">'union'</span><span class="s2">, </span><span class="s5">'update'</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">fill_iter</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+
+        <span class="s0">if </span><span class="s1">fill_iter </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">set</span><span class="s2">()</span>
+
+        <span class="s0">class </span><span class="s1">LazySet</span><span class="s2">(</span><span class="s1">set</span><span class="s2">):</span>
+            <span class="s0">pass</span>
+
+        <span class="s1">fill_iter </span><span class="s2">= [</span><span class="s1">fill_iter</span><span class="s2">]</span>
+
+        <span class="s0">def </span><span class="s1">lazy</span><span class="s2">(</span><span class="s1">name</span><span class="s2">):</span>
+            <span class="s0">def </span><span class="s1">_lazy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kw</span><span class="s2">):</span>
+                <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">acquire</span><span class="s2">()</span>
+                <span class="s0">try</span><span class="s2">:</span>
+                    <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">fill_iter</span><span class="s2">) &gt; </span><span class="s6">0</span><span class="s2">:</span>
+                        <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">fill_iter</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">():</span>
+                            <span class="s1">set</span><span class="s2">.</span><span class="s1">add</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">i</span><span class="s2">)</span>
+                        <span class="s0">for </span><span class="s1">method_name </span><span class="s0">in </span><span class="s1">cls</span><span class="s2">.</span><span class="s1">_props</span><span class="s2">:</span>
+                            <span class="s1">delattr</span><span class="s2">(</span><span class="s1">LazySet</span><span class="s2">, </span><span class="s1">method_name</span><span class="s2">)</span>
+                <span class="s0">finally</span><span class="s2">:</span>
+                    <span class="s1">_fill_lock</span><span class="s2">.</span><span class="s1">release</span><span class="s2">()</span>
+                <span class="s0">return </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">set</span><span class="s2">, </span><span class="s1">name</span><span class="s2">)(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kw</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">_lazy</span>
+
+        <span class="s0">for </span><span class="s1">name </span><span class="s0">in </span><span class="s1">cls</span><span class="s2">.</span><span class="s1">_props</span><span class="s2">:</span>
+            <span class="s1">setattr</span><span class="s2">(</span><span class="s1">LazySet</span><span class="s2">, </span><span class="s1">name</span><span class="s2">, </span><span class="s1">lazy</span><span class="s2">(</span><span class="s1">name</span><span class="s2">))</span>
+
+        <span class="s1">new_set </span><span class="s2">= </span><span class="s1">LazySet</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">new_set</span>
+
+<span class="s3"># Not all versions of Python declare the same magic methods.</span>
+<span class="s3"># Filter out properties that don't exist in this version of Python</span>
+<span class="s3"># from the list.</span>
+<span class="s1">LazySet</span><span class="s2">.</span><span class="s1">_props </span><span class="s2">= [</span><span class="s1">prop </span><span class="s0">for </span><span class="s1">prop </span><span class="s0">in </span><span class="s1">LazySet</span><span class="s2">.</span><span class="s1">_props </span><span class="s0">if </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">set</span><span class="s2">, </span><span class="s1">prop</span><span class="s2">)]</span>
+</pre>
+</body>
+</html>

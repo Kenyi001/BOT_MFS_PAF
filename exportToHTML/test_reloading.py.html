@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>test_reloading.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.s6 { color: #5f826b; font-style: italic;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_reloading.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">assert_raises</span><span class="s2">,</span>
+    <span class="s1">assert_warns</span><span class="s2">,</span>
+    <span class="s1">assert_</span><span class="s2">,</span>
+    <span class="s1">assert_equal</span><span class="s2">,</span>
+    <span class="s1">IS_WASM</span><span class="s2">,</span>
+<span class="s2">)</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">compat </span><span class="s0">import </span><span class="s1">pickle</span>
+
+<span class="s0">import </span><span class="s1">pytest</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">import </span><span class="s1">subprocess</span>
+<span class="s0">import </span><span class="s1">textwrap</span>
+<span class="s0">from </span><span class="s1">importlib </span><span class="s0">import </span><span class="s1">reload</span>
+
+
+<span class="s0">def </span><span class="s1">test_numpy_reloading</span><span class="s2">():</span>
+    <span class="s3"># gh-7844. Also check that relevant globals retain their identity.</span>
+    <span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+    <span class="s0">import </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_globals</span>
+
+    <span class="s1">_NoValue </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">_NoValue</span>
+    <span class="s1">VisibleDeprecationWarning </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">VisibleDeprecationWarning</span>
+    <span class="s1">ModuleDeprecationWarning </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ModuleDeprecationWarning</span>
+
+    <span class="s0">with </span><span class="s1">assert_warns</span><span class="s2">(</span><span class="s1">UserWarning</span><span class="s2">):</span>
+        <span class="s1">reload</span><span class="s2">(</span><span class="s1">np</span><span class="s2">)</span>
+    <span class="s1">assert_</span><span class="s2">(</span><span class="s1">_NoValue </span><span class="s0">is </span><span class="s1">np</span><span class="s2">.</span><span class="s1">_NoValue</span><span class="s2">)</span>
+    <span class="s1">assert_</span><span class="s2">(</span><span class="s1">ModuleDeprecationWarning </span><span class="s0">is </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ModuleDeprecationWarning</span><span class="s2">)</span>
+    <span class="s1">assert_</span><span class="s2">(</span><span class="s1">VisibleDeprecationWarning </span><span class="s0">is </span><span class="s1">np</span><span class="s2">.</span><span class="s1">VisibleDeprecationWarning</span><span class="s2">)</span>
+
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">RuntimeError</span><span class="s2">, </span><span class="s1">reload</span><span class="s2">, </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">_globals</span><span class="s2">)</span>
+    <span class="s0">with </span><span class="s1">assert_warns</span><span class="s2">(</span><span class="s1">UserWarning</span><span class="s2">):</span>
+        <span class="s1">reload</span><span class="s2">(</span><span class="s1">np</span><span class="s2">)</span>
+    <span class="s1">assert_</span><span class="s2">(</span><span class="s1">_NoValue </span><span class="s0">is </span><span class="s1">np</span><span class="s2">.</span><span class="s1">_NoValue</span><span class="s2">)</span>
+    <span class="s1">assert_</span><span class="s2">(</span><span class="s1">ModuleDeprecationWarning </span><span class="s0">is </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ModuleDeprecationWarning</span><span class="s2">)</span>
+    <span class="s1">assert_</span><span class="s2">(</span><span class="s1">VisibleDeprecationWarning </span><span class="s0">is </span><span class="s1">np</span><span class="s2">.</span><span class="s1">VisibleDeprecationWarning</span><span class="s2">)</span>
+
+<span class="s0">def </span><span class="s1">test_novalue</span><span class="s2">():</span>
+    <span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+    <span class="s0">for </span><span class="s1">proto </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s4">2</span><span class="s2">, </span><span class="s1">pickle</span><span class="s2">.</span><span class="s1">HIGHEST_PROTOCOL </span><span class="s2">+ </span><span class="s4">1</span><span class="s2">):</span>
+        <span class="s1">assert_equal</span><span class="s2">(</span><span class="s1">repr</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">_NoValue</span><span class="s2">), </span><span class="s5">'&lt;no value&gt;'</span><span class="s2">)</span>
+        <span class="s1">assert_</span><span class="s2">(</span><span class="s1">pickle</span><span class="s2">.</span><span class="s1">loads</span><span class="s2">(</span><span class="s1">pickle</span><span class="s2">.</span><span class="s1">dumps</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">_NoValue</span><span class="s2">,</span>
+                                          <span class="s1">protocol</span><span class="s2">=</span><span class="s1">proto</span><span class="s2">)) </span><span class="s0">is </span><span class="s1">np</span><span class="s2">.</span><span class="s1">_NoValue</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">skipif</span><span class="s2">(</span><span class="s1">IS_WASM</span><span class="s2">, </span><span class="s1">reason</span><span class="s2">=</span><span class="s5">&quot;can't start subprocess&quot;</span><span class="s2">)</span>
+<span class="s0">def </span><span class="s1">test_full_reimport</span><span class="s2">():</span>
+    <span class="s6">&quot;&quot;&quot;At the time of writing this, it is *not* truly supported, but 
+    apparently enough users rely on it, for it to be an annoying change 
+    when it started failing previously. 
+    &quot;&quot;&quot;</span>
+    <span class="s3"># Test within a new process, to ensure that we do not mess with the</span>
+    <span class="s3"># global state during the test run (could lead to cryptic test failures).</span>
+    <span class="s3"># This is generally unsafe, especially, since we also reload the C-modules.</span>
+    <span class="s1">code </span><span class="s2">= </span><span class="s1">textwrap</span><span class="s2">.</span><span class="s1">dedent</span><span class="s2">(</span><span class="s5">r&quot;&quot;&quot; 
+        import sys 
+        from pytest import warns 
+        import numpy as np 
+ 
+        for k in list(sys.modules.keys()): 
+            if &quot;numpy&quot; in k: 
+                del sys.modules[k] 
+ 
+        with warns(UserWarning): 
+            import numpy as np 
+        &quot;&quot;&quot;</span><span class="s2">)</span>
+    <span class="s1">p </span><span class="s2">= </span><span class="s1">subprocess</span><span class="s2">.</span><span class="s1">run</span><span class="s2">([</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">executable</span><span class="s2">, </span><span class="s5">'-c'</span><span class="s2">, </span><span class="s1">code</span><span class="s2">], </span><span class="s1">capture_output</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">p</span><span class="s2">.</span><span class="s1">returncode</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">AssertionError</span><span class="s2">(</span>
+            <span class="s5">f&quot;Non-zero return code: </span><span class="s0">{</span><span class="s1">p</span><span class="s2">.</span><span class="s1">returncode</span><span class="s0">!r}\n\n{</span><span class="s1">p</span><span class="s2">.</span><span class="s1">stderr</span><span class="s2">.</span><span class="s1">decode</span><span class="s2">()</span><span class="s0">}</span><span class="s5">&quot;</span>
+        <span class="s2">)</span>
+</pre>
+</body>
+</html>

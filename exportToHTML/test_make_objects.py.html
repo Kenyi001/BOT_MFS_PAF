@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>test_make_objects.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_make_objects.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+Tests for tm.makeFoo functions. 
+&quot;&quot;&quot;</span>
+
+
+<span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+
+<span class="s2">import </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">_testing </span><span class="s2">as </span><span class="s1">tm</span>
+
+
+<span class="s2">def </span><span class="s1">test_make_multiindex_respects_k</span><span class="s3">():</span>
+    <span class="s4"># GH#38795 respect 'k' arg</span>
+    <span class="s1">N </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">random</span><span class="s3">.</span><span class="s1">default_rng</span><span class="s3">(</span><span class="s5">2</span><span class="s3">).</span><span class="s1">integers</span><span class="s3">(</span><span class="s5">0</span><span class="s3">, </span><span class="s5">100</span><span class="s3">)</span>
+    <span class="s1">mi </span><span class="s3">= </span><span class="s1">tm</span><span class="s3">.</span><span class="s1">makeMultiIndex</span><span class="s3">(</span><span class="s1">k</span><span class="s3">=</span><span class="s1">N</span><span class="s3">)</span>
+    <span class="s2">assert </span><span class="s1">len</span><span class="s3">(</span><span class="s1">mi</span><span class="s3">) == </span><span class="s1">N</span>
+</pre>
+</body>
+</html>

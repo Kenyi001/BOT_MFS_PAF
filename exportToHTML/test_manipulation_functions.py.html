@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>test_manipulation_functions.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_manipulation_functions.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">testing </span><span class="s0">import </span><span class="s1">assert_raises</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+
+<span class="s0">from </span><span class="s2">.. </span><span class="s0">import </span><span class="s1">all</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">_creation_functions </span><span class="s0">import </span><span class="s1">asarray</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">_dtypes </span><span class="s0">import </span><span class="s1">float64</span><span class="s2">, </span><span class="s1">int8</span>
+<span class="s0">from </span><span class="s2">..</span><span class="s1">_manipulation_functions </span><span class="s0">import </span><span class="s2">(</span>
+        <span class="s1">concat</span><span class="s2">,</span>
+        <span class="s1">reshape</span><span class="s2">,</span>
+        <span class="s1">stack</span>
+<span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">test_concat_errors</span><span class="s2">():</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">concat</span><span class="s2">((</span><span class="s3">1</span><span class="s2">, </span><span class="s3">1</span><span class="s2">), </span><span class="s1">axis</span><span class="s2">=</span><span class="s0">None</span><span class="s2">))</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">concat</span><span class="s2">([</span><span class="s1">asarray</span><span class="s2">([</span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">int8</span><span class="s2">),</span>
+                                             <span class="s1">asarray</span><span class="s2">([</span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">float64</span><span class="s2">)]))</span>
+
+
+<span class="s0">def </span><span class="s1">test_stack_errors</span><span class="s2">():</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">TypeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">stack</span><span class="s2">([</span><span class="s1">asarray</span><span class="s2">([</span><span class="s3">1</span><span class="s2">, </span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">int8</span><span class="s2">),</span>
+                                            <span class="s1">asarray</span><span class="s2">([</span><span class="s3">2</span><span class="s2">, </span><span class="s3">2</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">float64</span><span class="s2">)]))</span>
+
+
+<span class="s0">def </span><span class="s1">test_reshape_copy</span><span class="s2">():</span>
+    <span class="s1">a </span><span class="s2">= </span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">((</span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">)))</span>
+    <span class="s1">b </span><span class="s2">= </span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">2</span><span class="s2">), </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s0">assert not </span><span class="s1">np</span><span class="s2">.</span><span class="s1">shares_memory</span><span class="s2">(</span><span class="s1">a</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">b</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">)</span>
+    
+    <span class="s1">a </span><span class="s2">= </span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">((</span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">)))</span>
+    <span class="s1">b </span><span class="s2">= </span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">2</span><span class="s2">), </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+    <span class="s0">assert </span><span class="s1">np</span><span class="s2">.</span><span class="s1">shares_memory</span><span class="s2">(</span><span class="s1">a</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">, </span><span class="s1">b</span><span class="s2">.</span><span class="s1">_array</span><span class="s2">)</span>
+
+    <span class="s1">a </span><span class="s2">= </span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">((</span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">)).</span><span class="s1">T</span><span class="s2">)</span>
+    <span class="s1">b </span><span class="s2">= </span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">2</span><span class="s2">), </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s1">assert_raises</span><span class="s2">(</span><span class="s1">AttributeError</span><span class="s2">, </span><span class="s0">lambda</span><span class="s2">: </span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, (</span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">), </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">False</span><span class="s2">))</span>
+
+</pre>
+</body>
+</html>

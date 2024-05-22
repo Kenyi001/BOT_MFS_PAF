@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>encoding.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #a5c261;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #7a7e85;}
+.s7 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+encoding.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">codecs</span>
+<span class="s0">import </span><span class="s1">locale</span>
+<span class="s0">import </span><span class="s1">re</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">List</span><span class="s2">, </span><span class="s1">Tuple</span>
+
+<span class="s1">BOMS</span><span class="s2">: </span><span class="s1">List</span><span class="s2">[</span><span class="s1">Tuple</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">, </span><span class="s1">str</span><span class="s2">]] = [</span>
+    <span class="s2">(</span><span class="s1">codecs</span><span class="s2">.</span><span class="s1">BOM_UTF8</span><span class="s2">, </span><span class="s3">&quot;utf-8&quot;</span><span class="s2">),</span>
+    <span class="s2">(</span><span class="s1">codecs</span><span class="s2">.</span><span class="s1">BOM_UTF16</span><span class="s2">, </span><span class="s3">&quot;utf-16&quot;</span><span class="s2">),</span>
+    <span class="s2">(</span><span class="s1">codecs</span><span class="s2">.</span><span class="s1">BOM_UTF16_BE</span><span class="s2">, </span><span class="s3">&quot;utf-16-be&quot;</span><span class="s2">),</span>
+    <span class="s2">(</span><span class="s1">codecs</span><span class="s2">.</span><span class="s1">BOM_UTF16_LE</span><span class="s2">, </span><span class="s3">&quot;utf-16-le&quot;</span><span class="s2">),</span>
+    <span class="s2">(</span><span class="s1">codecs</span><span class="s2">.</span><span class="s1">BOM_UTF32</span><span class="s2">, </span><span class="s3">&quot;utf-32&quot;</span><span class="s2">),</span>
+    <span class="s2">(</span><span class="s1">codecs</span><span class="s2">.</span><span class="s1">BOM_UTF32_BE</span><span class="s2">, </span><span class="s3">&quot;utf-32-be&quot;</span><span class="s2">),</span>
+    <span class="s2">(</span><span class="s1">codecs</span><span class="s2">.</span><span class="s1">BOM_UTF32_LE</span><span class="s2">, </span><span class="s3">&quot;utf-32-le&quot;</span><span class="s2">),</span>
+<span class="s2">]</span>
+
+<span class="s1">ENCODING_RE </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">compile</span><span class="s2">(</span><span class="s4">rb&quot;coding[:=]\s*([-\w.]+)&quot;</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">auto_decode</span><span class="s2">(</span><span class="s1">data</span><span class="s2">: </span><span class="s1">bytes</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot;Check a bytes string for a BOM to correctly detect the encoding 
+ 
+    Fallback to locale.getpreferredencoding(False) like open() on Python3&quot;&quot;&quot;</span>
+    <span class="s0">for </span><span class="s1">bom</span><span class="s2">, </span><span class="s1">encoding </span><span class="s0">in </span><span class="s1">BOMS</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">data</span><span class="s2">.</span><span class="s1">startswith</span><span class="s2">(</span><span class="s1">bom</span><span class="s2">):</span>
+            <span class="s0">return </span><span class="s1">data</span><span class="s2">[</span><span class="s1">len</span><span class="s2">(</span><span class="s1">bom</span><span class="s2">) :].</span><span class="s1">decode</span><span class="s2">(</span><span class="s1">encoding</span><span class="s2">)</span>
+    <span class="s6"># Lets check the first two lines as in PEP263</span>
+    <span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">data</span><span class="s2">.</span><span class="s1">split</span><span class="s2">(</span><span class="s4">b&quot;</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s2">)[:</span><span class="s7">2</span><span class="s2">]:</span>
+        <span class="s0">if </span><span class="s1">line</span><span class="s2">[</span><span class="s7">0</span><span class="s2">:</span><span class="s7">1</span><span class="s2">] == </span><span class="s4">b&quot;#&quot; </span><span class="s0">and </span><span class="s1">ENCODING_RE</span><span class="s2">.</span><span class="s1">search</span><span class="s2">(</span><span class="s1">line</span><span class="s2">):</span>
+            <span class="s1">result </span><span class="s2">= </span><span class="s1">ENCODING_RE</span><span class="s2">.</span><span class="s1">search</span><span class="s2">(</span><span class="s1">line</span><span class="s2">)</span>
+            <span class="s0">assert </span><span class="s1">result </span><span class="s0">is not None</span>
+            <span class="s1">encoding </span><span class="s2">= </span><span class="s1">result</span><span class="s2">.</span><span class="s1">groups</span><span class="s2">()[</span><span class="s7">0</span><span class="s2">].</span><span class="s1">decode</span><span class="s2">(</span><span class="s3">&quot;ascii&quot;</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">data</span><span class="s2">.</span><span class="s1">decode</span><span class="s2">(</span><span class="s1">encoding</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">data</span><span class="s2">.</span><span class="s1">decode</span><span class="s2">(</span>
+        <span class="s1">locale</span><span class="s2">.</span><span class="s1">getpreferredencoding</span><span class="s2">(</span><span class="s0">False</span><span class="s2">) </span><span class="s0">or </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">getdefaultencoding</span><span class="s2">(),</span>
+    <span class="s2">)</span>
+</pre>
+</body>
+</html>

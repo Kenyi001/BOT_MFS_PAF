@@ -1,0 +1,171 @@
+<html>
+<head>
+<title>ColorOverlay.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #7a7e85;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ColorOverlay.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2017 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Graphical Effects module.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.12</span>
+<span class="s2">import </span><span class="s1">QtGraphicalEffects</span><span class="s4">.</span><span class="s1">private </span><span class="s3">1.12</span>
+
+<span class="s5">/*! 
+    \qmltype ColorOverlay 
+    \inqmlmodule QtGraphicalEffects 
+    \since QtGraphicalEffects 1.0 
+    \inherits QtQuick2::Item 
+    \ingroup qtgraphicaleffects-color 
+    \brief Alters the colors of the source item by applying an overlay color. 
+ 
+    The effect is similar to what happens when a colorized glass is put on top 
+    of a grayscale image. The color for the overlay is given in the RGBA format. 
+ 
+    \table 
+    \header 
+        \li Source 
+        \li Effect applied 
+    \row 
+        \li \image Original_butterfly.png 
+        \li \image ColorOverlay_butterfly.png 
+    \endtable 
+ 
+    \note This effect is available when running with OpenGL. 
+ 
+    \section1 Example 
+ 
+    The following example shows how to apply the effect. 
+    \snippet ColorOverlay-example.qml example 
+ 
+*/</span>
+<span class="s1">Item </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">rootItem</span>
+
+    <span class="s5">/*! 
+        This property defines the source item that provides the source pixels 
+        for the effect. 
+ 
+        \note It is not supported to let the effect include itself, for 
+        instance by setting source to the effect's parent. 
+    */</span>
+    <span class="s1">property variant source</span>
+
+    <span class="s5">/*! 
+        This property defines the RGBA color value which is used to colorize the 
+        source. 
+ 
+        By default, the property is set to \c &quot;transparent&quot;. 
+ 
+        \table 
+        \header 
+        \li Output examples with different color values 
+        \li 
+        \li 
+        \row 
+            \li \image ColorOverlay_color1.png 
+            \li \image ColorOverlay_color2.png 
+            \li \image ColorOverlay_color3.png 
+        \row 
+            \li \b { color: #80ff0000 } 
+            \li \b { color: #8000ff00 } 
+            \li \b { color: #800000ff } 
+        \endtable 
+ 
+    */</span>
+    <span class="s1">property color color</span><span class="s4">: </span><span class="s6">&quot;transparent&quot;</span>
+
+    <span class="s5">/*! 
+        This property allows the effect output pixels to be cached in order to 
+        improve the rendering performance. 
+ 
+        Every time the source or effect properties are changed, the pixels in 
+        the cache must be updated. Memory consumption is increased, because an 
+        extra buffer of memory is required for storing the effect output. 
+ 
+        It is recommended to disable the cache when the source or the effect 
+        properties are animated. 
+ 
+        By default, the property is set to \c false. 
+ 
+    */</span>
+    <span class="s1">property bool cached</span><span class="s4">: </span><span class="s2">false</span>
+
+    <span class="s1">SourceProxy </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">sourceProxy</span>
+        <span class="s1">input</span><span class="s4">: </span><span class="s1">rootItem</span><span class="s4">.</span><span class="s1">source</span>
+        <span class="s1">interpolation</span><span class="s4">: </span><span class="s1">input </span><span class="s4">&amp;&amp; </span><span class="s1">input</span><span class="s4">.</span><span class="s1">smooth </span><span class="s4">? </span><span class="s1">SourceProxy</span><span class="s4">.</span><span class="s1">LinearInterpolation </span><span class="s4">: </span><span class="s1">SourceProxy</span><span class="s4">.</span><span class="s1">NearestInterpolation</span>
+    <span class="s4">}</span>
+
+    <span class="s1">ShaderEffectSource </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">cacheItem</span>
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+        <span class="s1">visible</span><span class="s4">: </span><span class="s1">rootItem</span><span class="s4">.</span><span class="s1">cached</span>
+        <span class="s1">smooth</span><span class="s4">: </span><span class="s2">true</span>
+        <span class="s1">sourceItem</span><span class="s4">: </span><span class="s1">shaderItem</span>
+        <span class="s1">live</span><span class="s4">: </span><span class="s2">true</span>
+        <span class="s1">hideSource</span><span class="s4">: </span><span class="s1">visible</span>
+    <span class="s4">}</span>
+
+    <span class="s1">ShaderEffect </span><span class="s4">{</span>
+        <span class="s1">id</span><span class="s4">: </span><span class="s1">shaderItem</span>
+        <span class="s1">property variant source</span><span class="s4">: </span><span class="s1">sourceProxy</span><span class="s4">.</span><span class="s1">output</span>
+        <span class="s1">property color color</span><span class="s4">: </span><span class="s1">rootItem</span><span class="s4">.</span><span class="s1">color</span>
+
+        <span class="s1">anchors</span><span class="s4">.</span><span class="s1">fill</span><span class="s4">: </span><span class="s1">parent</span>
+
+        <span class="s1">fragmentShader</span><span class="s4">: </span><span class="s6">&quot;qrc:/qt-project.org/imports/QtGraphicalEffects/shaders/coloroverlay.frag&quot;</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

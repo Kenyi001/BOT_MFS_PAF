@@ -1,0 +1,463 @@
+<html>
+<head>
+<title>util.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+.s6 { color: #6aab73;}
+.s7 { color: #a5c261;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+util.py</font>
+</center></td></tr></table>
+<pre><span class="s0">&quot;&quot;&quot; 
+Utility functions for 
+ 
+- building and importing modules on test time, using a temporary location 
+- detecting if compilers are present 
+- determining paths to tests 
+ 
+&quot;&quot;&quot;</span>
+<span class="s2">import </span><span class="s1">glob</span>
+<span class="s2">import </span><span class="s1">os</span>
+<span class="s2">import </span><span class="s1">sys</span>
+<span class="s2">import </span><span class="s1">subprocess</span>
+<span class="s2">import </span><span class="s1">tempfile</span>
+<span class="s2">import </span><span class="s1">shutil</span>
+<span class="s2">import </span><span class="s1">atexit</span>
+<span class="s2">import </span><span class="s1">textwrap</span>
+<span class="s2">import </span><span class="s1">re</span>
+<span class="s2">import </span><span class="s1">pytest</span>
+<span class="s2">import </span><span class="s1">contextlib</span>
+<span class="s2">import </span><span class="s1">numpy</span>
+
+<span class="s2">from </span><span class="s1">pathlib </span><span class="s2">import </span><span class="s1">Path</span>
+<span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">_utils </span><span class="s2">import </span><span class="s1">asunicode</span>
+<span class="s2">from </span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">testing </span><span class="s2">import </span><span class="s1">temppath</span><span class="s3">, </span><span class="s1">IS_WASM</span>
+<span class="s2">from </span><span class="s1">importlib </span><span class="s2">import </span><span class="s1">import_module</span>
+
+<span class="s4">#</span>
+<span class="s4"># Maintaining a temporary module directory</span>
+<span class="s4">#</span>
+
+<span class="s1">_module_dir </span><span class="s3">= </span><span class="s2">None</span>
+<span class="s1">_module_num </span><span class="s3">= </span><span class="s5">5403</span>
+
+<span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s6">&quot;cygwin&quot;</span><span class="s3">:</span>
+    <span class="s1">NUMPY_INSTALL_ROOT </span><span class="s3">= </span><span class="s1">Path</span><span class="s3">(</span><span class="s1">__file__</span><span class="s3">).</span><span class="s1">parent</span><span class="s3">.</span><span class="s1">parent</span><span class="s3">.</span><span class="s1">parent</span>
+    <span class="s1">_module_list </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">NUMPY_INSTALL_ROOT</span><span class="s3">.</span><span class="s1">glob</span><span class="s3">(</span><span class="s6">&quot;**/*.dll&quot;</span><span class="s3">))</span>
+
+
+<span class="s2">def </span><span class="s1">_cleanup</span><span class="s3">():</span>
+    <span class="s2">global </span><span class="s1">_module_dir</span>
+    <span class="s2">if </span><span class="s1">_module_dir </span><span class="s2">is not None</span><span class="s3">:</span>
+        <span class="s2">try</span><span class="s3">:</span>
+            <span class="s1">sys</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">remove</span><span class="s3">(</span><span class="s1">_module_dir</span><span class="s3">)</span>
+        <span class="s2">except </span><span class="s1">ValueError</span><span class="s3">:</span>
+            <span class="s2">pass</span>
+        <span class="s2">try</span><span class="s3">:</span>
+            <span class="s1">shutil</span><span class="s3">.</span><span class="s1">rmtree</span><span class="s3">(</span><span class="s1">_module_dir</span><span class="s3">)</span>
+        <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+            <span class="s2">pass</span>
+        <span class="s1">_module_dir </span><span class="s3">= </span><span class="s2">None</span>
+
+
+<span class="s2">def </span><span class="s1">get_module_dir</span><span class="s3">():</span>
+    <span class="s2">global </span><span class="s1">_module_dir</span>
+    <span class="s2">if </span><span class="s1">_module_dir </span><span class="s2">is None</span><span class="s3">:</span>
+        <span class="s1">_module_dir </span><span class="s3">= </span><span class="s1">tempfile</span><span class="s3">.</span><span class="s1">mkdtemp</span><span class="s3">()</span>
+        <span class="s1">atexit</span><span class="s3">.</span><span class="s1">register</span><span class="s3">(</span><span class="s1">_cleanup</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">_module_dir </span><span class="s2">not in </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">path</span><span class="s3">:</span>
+            <span class="s1">sys</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">insert</span><span class="s3">(</span><span class="s5">0</span><span class="s3">, </span><span class="s1">_module_dir</span><span class="s3">)</span>
+    <span class="s2">return </span><span class="s1">_module_dir</span>
+
+
+<span class="s2">def </span><span class="s1">get_temp_module_name</span><span class="s3">():</span>
+    <span class="s4"># Assume single-threaded, and the module dir usable only by this thread</span>
+    <span class="s2">global </span><span class="s1">_module_num</span>
+    <span class="s1">get_module_dir</span><span class="s3">()</span>
+    <span class="s1">name </span><span class="s3">= </span><span class="s6">&quot;_test_ext_module_%d&quot; </span><span class="s3">% </span><span class="s1">_module_num</span>
+    <span class="s1">_module_num </span><span class="s3">+= </span><span class="s5">1</span>
+    <span class="s2">if </span><span class="s1">name </span><span class="s2">in </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">modules</span><span class="s3">:</span>
+        <span class="s4"># this should not be possible, but check anyway</span>
+        <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s6">&quot;Temporary module name already in use.&quot;</span><span class="s3">)</span>
+    <span class="s2">return </span><span class="s1">name</span>
+
+
+<span class="s2">def </span><span class="s1">_memoize</span><span class="s3">(</span><span class="s1">func</span><span class="s3">):</span>
+    <span class="s1">memo </span><span class="s3">= {}</span>
+
+    <span class="s2">def </span><span class="s1">wrapper</span><span class="s3">(*</span><span class="s1">a</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">):</span>
+        <span class="s1">key </span><span class="s3">= </span><span class="s1">repr</span><span class="s3">((</span><span class="s1">a</span><span class="s3">, </span><span class="s1">kw</span><span class="s3">))</span>
+        <span class="s2">if </span><span class="s1">key </span><span class="s2">not in </span><span class="s1">memo</span><span class="s3">:</span>
+            <span class="s2">try</span><span class="s3">:</span>
+                <span class="s1">memo</span><span class="s3">[</span><span class="s1">key</span><span class="s3">] = </span><span class="s1">func</span><span class="s3">(*</span><span class="s1">a</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">)</span>
+            <span class="s2">except </span><span class="s1">Exception </span><span class="s2">as </span><span class="s1">e</span><span class="s3">:</span>
+                <span class="s1">memo</span><span class="s3">[</span><span class="s1">key</span><span class="s3">] = </span><span class="s1">e</span>
+                <span class="s2">raise</span>
+        <span class="s1">ret </span><span class="s3">= </span><span class="s1">memo</span><span class="s3">[</span><span class="s1">key</span><span class="s3">]</span>
+        <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">ret</span><span class="s3">, </span><span class="s1">Exception</span><span class="s3">):</span>
+            <span class="s2">raise </span><span class="s1">ret</span>
+        <span class="s2">return </span><span class="s1">ret</span>
+
+    <span class="s1">wrapper</span><span class="s3">.</span><span class="s1">__name__ </span><span class="s3">= </span><span class="s1">func</span><span class="s3">.</span><span class="s1">__name__</span>
+    <span class="s2">return </span><span class="s1">wrapper</span>
+
+
+<span class="s4">#</span>
+<span class="s4"># Building modules</span>
+<span class="s4">#</span>
+
+
+<span class="s3">@</span><span class="s1">_memoize</span>
+<span class="s2">def </span><span class="s1">build_module</span><span class="s3">(</span><span class="s1">source_files</span><span class="s3">, </span><span class="s1">options</span><span class="s3">=[], </span><span class="s1">skip</span><span class="s3">=[], </span><span class="s1">only</span><span class="s3">=[], </span><span class="s1">module_name</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Compile and import a f2py module, built from the given files. 
+ 
+    &quot;&quot;&quot;</span>
+
+    <span class="s1">code </span><span class="s3">= </span><span class="s6">f&quot;import sys; sys.path = </span><span class="s2">{</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">path</span><span class="s2">!r}</span><span class="s6">; import numpy.f2py; numpy.f2py.main()&quot;</span>
+
+    <span class="s1">d </span><span class="s3">= </span><span class="s1">get_module_dir</span><span class="s3">()</span>
+
+    <span class="s4"># Copy files</span>
+    <span class="s1">dst_sources </span><span class="s3">= []</span>
+    <span class="s1">f2py_sources </span><span class="s3">= []</span>
+    <span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">source_files</span><span class="s3">:</span>
+        <span class="s2">if not </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">):</span>
+            <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s6">&quot;%s is not a file&quot; </span><span class="s3">% </span><span class="s1">fn</span><span class="s3">)</span>
+        <span class="s1">dst </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">d</span><span class="s3">, </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">basename</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">))</span>
+        <span class="s1">shutil</span><span class="s3">.</span><span class="s1">copyfile</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">, </span><span class="s1">dst</span><span class="s3">)</span>
+        <span class="s1">dst_sources</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">dst</span><span class="s3">)</span>
+
+        <span class="s1">base</span><span class="s3">, </span><span class="s1">ext </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">splitext</span><span class="s3">(</span><span class="s1">dst</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">ext </span><span class="s2">in </span><span class="s3">(</span><span class="s6">&quot;.f90&quot;</span><span class="s3">, </span><span class="s6">&quot;.f&quot;</span><span class="s3">, </span><span class="s6">&quot;.c&quot;</span><span class="s3">, </span><span class="s6">&quot;.pyf&quot;</span><span class="s3">):</span>
+            <span class="s1">f2py_sources</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">dst</span><span class="s3">)</span>
+
+    <span class="s2">assert </span><span class="s1">f2py_sources</span>
+
+    <span class="s4"># Prepare options</span>
+    <span class="s2">if </span><span class="s1">module_name </span><span class="s2">is None</span><span class="s3">:</span>
+        <span class="s1">module_name </span><span class="s3">= </span><span class="s1">get_temp_module_name</span><span class="s3">()</span>
+    <span class="s1">f2py_opts </span><span class="s3">= [</span><span class="s6">&quot;-c&quot;</span><span class="s3">, </span><span class="s6">&quot;-m&quot;</span><span class="s3">, </span><span class="s1">module_name</span><span class="s3">] + </span><span class="s1">options </span><span class="s3">+ </span><span class="s1">f2py_sources</span>
+    <span class="s2">if </span><span class="s1">skip</span><span class="s3">:</span>
+        <span class="s1">f2py_opts </span><span class="s3">+= [</span><span class="s6">&quot;skip:&quot;</span><span class="s3">] + </span><span class="s1">skip</span>
+    <span class="s2">if </span><span class="s1">only</span><span class="s3">:</span>
+        <span class="s1">f2py_opts </span><span class="s3">+= [</span><span class="s6">&quot;only:&quot;</span><span class="s3">] + </span><span class="s1">only</span>
+
+    <span class="s4"># Build</span>
+    <span class="s1">cwd </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">getcwd</span><span class="s3">()</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">d</span><span class="s3">)</span>
+        <span class="s1">cmd </span><span class="s3">= [</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span><span class="s3">, </span><span class="s6">&quot;-c&quot;</span><span class="s3">, </span><span class="s1">code</span><span class="s3">] + </span><span class="s1">f2py_opts</span>
+        <span class="s1">p </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">,</span>
+                             <span class="s1">stdout</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">PIPE</span><span class="s3">,</span>
+                             <span class="s1">stderr</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">STDOUT</span><span class="s3">)</span>
+        <span class="s1">out</span><span class="s3">, </span><span class="s1">err </span><span class="s3">= </span><span class="s1">p</span><span class="s3">.</span><span class="s1">communicate</span><span class="s3">()</span>
+        <span class="s2">if </span><span class="s1">p</span><span class="s3">.</span><span class="s1">returncode </span><span class="s3">!= </span><span class="s5">0</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s6">&quot;Running f2py failed: %s</span><span class="s2">\n</span><span class="s6">%s&quot; </span><span class="s3">%</span>
+                               <span class="s3">(</span><span class="s1">cmd</span><span class="s3">[</span><span class="s5">4</span><span class="s3">:], </span><span class="s1">asunicode</span><span class="s3">(</span><span class="s1">out</span><span class="s3">)))</span>
+    <span class="s2">finally</span><span class="s3">:</span>
+        <span class="s1">os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">cwd</span><span class="s3">)</span>
+
+        <span class="s4"># Partial cleanup</span>
+        <span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">dst_sources</span><span class="s3">:</span>
+            <span class="s1">os</span><span class="s3">.</span><span class="s1">unlink</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">)</span>
+
+    <span class="s4"># Rebase (Cygwin-only)</span>
+    <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s6">&quot;cygwin&quot;</span><span class="s3">:</span>
+        <span class="s4"># If someone starts deleting modules after import, this will</span>
+        <span class="s4"># need to change to record how big each module is, rather than</span>
+        <span class="s4"># relying on rebase being able to find that from the files.</span>
+        <span class="s1">_module_list</span><span class="s3">.</span><span class="s1">extend</span><span class="s3">(</span>
+            <span class="s1">glob</span><span class="s3">.</span><span class="s1">glob</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">d</span><span class="s3">, </span><span class="s6">&quot;{:s}*&quot;</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">module_name</span><span class="s3">)))</span>
+        <span class="s3">)</span>
+        <span class="s1">subprocess</span><span class="s3">.</span><span class="s1">check_call</span><span class="s3">(</span>
+            <span class="s3">[</span><span class="s6">&quot;/usr/bin/rebase&quot;</span><span class="s3">, </span><span class="s6">&quot;--database&quot;</span><span class="s3">, </span><span class="s6">&quot;--oblivious&quot;</span><span class="s3">, </span><span class="s6">&quot;--verbose&quot;</span><span class="s3">]</span>
+            <span class="s3">+ </span><span class="s1">_module_list</span>
+        <span class="s3">)</span>
+
+
+
+    <span class="s4"># Import</span>
+    <span class="s2">return </span><span class="s1">import_module</span><span class="s3">(</span><span class="s1">module_name</span><span class="s3">)</span>
+
+
+<span class="s3">@</span><span class="s1">_memoize</span>
+<span class="s2">def </span><span class="s1">build_code</span><span class="s3">(</span><span class="s1">source_code</span><span class="s3">,</span>
+               <span class="s1">options</span><span class="s3">=[],</span>
+               <span class="s1">skip</span><span class="s3">=[],</span>
+               <span class="s1">only</span><span class="s3">=[],</span>
+               <span class="s1">suffix</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+               <span class="s1">module_name</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Compile and import Fortran code using f2py. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s2">if </span><span class="s1">suffix </span><span class="s2">is None</span><span class="s3">:</span>
+        <span class="s1">suffix </span><span class="s3">= </span><span class="s6">&quot;.f&quot;</span>
+    <span class="s2">with </span><span class="s1">temppath</span><span class="s3">(</span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix</span><span class="s3">) </span><span class="s2">as </span><span class="s1">path</span><span class="s3">:</span>
+        <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">path</span><span class="s3">, </span><span class="s6">&quot;w&quot;</span><span class="s3">) </span><span class="s2">as </span><span class="s1">f</span><span class="s3">:</span>
+            <span class="s1">f</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">source_code</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s1">build_module</span><span class="s3">([</span><span class="s1">path</span><span class="s3">],</span>
+                            <span class="s1">options</span><span class="s3">=</span><span class="s1">options</span><span class="s3">,</span>
+                            <span class="s1">skip</span><span class="s3">=</span><span class="s1">skip</span><span class="s3">,</span>
+                            <span class="s1">only</span><span class="s3">=</span><span class="s1">only</span><span class="s3">,</span>
+                            <span class="s1">module_name</span><span class="s3">=</span><span class="s1">module_name</span><span class="s3">)</span>
+
+
+<span class="s4">#</span>
+<span class="s4"># Check if compilers are available at all...</span>
+<span class="s4">#</span>
+
+<span class="s1">_compiler_status </span><span class="s3">= </span><span class="s2">None</span>
+
+
+<span class="s2">def </span><span class="s1">_get_compiler_status</span><span class="s3">():</span>
+    <span class="s2">global </span><span class="s1">_compiler_status</span>
+    <span class="s2">if </span><span class="s1">_compiler_status </span><span class="s2">is not None</span><span class="s3">:</span>
+        <span class="s2">return </span><span class="s1">_compiler_status</span>
+
+    <span class="s1">_compiler_status </span><span class="s3">= (</span><span class="s2">False</span><span class="s3">, </span><span class="s2">False</span><span class="s3">, </span><span class="s2">False</span><span class="s3">)</span>
+    <span class="s2">if </span><span class="s1">IS_WASM</span><span class="s3">:</span>
+        <span class="s4"># Can't run compiler from inside WASM.</span>
+        <span class="s2">return </span><span class="s1">_compiler_status</span>
+
+    <span class="s4"># XXX: this is really ugly. But I don't know how to invoke Distutils</span>
+    <span class="s4">#      in a safer way...</span>
+    <span class="s1">code </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s6">f&quot;&quot;&quot;</span><span class="s2">\ 
+        </span><span class="s6">import os</span>
+        <span class="s6">import sys</span>
+        <span class="s6">sys.path = </span><span class="s2">{</span><span class="s1">repr</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">path</span><span class="s3">)</span><span class="s2">}</span>
+
+        <span class="s6">def configuration(parent_name='',top_path=None):</span>
+            <span class="s6">global config</span>
+            <span class="s6">from numpy.distutils.misc_util import Configuration</span>
+            <span class="s6">config = Configuration('', parent_name, top_path)</span>
+            <span class="s6">return config</span>
+
+        <span class="s6">from numpy.distutils.core import setup</span>
+        <span class="s6">setup(configuration=configuration)</span>
+
+        <span class="s6">config_cmd = config.get_config_cmd()</span>
+        <span class="s6">have_c = config_cmd.try_compile('void foo() </span><span class="s2">{{}}</span><span class="s6">')</span>
+        <span class="s6">print('COMPILERS:%%d,%%d,%%d' %% (have_c,</span>
+                                          <span class="s6">config.have_f77c(),</span>
+                                          <span class="s6">config.have_f90c()))</span>
+        <span class="s6">sys.exit(99)</span>
+        <span class="s6">&quot;&quot;&quot;</span><span class="s3">)</span>
+    <span class="s1">code </span><span class="s3">= </span><span class="s1">code </span><span class="s3">% </span><span class="s1">dict</span><span class="s3">(</span><span class="s1">syspath</span><span class="s3">=</span><span class="s1">repr</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">path</span><span class="s3">))</span>
+
+    <span class="s1">tmpdir </span><span class="s3">= </span><span class="s1">tempfile</span><span class="s3">.</span><span class="s1">mkdtemp</span><span class="s3">()</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">script </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">, </span><span class="s6">&quot;setup.py&quot;</span><span class="s3">)</span>
+
+        <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">script</span><span class="s3">, </span><span class="s6">&quot;w&quot;</span><span class="s3">) </span><span class="s2">as </span><span class="s1">f</span><span class="s3">:</span>
+            <span class="s1">f</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">code</span><span class="s3">)</span>
+
+        <span class="s1">cmd </span><span class="s3">= [</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span><span class="s3">, </span><span class="s6">&quot;setup.py&quot;</span><span class="s3">, </span><span class="s6">&quot;config&quot;</span><span class="s3">]</span>
+        <span class="s1">p </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">,</span>
+                             <span class="s1">stdout</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">PIPE</span><span class="s3">,</span>
+                             <span class="s1">stderr</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">STDOUT</span><span class="s3">,</span>
+                             <span class="s1">cwd</span><span class="s3">=</span><span class="s1">tmpdir</span><span class="s3">)</span>
+        <span class="s1">out</span><span class="s3">, </span><span class="s1">err </span><span class="s3">= </span><span class="s1">p</span><span class="s3">.</span><span class="s1">communicate</span><span class="s3">()</span>
+    <span class="s2">finally</span><span class="s3">:</span>
+        <span class="s1">shutil</span><span class="s3">.</span><span class="s1">rmtree</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">)</span>
+
+    <span class="s1">m </span><span class="s3">= </span><span class="s1">re</span><span class="s3">.</span><span class="s1">search</span><span class="s3">(</span><span class="s7">br&quot;COMPILERS:(\d+),(\d+),(\d+)&quot;</span><span class="s3">, </span><span class="s1">out</span><span class="s3">)</span>
+    <span class="s2">if </span><span class="s1">m</span><span class="s3">:</span>
+        <span class="s1">_compiler_status </span><span class="s3">= (</span>
+            <span class="s1">bool</span><span class="s3">(</span><span class="s1">int</span><span class="s3">(</span><span class="s1">m</span><span class="s3">.</span><span class="s1">group</span><span class="s3">(</span><span class="s5">1</span><span class="s3">))),</span>
+            <span class="s1">bool</span><span class="s3">(</span><span class="s1">int</span><span class="s3">(</span><span class="s1">m</span><span class="s3">.</span><span class="s1">group</span><span class="s3">(</span><span class="s5">2</span><span class="s3">))),</span>
+            <span class="s1">bool</span><span class="s3">(</span><span class="s1">int</span><span class="s3">(</span><span class="s1">m</span><span class="s3">.</span><span class="s1">group</span><span class="s3">(</span><span class="s5">3</span><span class="s3">))),</span>
+        <span class="s3">)</span>
+    <span class="s4"># Finished</span>
+    <span class="s2">return </span><span class="s1">_compiler_status</span>
+
+
+<span class="s2">def </span><span class="s1">has_c_compiler</span><span class="s3">():</span>
+    <span class="s2">return </span><span class="s1">_get_compiler_status</span><span class="s3">()[</span><span class="s5">0</span><span class="s3">]</span>
+
+
+<span class="s2">def </span><span class="s1">has_f77_compiler</span><span class="s3">():</span>
+    <span class="s2">return </span><span class="s1">_get_compiler_status</span><span class="s3">()[</span><span class="s5">1</span><span class="s3">]</span>
+
+
+<span class="s2">def </span><span class="s1">has_f90_compiler</span><span class="s3">():</span>
+    <span class="s2">return </span><span class="s1">_get_compiler_status</span><span class="s3">()[</span><span class="s5">2</span><span class="s3">]</span>
+
+
+<span class="s4">#</span>
+<span class="s4"># Building with distutils</span>
+<span class="s4">#</span>
+
+
+<span class="s3">@</span><span class="s1">_memoize</span>
+<span class="s2">def </span><span class="s1">build_module_distutils</span><span class="s3">(</span><span class="s1">source_files</span><span class="s3">, </span><span class="s1">config_code</span><span class="s3">, </span><span class="s1">module_name</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">):</span>
+    <span class="s0">&quot;&quot;&quot; 
+    Build a module via distutils and import it. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s1">d </span><span class="s3">= </span><span class="s1">get_module_dir</span><span class="s3">()</span>
+
+    <span class="s4"># Copy files</span>
+    <span class="s1">dst_sources </span><span class="s3">= []</span>
+    <span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">source_files</span><span class="s3">:</span>
+        <span class="s2">if not </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">):</span>
+            <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s6">&quot;%s is not a file&quot; </span><span class="s3">% </span><span class="s1">fn</span><span class="s3">)</span>
+        <span class="s1">dst </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">d</span><span class="s3">, </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">basename</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">))</span>
+        <span class="s1">shutil</span><span class="s3">.</span><span class="s1">copyfile</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">, </span><span class="s1">dst</span><span class="s3">)</span>
+        <span class="s1">dst_sources</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">dst</span><span class="s3">)</span>
+
+    <span class="s4"># Build script</span>
+    <span class="s1">config_code </span><span class="s3">= </span><span class="s1">textwrap</span><span class="s3">.</span><span class="s1">dedent</span><span class="s3">(</span><span class="s1">config_code</span><span class="s3">).</span><span class="s1">replace</span><span class="s3">(</span><span class="s6">&quot;</span><span class="s2">\n</span><span class="s6">&quot;</span><span class="s3">, </span><span class="s6">&quot;</span><span class="s2">\n    </span><span class="s6">&quot;</span><span class="s3">)</span>
+
+    <span class="s1">code </span><span class="s3">= </span><span class="s6">fr&quot;&quot;&quot;</span>
+<span class="s6">import os</span>
+<span class="s6">import sys</span>
+<span class="s6">sys.path = </span><span class="s2">{</span><span class="s1">repr</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">path</span><span class="s3">)</span><span class="s2">}</span>
+
+<span class="s6">def configuration(parent_name='',top_path=None):</span>
+    <span class="s6">from numpy.distutils.misc_util import Configuration</span>
+    <span class="s6">config = Configuration('', parent_name, top_path)</span>
+    <span class="s2">{</span><span class="s1">config_code</span><span class="s2">}</span>
+    <span class="s6">return config</span>
+
+<span class="s6">if __name__ == &quot;__main__&quot;:</span>
+    <span class="s6">from numpy.distutils.core import setup</span>
+    <span class="s6">setup(configuration=configuration)</span>
+    <span class="s6">&quot;&quot;&quot;</span>
+    <span class="s1">script </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">d</span><span class="s3">, </span><span class="s1">get_temp_module_name</span><span class="s3">() + </span><span class="s6">&quot;.py&quot;</span><span class="s3">)</span>
+    <span class="s1">dst_sources</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">script</span><span class="s3">)</span>
+    <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">script</span><span class="s3">, </span><span class="s6">&quot;wb&quot;</span><span class="s3">) </span><span class="s2">as </span><span class="s1">f</span><span class="s3">:</span>
+        <span class="s1">f</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">code</span><span class="s3">.</span><span class="s1">encode</span><span class="s3">(</span><span class="s6">'latin1'</span><span class="s3">))</span>
+
+    <span class="s4"># Build</span>
+    <span class="s1">cwd </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">getcwd</span><span class="s3">()</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s1">os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">d</span><span class="s3">)</span>
+        <span class="s1">cmd </span><span class="s3">= [</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span><span class="s3">, </span><span class="s1">script</span><span class="s3">, </span><span class="s6">&quot;build_ext&quot;</span><span class="s3">, </span><span class="s6">&quot;-i&quot;</span><span class="s3">]</span>
+        <span class="s1">p </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">,</span>
+                             <span class="s1">stdout</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">PIPE</span><span class="s3">,</span>
+                             <span class="s1">stderr</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">STDOUT</span><span class="s3">)</span>
+        <span class="s1">out</span><span class="s3">, </span><span class="s1">err </span><span class="s3">= </span><span class="s1">p</span><span class="s3">.</span><span class="s1">communicate</span><span class="s3">()</span>
+        <span class="s2">if </span><span class="s1">p</span><span class="s3">.</span><span class="s1">returncode </span><span class="s3">!= </span><span class="s5">0</span><span class="s3">:</span>
+            <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s6">&quot;Running distutils build failed: %s</span><span class="s2">\n</span><span class="s6">%s&quot; </span><span class="s3">%</span>
+                               <span class="s3">(</span><span class="s1">cmd</span><span class="s3">[</span><span class="s5">4</span><span class="s3">:], </span><span class="s1">asstr</span><span class="s3">(</span><span class="s1">out</span><span class="s3">)))</span>
+    <span class="s2">finally</span><span class="s3">:</span>
+        <span class="s1">os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">cwd</span><span class="s3">)</span>
+
+        <span class="s4"># Partial cleanup</span>
+        <span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">dst_sources</span><span class="s3">:</span>
+            <span class="s1">os</span><span class="s3">.</span><span class="s1">unlink</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">)</span>
+
+    <span class="s4"># Import</span>
+    <span class="s1">__import__</span><span class="s3">(</span><span class="s1">module_name</span><span class="s3">)</span>
+    <span class="s2">return </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">modules</span><span class="s3">[</span><span class="s1">module_name</span><span class="s3">]</span>
+
+
+<span class="s4">#</span>
+<span class="s4"># Unittest convenience</span>
+<span class="s4">#</span>
+
+
+<span class="s2">class </span><span class="s1">F2PyTest</span><span class="s3">:</span>
+    <span class="s1">code </span><span class="s3">= </span><span class="s2">None</span>
+    <span class="s1">sources </span><span class="s3">= </span><span class="s2">None</span>
+    <span class="s1">options </span><span class="s3">= []</span>
+    <span class="s1">skip </span><span class="s3">= []</span>
+    <span class="s1">only </span><span class="s3">= []</span>
+    <span class="s1">suffix </span><span class="s3">= </span><span class="s6">&quot;.f&quot;</span>
+    <span class="s1">module </span><span class="s3">= </span><span class="s2">None</span>
+
+    <span class="s3">@</span><span class="s1">property</span>
+    <span class="s2">def </span><span class="s1">module_name</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">cls </span><span class="s3">= </span><span class="s1">type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+        <span class="s2">return </span><span class="s6">f'_</span><span class="s2">{</span><span class="s1">cls</span><span class="s3">.</span><span class="s1">__module__</span><span class="s3">.</span><span class="s1">rsplit</span><span class="s3">(</span><span class="s6">&quot;.&quot;</span><span class="s3">,</span><span class="s5">1</span><span class="s3">)[-</span><span class="s5">1</span><span class="s3">]</span><span class="s2">}</span><span class="s6">_</span><span class="s2">{</span><span class="s1">cls</span><span class="s3">.</span><span class="s1">__name__</span><span class="s2">}</span><span class="s6">_ext_module'</span>
+
+    <span class="s2">def </span><span class="s1">setup_method</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s6">&quot;win32&quot;</span><span class="s3">:</span>
+            <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s6">&quot;Fails with MinGW64 Gfortran (Issue #9673)&quot;</span><span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">module </span><span class="s2">is not None</span><span class="s3">:</span>
+            <span class="s2">return</span>
+
+        <span class="s4"># Check compiler availability first</span>
+        <span class="s2">if not </span><span class="s1">has_c_compiler</span><span class="s3">():</span>
+            <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s6">&quot;No C compiler available&quot;</span><span class="s3">)</span>
+
+        <span class="s1">codes </span><span class="s3">= []</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">sources</span><span class="s3">:</span>
+            <span class="s1">codes</span><span class="s3">.</span><span class="s1">extend</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sources</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">code </span><span class="s2">is not None</span><span class="s3">:</span>
+            <span class="s1">codes</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">suffix</span><span class="s3">)</span>
+
+        <span class="s1">needs_f77 </span><span class="s3">= </span><span class="s2">False</span>
+        <span class="s1">needs_f90 </span><span class="s3">= </span><span class="s2">False</span>
+        <span class="s1">needs_pyf </span><span class="s3">= </span><span class="s2">False</span>
+        <span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">codes</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s1">str</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">).</span><span class="s1">endswith</span><span class="s3">(</span><span class="s6">&quot;.f&quot;</span><span class="s3">):</span>
+                <span class="s1">needs_f77 </span><span class="s3">= </span><span class="s2">True</span>
+            <span class="s2">elif </span><span class="s1">str</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">).</span><span class="s1">endswith</span><span class="s3">(</span><span class="s6">&quot;.f90&quot;</span><span class="s3">):</span>
+                <span class="s1">needs_f90 </span><span class="s3">= </span><span class="s2">True</span>
+            <span class="s2">elif </span><span class="s1">str</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">).</span><span class="s1">endswith</span><span class="s3">(</span><span class="s6">&quot;.pyf&quot;</span><span class="s3">):</span>
+                <span class="s1">needs_pyf </span><span class="s3">= </span><span class="s2">True</span>
+        <span class="s2">if </span><span class="s1">needs_f77 </span><span class="s2">and not </span><span class="s1">has_f77_compiler</span><span class="s3">():</span>
+            <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s6">&quot;No Fortran 77 compiler available&quot;</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">needs_f90 </span><span class="s2">and not </span><span class="s1">has_f90_compiler</span><span class="s3">():</span>
+            <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s6">&quot;No Fortran 90 compiler available&quot;</span><span class="s3">)</span>
+        <span class="s2">if </span><span class="s1">needs_pyf </span><span class="s2">and not </span><span class="s3">(</span><span class="s1">has_f90_compiler</span><span class="s3">() </span><span class="s2">or </span><span class="s1">has_f77_compiler</span><span class="s3">()):</span>
+            <span class="s1">pytest</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">(</span><span class="s6">&quot;No Fortran compiler available&quot;</span><span class="s3">)</span>
+
+        <span class="s4"># Build the module</span>
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">code </span><span class="s2">is not None</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">module </span><span class="s3">= </span><span class="s1">build_code</span><span class="s3">(</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">code</span><span class="s3">,</span>
+                <span class="s1">options</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">options</span><span class="s3">,</span>
+                <span class="s1">skip</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">,</span>
+                <span class="s1">only</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">only</span><span class="s3">,</span>
+                <span class="s1">suffix</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">suffix</span><span class="s3">,</span>
+                <span class="s1">module_name</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">module_name</span><span class="s3">,</span>
+            <span class="s3">)</span>
+
+        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">sources </span><span class="s2">is not None</span><span class="s3">:</span>
+            <span class="s1">self</span><span class="s3">.</span><span class="s1">module </span><span class="s3">= </span><span class="s1">build_module</span><span class="s3">(</span>
+                <span class="s1">self</span><span class="s3">.</span><span class="s1">sources</span><span class="s3">,</span>
+                <span class="s1">options</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">options</span><span class="s3">,</span>
+                <span class="s1">skip</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">skip</span><span class="s3">,</span>
+                <span class="s1">only</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">only</span><span class="s3">,</span>
+                <span class="s1">module_name</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">module_name</span><span class="s3">,</span>
+            <span class="s3">)</span>
+
+
+<span class="s4">#</span>
+<span class="s4"># Helper functions</span>
+<span class="s4">#</span>
+
+
+<span class="s2">def </span><span class="s1">getpath</span><span class="s3">(*</span><span class="s1">a</span><span class="s3">):</span>
+    <span class="s4"># Package root</span>
+    <span class="s1">d </span><span class="s3">= </span><span class="s1">Path</span><span class="s3">(</span><span class="s1">numpy</span><span class="s3">.</span><span class="s1">f2py</span><span class="s3">.</span><span class="s1">__file__</span><span class="s3">).</span><span class="s1">parent</span><span class="s3">.</span><span class="s1">resolve</span><span class="s3">()</span>
+    <span class="s2">return </span><span class="s1">d</span><span class="s3">.</span><span class="s1">joinpath</span><span class="s3">(*</span><span class="s1">a</span><span class="s3">)</span>
+
+
+<span class="s3">@</span><span class="s1">contextlib</span><span class="s3">.</span><span class="s1">contextmanager</span>
+<span class="s2">def </span><span class="s1">switchdir</span><span class="s3">(</span><span class="s1">path</span><span class="s3">):</span>
+    <span class="s1">curpath </span><span class="s3">= </span><span class="s1">Path</span><span class="s3">.</span><span class="s1">cwd</span><span class="s3">()</span>
+    <span class="s1">os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">path</span><span class="s3">)</span>
+    <span class="s2">try</span><span class="s3">:</span>
+        <span class="s2">yield</span>
+    <span class="s2">finally</span><span class="s3">:</span>
+        <span class="s1">os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">curpath</span><span class="s3">)</span>
+</pre>
+</body>
+</html>

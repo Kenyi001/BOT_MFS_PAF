@@ -1,0 +1,1264 @@
+<html>
+<head>
+<title>_socket.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_socket.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+
+<span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">select</span>
+<span class="s0">import </span><span class="s1">socket </span><span class="s0">as </span><span class="s1">_stdlib_socket</span>
+<span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">from </span><span class="s1">operator </span><span class="s0">import </span><span class="s1">index</span>
+<span class="s0">from </span><span class="s1">socket </span><span class="s0">import </span><span class="s1">AddressFamily</span><span class="s2">, </span><span class="s1">SocketKind</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s2">(</span>
+    <span class="s1">TYPE_CHECKING</span><span class="s2">,</span>
+    <span class="s1">Any</span><span class="s2">,</span>
+    <span class="s1">Awaitable</span><span class="s2">,</span>
+    <span class="s1">Callable</span><span class="s2">,</span>
+    <span class="s1">Literal</span><span class="s2">,</span>
+    <span class="s1">SupportsIndex</span><span class="s2">,</span>
+    <span class="s1">TypeVar</span><span class="s2">,</span>
+    <span class="s1">Union</span><span class="s2">,</span>
+    <span class="s1">overload</span><span class="s2">,</span>
+<span class="s2">)</span>
+
+<span class="s0">import </span><span class="s1">idna </span><span class="s0">as </span><span class="s1">_idna</span>
+
+<span class="s0">import </span><span class="s1">trio</span>
+<span class="s0">from </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">_util </span><span class="s0">import </span><span class="s1">wraps </span><span class="s0">as </span><span class="s1">_wraps</span>
+
+<span class="s0">from </span><span class="s2">. </span><span class="s0">import </span><span class="s1">_core</span>
+
+<span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+    <span class="s0">from </span><span class="s1">collections</span><span class="s2">.</span><span class="s1">abc </span><span class="s0">import </span><span class="s1">Iterable</span>
+    <span class="s0">from </span><span class="s1">types </span><span class="s0">import </span><span class="s1">TracebackType</span>
+
+    <span class="s0">from </span><span class="s1">typing_extensions </span><span class="s0">import </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">Concatenate</span><span class="s2">, </span><span class="s1">ParamSpec</span><span class="s2">, </span><span class="s1">Self</span><span class="s2">, </span><span class="s1">TypeAlias</span>
+
+    <span class="s0">from </span><span class="s2">.</span><span class="s1">_abc </span><span class="s0">import </span><span class="s1">HostnameResolver</span><span class="s2">, </span><span class="s1">SocketFactory</span>
+
+    <span class="s1">P </span><span class="s2">= </span><span class="s1">ParamSpec</span><span class="s2">(</span><span class="s3">&quot;P&quot;</span><span class="s2">)</span>
+
+
+<span class="s1">T </span><span class="s2">= </span><span class="s1">TypeVar</span><span class="s2">(</span><span class="s3">&quot;T&quot;</span><span class="s2">)</span>
+
+<span class="s4"># _stdlib_socket.socket supports 13 different socket families, see</span>
+<span class="s4"># https://docs.python.org/3/library/socket.html#socket-families</span>
+<span class="s4"># and the return type of several methods in SocketType will depend on those. Typeshed</span>
+<span class="s4"># has ended up typing those return types as `Any` in most cases, but for users that</span>
+<span class="s4"># know which family/families they're working in we could make SocketType a generic type,</span>
+<span class="s4"># where you specify the return values you expect from those methods depending on the</span>
+<span class="s4"># protocol the socket will be handling.</span>
+<span class="s4"># But without the ability to default the value to `Any` it will be overly cumbersome for</span>
+<span class="s4"># most users, so currently we just specify it as `Any`. Otherwise we would write:</span>
+<span class="s4"># `AddressFormat = TypeVar(&quot;AddressFormat&quot;)`</span>
+<span class="s4"># but instead we simply do:</span>
+<span class="s1">AddressFormat</span><span class="s2">: </span><span class="s1">TypeAlias </span><span class="s2">= </span><span class="s1">Any</span>
+
+
+<span class="s4"># Usage:</span>
+<span class="s4">#</span>
+<span class="s4">#   async with _try_sync():</span>
+<span class="s4">#       return sync_call_that_might_fail_with_exception()</span>
+<span class="s4">#   # we only get here if the sync call in fact did fail with a</span>
+<span class="s4">#   # BlockingIOError</span>
+<span class="s4">#   return await do_it_properly_with_a_check_point()</span>
+<span class="s4">#</span>
+<span class="s0">class </span><span class="s1">_try_sync</span><span class="s2">:</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, </span><span class="s1">blocking_exc_override</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[[</span><span class="s1">BaseException</span><span class="s2">], </span><span class="s1">bool</span><span class="s2">] | </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span>
+    <span class="s2">):</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_blocking_exc_override </span><span class="s2">= </span><span class="s1">blocking_exc_override</span>
+
+    <span class="s0">def </span><span class="s1">_is_blocking_io_error</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">exc</span><span class="s2">: </span><span class="s1">BaseException</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_blocking_exc_override </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">exc</span><span class="s2">, </span><span class="s1">BlockingIOError</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_blocking_exc_override</span><span class="s2">(</span><span class="s1">exc</span><span class="s2">)</span>
+
+    <span class="s0">async def </span><span class="s1">__aenter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">lowlevel</span><span class="s2">.</span><span class="s1">checkpoint_if_cancelled</span><span class="s2">()</span>
+
+    <span class="s0">async def </span><span class="s1">__aexit__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">exc_type</span><span class="s2">: </span><span class="s1">type</span><span class="s2">[</span><span class="s1">BaseException</span><span class="s2">] | </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">exc_value</span><span class="s2">: </span><span class="s1">BaseException </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">traceback</span><span class="s2">: </span><span class="s1">TracebackType </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">exc_value </span><span class="s0">is not None and </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_is_blocking_io_error</span><span class="s2">(</span><span class="s1">exc_value</span><span class="s2">):</span>
+            <span class="s4"># Discard the exception and fall through to the code below the</span>
+            <span class="s4"># block</span>
+            <span class="s0">return True</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">lowlevel</span><span class="s2">.</span><span class="s1">cancel_shielded_checkpoint</span><span class="s2">()</span>
+            <span class="s4"># Let the return or exception propagate</span>
+            <span class="s0">return False</span>
+
+
+<span class="s4">################################################################</span>
+<span class="s4"># Overrides</span>
+<span class="s4">################################################################</span>
+
+<span class="s1">_resolver</span><span class="s2">: </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">RunVar</span><span class="s2">[</span><span class="s1">HostnameResolver </span><span class="s2">| </span><span class="s0">None</span><span class="s2">] = </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">RunVar</span><span class="s2">(</span><span class="s3">&quot;hostname_resolver&quot;</span><span class="s2">)</span>
+<span class="s1">_socket_factory</span><span class="s2">: </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">RunVar</span><span class="s2">[</span><span class="s1">SocketFactory </span><span class="s2">| </span><span class="s0">None</span><span class="s2">] = </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">RunVar</span><span class="s2">(</span><span class="s3">&quot;socket_factory&quot;</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">set_custom_hostname_resolver</span><span class="s2">(</span>
+    <span class="s1">hostname_resolver</span><span class="s2">: </span><span class="s1">HostnameResolver </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; HostnameResolver </span><span class="s2">| </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot;Set a custom hostname resolver. 
+ 
+    By default, Trio's :func:`getaddrinfo` and :func:`getnameinfo` functions 
+    use the standard system resolver functions. This function allows you to 
+    customize that behavior. The main intended use case is for testing, but it 
+    might also be useful for using third-party resolvers like `c-ares 
+    &lt;https://c-ares.haxx.se/&gt;`__ (though be warned that these rarely make 
+    perfect drop-in replacements for the system resolver). See 
+    :class:`trio.abc.HostnameResolver` for more details. 
+ 
+    Setting a custom hostname resolver affects all future calls to 
+    :func:`getaddrinfo` and :func:`getnameinfo` within the enclosing call to 
+    :func:`trio.run`. All other hostname resolution in Trio is implemented in 
+    terms of these functions. 
+ 
+    Generally you should call this function just once, right at the beginning 
+    of your program. 
+ 
+    Args: 
+      hostname_resolver (trio.abc.HostnameResolver or None): The new custom 
+          hostname resolver, or None to restore the default behavior. 
+ 
+    Returns: 
+      The previous hostname resolver (which may be None). 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s1">old </span><span class="s2">= </span><span class="s1">_resolver</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+    <span class="s1">_resolver</span><span class="s2">.</span><span class="s1">set</span><span class="s2">(</span><span class="s1">hostname_resolver</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">old</span>
+
+
+<span class="s0">def </span><span class="s1">set_custom_socket_factory</span><span class="s2">(</span>
+    <span class="s1">socket_factory</span><span class="s2">: </span><span class="s1">SocketFactory </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; SocketFactory </span><span class="s2">| </span><span class="s0">None</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot;Set a custom socket object factory. 
+ 
+    This function allows you to replace Trio's normal socket class with a 
+    custom class. This is very useful for testing, and probably a bad idea in 
+    any other circumstance. See :class:`trio.abc.HostnameResolver` for more 
+    details. 
+ 
+    Setting a custom socket factory affects all future calls to :func:`socket` 
+    within the enclosing call to :func:`trio.run`. 
+ 
+    Generally you should call this function just once, right at the beginning 
+    of your program. 
+ 
+    Args: 
+      socket_factory (trio.abc.SocketFactory or None): The new custom 
+          socket factory, or None to restore the default behavior. 
+ 
+    Returns: 
+      The previous socket factory (which may be None). 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s1">old </span><span class="s2">= </span><span class="s1">_socket_factory</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+    <span class="s1">_socket_factory</span><span class="s2">.</span><span class="s1">set</span><span class="s2">(</span><span class="s1">socket_factory</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">old</span>
+
+
+<span class="s4">################################################################</span>
+<span class="s4"># getaddrinfo and friends</span>
+<span class="s4">################################################################</span>
+
+<span class="s1">_NUMERIC_ONLY </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AI_NUMERICHOST </span><span class="s2">| </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AI_NUMERICSERV</span>
+
+
+<span class="s4"># It would be possible to @overload the return value depending on Literal[AddressFamily.INET/6], but should probably be added in typeshed first</span>
+<span class="s0">async def </span><span class="s1">getaddrinfo</span><span class="s2">(</span>
+    <span class="s1">host</span><span class="s2">: </span><span class="s1">bytes </span><span class="s2">| </span><span class="s1">str </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">port</span><span class="s2">: </span><span class="s1">bytes </span><span class="s2">| </span><span class="s1">str </span><span class="s2">| </span><span class="s1">int </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s1">family</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+    <span class="s1">type</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+    <span class="s1">proto</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+    <span class="s1">flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; list</span><span class="s2">[</span>
+    <span class="s1">tuple</span><span class="s2">[</span>
+        <span class="s1">AddressFamily</span><span class="s2">, </span><span class="s1">SocketKind</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">str</span><span class="s2">, </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">int</span><span class="s2">] | </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">]</span>
+    <span class="s2">]</span>
+<span class="s2">]:</span>
+    <span class="s5">&quot;&quot;&quot;Look up a numeric address given a name. 
+ 
+    Arguments and return values are identical to :func:`socket.getaddrinfo`, 
+    except that this version is async. 
+ 
+    Also, :func:`trio.socket.getaddrinfo` correctly uses IDNA 2008 to process 
+    non-ASCII domain names. (:func:`socket.getaddrinfo` uses IDNA 2003, which 
+    can give the wrong result in some cases and cause you to connect to a 
+    different host than the one you intended; see `bpo-17305 
+    &lt;https://bugs.python.org/issue17305&gt;`__.) 
+ 
+    This function's behavior can be customized using 
+    :func:`set_custom_hostname_resolver`. 
+ 
+    &quot;&quot;&quot;</span>
+
+    <span class="s4"># If host and port are numeric, then getaddrinfo doesn't block and we can</span>
+    <span class="s4"># skip the whole thread thing, which seems worthwhile. So we try first</span>
+    <span class="s4"># with the _NUMERIC_ONLY flags set, and then only spawn a thread if that</span>
+    <span class="s4"># fails with EAI_NONAME:</span>
+    <span class="s0">def </span><span class="s1">numeric_only_failure</span><span class="s2">(</span><span class="s1">exc</span><span class="s2">: </span><span class="s1">BaseException</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s2">(</span>
+            <span class="s1">isinstance</span><span class="s2">(</span><span class="s1">exc</span><span class="s2">, </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">gaierror</span><span class="s2">)</span>
+            <span class="s0">and </span><span class="s1">exc</span><span class="s2">.</span><span class="s1">errno </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">EAI_NONAME</span>
+        <span class="s2">)</span>
+
+    <span class="s0">async with </span><span class="s1">_try_sync</span><span class="s2">(</span><span class="s1">numeric_only_failure</span><span class="s2">):</span>
+        <span class="s0">return </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">getaddrinfo</span><span class="s2">(</span>
+            <span class="s1">host</span><span class="s2">, </span><span class="s1">port</span><span class="s2">, </span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">, </span><span class="s1">flags </span><span class="s2">| </span><span class="s1">_NUMERIC_ONLY</span>
+        <span class="s2">)</span>
+    <span class="s4"># That failed; it's a real hostname. We better use a thread.</span>
+    <span class="s4">#</span>
+    <span class="s4"># Also, it might be a unicode hostname, in which case we want to do our</span>
+    <span class="s4"># own encoding using the idna module, rather than letting Python do</span>
+    <span class="s4"># it. (Python will use the old IDNA 2003 standard, and possibly get the</span>
+    <span class="s4"># wrong answer - see bpo-17305). However, the idna module is picky, and</span>
+    <span class="s4"># will refuse to process some valid hostname strings, like &quot;::1&quot;. So if</span>
+    <span class="s4"># it's already ascii, we pass it through; otherwise, we encode it to.</span>
+    <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">host</span><span class="s2">, </span><span class="s1">str</span><span class="s2">):</span>
+        <span class="s0">try</span><span class="s2">:</span>
+            <span class="s1">host </span><span class="s2">= </span><span class="s1">host</span><span class="s2">.</span><span class="s1">encode</span><span class="s2">(</span><span class="s3">&quot;ascii&quot;</span><span class="s2">)</span>
+        <span class="s0">except </span><span class="s1">UnicodeEncodeError</span><span class="s2">:</span>
+            <span class="s4"># UTS-46 defines various normalizations; in particular, by default</span>
+            <span class="s4"># idna.encode will error out if the hostname has Capital Letters</span>
+            <span class="s4"># in it; with uts46=True it will lowercase them instead.</span>
+            <span class="s1">host </span><span class="s2">= </span><span class="s1">_idna</span><span class="s2">.</span><span class="s1">encode</span><span class="s2">(</span><span class="s1">host</span><span class="s2">, </span><span class="s1">uts46</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+    <span class="s1">hr </span><span class="s2">= </span><span class="s1">_resolver</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">hr </span><span class="s0">is not None</span><span class="s2">:</span>
+        <span class="s0">return await </span><span class="s1">hr</span><span class="s2">.</span><span class="s1">getaddrinfo</span><span class="s2">(</span><span class="s1">host</span><span class="s2">, </span><span class="s1">port</span><span class="s2">, </span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s0">return await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">to_thread</span><span class="s2">.</span><span class="s1">run_sync</span><span class="s2">(</span>
+            <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">getaddrinfo</span><span class="s2">,</span>
+            <span class="s1">host</span><span class="s2">,</span>
+            <span class="s1">port</span><span class="s2">,</span>
+            <span class="s1">family</span><span class="s2">,</span>
+            <span class="s1">type</span><span class="s2">,</span>
+            <span class="s1">proto</span><span class="s2">,</span>
+            <span class="s1">flags</span><span class="s2">,</span>
+            <span class="s1">abandon_on_cancel</span><span class="s2">=</span><span class="s0">True</span><span class="s2">,</span>
+        <span class="s2">)</span>
+
+
+<span class="s0">async def </span><span class="s1">getnameinfo</span><span class="s2">(</span>
+    <span class="s1">sockaddr</span><span class="s2">: </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">int</span><span class="s2">] | </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">], </span><span class="s1">flags</span><span class="s2">: </span><span class="s1">int</span>
+<span class="s2">) </span><span class="s1">-&gt; tuple</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">str</span><span class="s2">]:</span>
+    <span class="s5">&quot;&quot;&quot;Look up a name given a numeric address. 
+ 
+    Arguments and return values are identical to :func:`socket.getnameinfo`, 
+    except that this version is async. 
+ 
+    This function's behavior can be customized using 
+    :func:`set_custom_hostname_resolver`. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s1">hr </span><span class="s2">= </span><span class="s1">_resolver</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+    <span class="s0">if </span><span class="s1">hr </span><span class="s0">is not None</span><span class="s2">:</span>
+        <span class="s0">return await </span><span class="s1">hr</span><span class="s2">.</span><span class="s1">getnameinfo</span><span class="s2">(</span><span class="s1">sockaddr</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s0">return await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">to_thread</span><span class="s2">.</span><span class="s1">run_sync</span><span class="s2">(</span>
+            <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">getnameinfo</span><span class="s2">, </span><span class="s1">sockaddr</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">, </span><span class="s1">abandon_on_cancel</span><span class="s2">=</span><span class="s0">True</span>
+        <span class="s2">)</span>
+
+
+<span class="s0">async def </span><span class="s1">getprotobyname</span><span class="s2">(</span><span class="s1">name</span><span class="s2">: </span><span class="s1">str</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot;Look up a protocol number by name. (Rarely used.) 
+ 
+    Like :func:`socket.getprotobyname`, but async. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">return await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">to_thread</span><span class="s2">.</span><span class="s1">run_sync</span><span class="s2">(</span>
+        <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">getprotobyname</span><span class="s2">, </span><span class="s1">name</span><span class="s2">, </span><span class="s1">abandon_on_cancel</span><span class="s2">=</span><span class="s0">True</span>
+    <span class="s2">)</span>
+
+
+<span class="s4"># obsolete gethostbyname etc. intentionally omitted</span>
+<span class="s4"># likewise for create_connection (use open_tcp_stream instead)</span>
+
+<span class="s4">################################################################</span>
+<span class="s4"># Socket &quot;constructors&quot;</span>
+<span class="s4">################################################################</span>
+
+
+<span class="s0">def </span><span class="s1">from_stdlib_socket</span><span class="s2">(</span><span class="s1">sock</span><span class="s2">: </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">) </span><span class="s1">-&gt; SocketType</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot;Convert a standard library :class:`socket.socket` object into a Trio 
+    socket object. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">return </span><span class="s1">_SocketType</span><span class="s2">(</span><span class="s1">sock</span><span class="s2">)</span>
+
+
+<span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">fromfd</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(), </span><span class="s1">updated</span><span class="s2">=())</span>
+<span class="s0">def </span><span class="s1">fromfd</span><span class="s2">(</span>
+    <span class="s1">fd</span><span class="s2">: </span><span class="s1">SupportsIndex</span><span class="s2">,</span>
+    <span class="s1">family</span><span class="s2">: </span><span class="s1">AddressFamily </span><span class="s2">| </span><span class="s1">int </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET</span><span class="s2">,</span>
+    <span class="s1">type</span><span class="s2">: </span><span class="s1">SocketKind </span><span class="s2">| </span><span class="s1">int </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SOCK_STREAM</span><span class="s2">,</span>
+    <span class="s1">proto</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; SocketType</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot;Like :func:`socket.fromfd`, but returns a Trio socket object.&quot;&quot;&quot;</span>
+    <span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto </span><span class="s2">= </span><span class="s1">_sniff_sockopts_for_fileno</span><span class="s2">(</span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">, </span><span class="s1">index</span><span class="s2">(</span><span class="s1">fd</span><span class="s2">))</span>
+    <span class="s0">return </span><span class="s1">from_stdlib_socket</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">fromfd</span><span class="s2">(</span><span class="s1">fd</span><span class="s2">, </span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">))</span>
+
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">== </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+    <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">, </span><span class="s3">&quot;fromshare&quot;</span><span class="s2">)</span>
+<span class="s2">):</span>
+
+    <span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">fromshare</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(), </span><span class="s1">updated</span><span class="s2">=())</span>
+    <span class="s0">def </span><span class="s1">fromshare</span><span class="s2">(</span><span class="s1">info</span><span class="s2">: </span><span class="s1">bytes</span><span class="s2">) </span><span class="s1">-&gt; SocketType</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">from_stdlib_socket</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">fromshare</span><span class="s2">(</span><span class="s1">info</span><span class="s2">))</span>
+
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">== </span><span class="s3">&quot;win32&quot;</span><span class="s2">:</span>
+    <span class="s1">FamilyT</span><span class="s2">: </span><span class="s1">TypeAlias </span><span class="s2">= </span><span class="s1">int</span>
+    <span class="s1">TypeT</span><span class="s2">: </span><span class="s1">TypeAlias </span><span class="s2">= </span><span class="s1">int</span>
+    <span class="s1">FamilyDefault </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s1">FamilyDefault</span><span class="s2">: </span><span class="s1">Literal</span><span class="s2">[</span><span class="s0">None</span><span class="s2">] = </span><span class="s0">None</span>
+    <span class="s1">FamilyT</span><span class="s2">: </span><span class="s1">TypeAlias </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">AddressFamily</span><span class="s2">, </span><span class="s0">None</span><span class="s2">]</span>
+    <span class="s1">TypeT</span><span class="s2">: </span><span class="s1">TypeAlias </span><span class="s2">= </span><span class="s1">Union</span><span class="s2">[</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s1">int</span><span class="s2">]</span>
+
+
+<span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socketpair</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(), </span><span class="s1">updated</span><span class="s2">=())</span>
+<span class="s0">def </span><span class="s1">socketpair</span><span class="s2">(</span>
+    <span class="s1">family</span><span class="s2">: </span><span class="s1">FamilyT </span><span class="s2">= </span><span class="s1">FamilyDefault</span><span class="s2">,</span>
+    <span class="s1">type</span><span class="s2">: </span><span class="s1">TypeT </span><span class="s2">= </span><span class="s1">SocketKind</span><span class="s2">.</span><span class="s1">SOCK_STREAM</span><span class="s2">,</span>
+    <span class="s1">proto</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; tuple</span><span class="s2">[</span><span class="s1">SocketType</span><span class="s2">, </span><span class="s1">SocketType</span><span class="s2">]:</span>
+    <span class="s5">&quot;&quot;&quot;Like :func:`socket.socketpair`, but returns a pair of Trio socket 
+    objects. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s1">left</span><span class="s2">, </span><span class="s1">right </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socketpair</span><span class="s2">(</span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s2">(</span><span class="s1">from_stdlib_socket</span><span class="s2">(</span><span class="s1">left</span><span class="s2">), </span><span class="s1">from_stdlib_socket</span><span class="s2">(</span><span class="s1">right</span><span class="s2">))</span>
+
+
+<span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(), </span><span class="s1">updated</span><span class="s2">=())</span>
+<span class="s0">def </span><span class="s1">socket</span><span class="s2">(</span>
+    <span class="s1">family</span><span class="s2">: </span><span class="s1">AddressFamily </span><span class="s2">| </span><span class="s1">int </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET</span><span class="s2">,</span>
+    <span class="s1">type</span><span class="s2">: </span><span class="s1">SocketKind </span><span class="s2">| </span><span class="s1">int </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SOCK_STREAM</span><span class="s2">,</span>
+    <span class="s1">proto</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+    <span class="s1">fileno</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; SocketType</span><span class="s2">:</span>
+    <span class="s5">&quot;&quot;&quot;Create a new Trio socket, like :class:`socket.socket`. 
+ 
+    This function's behavior can be customized using 
+    :func:`set_custom_socket_factory`. 
+ 
+    &quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">fileno </span><span class="s0">is None</span><span class="s2">:</span>
+        <span class="s1">sf </span><span class="s2">= </span><span class="s1">_socket_factory</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s0">None</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">sf </span><span class="s0">is not None</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">sf</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">(</span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto </span><span class="s2">= </span><span class="s1">_sniff_sockopts_for_fileno</span><span class="s2">(</span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">, </span><span class="s1">fileno</span><span class="s2">)</span>
+    <span class="s1">stdlib_socket </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">(</span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">, </span><span class="s1">fileno</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">from_stdlib_socket</span><span class="s2">(</span><span class="s1">stdlib_socket</span><span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">_sniff_sockopts_for_fileno</span><span class="s2">(</span>
+    <span class="s1">family</span><span class="s2">: </span><span class="s1">AddressFamily </span><span class="s2">| </span><span class="s1">int</span><span class="s2">,</span>
+    <span class="s1">type</span><span class="s2">: </span><span class="s1">SocketKind </span><span class="s2">| </span><span class="s1">int</span><span class="s2">,</span>
+    <span class="s1">proto</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+    <span class="s1">fileno</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; tuple</span><span class="s2">[</span><span class="s1">AddressFamily </span><span class="s2">| </span><span class="s1">int</span><span class="s2">, </span><span class="s1">SocketKind </span><span class="s2">| </span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">]:</span>
+    <span class="s5">&quot;&quot;&quot;Correct SOCKOPTS for given fileno, falling back to provided values.&quot;&quot;&quot;</span>
+    <span class="s4"># Wrap the raw fileno into a Python socket object</span>
+    <span class="s4"># This object might have the wrong metadata, but it lets us easily call getsockopt</span>
+    <span class="s4"># and then we'll throw it away and construct a new one with the correct metadata.</span>
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s3">&quot;linux&quot;</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span>
+    <span class="s0">from </span><span class="s1">socket </span><span class="s0">import </span><span class="s2">(  </span><span class="s4"># type: ignore[attr-defined]</span>
+        <span class="s1">SO_DOMAIN</span><span class="s2">,</span>
+        <span class="s1">SO_PROTOCOL</span><span class="s2">,</span>
+        <span class="s1">SO_TYPE</span><span class="s2">,</span>
+        <span class="s1">SOL_SOCKET</span><span class="s2">,</span>
+    <span class="s2">)</span>
+
+    <span class="s1">sockobj </span><span class="s2">= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">(</span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">, </span><span class="s1">fileno</span><span class="s2">=</span><span class="s1">fileno</span><span class="s2">)</span>
+    <span class="s0">try</span><span class="s2">:</span>
+        <span class="s1">family </span><span class="s2">= </span><span class="s1">sockobj</span><span class="s2">.</span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">SOL_SOCKET</span><span class="s2">, </span><span class="s1">SO_DOMAIN</span><span class="s2">)</span>
+        <span class="s1">proto </span><span class="s2">= </span><span class="s1">sockobj</span><span class="s2">.</span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">SOL_SOCKET</span><span class="s2">, </span><span class="s1">SO_PROTOCOL</span><span class="s2">)</span>
+        <span class="s1">type </span><span class="s2">= </span><span class="s1">sockobj</span><span class="s2">.</span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">SOL_SOCKET</span><span class="s2">, </span><span class="s1">SO_TYPE</span><span class="s2">)</span>
+    <span class="s0">finally</span><span class="s2">:</span>
+        <span class="s4"># Unwrap it again, so that sockobj.__del__ doesn't try to close our socket</span>
+        <span class="s1">sockobj</span><span class="s2">.</span><span class="s1">detach</span><span class="s2">()</span>
+    <span class="s0">return </span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span>
+
+
+<span class="s4">################################################################</span>
+<span class="s4"># SocketType</span>
+<span class="s4">################################################################</span>
+
+<span class="s4"># sock.type gets weird stuff set in it, in particular on Linux:</span>
+<span class="s4">#</span>
+<span class="s4">#   https://bugs.python.org/issue21327</span>
+<span class="s4">#</span>
+<span class="s4"># But on other platforms (e.g. Windows) SOCK_NONBLOCK and SOCK_CLOEXEC aren't</span>
+<span class="s4"># even defined. To recover the actual socket type (e.g. SOCK_STREAM) from a</span>
+<span class="s4"># socket.type attribute, mask with this:</span>
+<span class="s1">_SOCK_TYPE_MASK </span><span class="s2">= ~(</span>
+    <span class="s1">getattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">, </span><span class="s3">&quot;SOCK_NONBLOCK&quot;</span><span class="s2">, </span><span class="s6">0</span><span class="s2">)</span>
+    <span class="s2">| </span><span class="s1">getattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">, </span><span class="s3">&quot;SOCK_CLOEXEC&quot;</span><span class="s2">, </span><span class="s6">0</span><span class="s2">)</span>
+<span class="s2">)</span>
+
+
+<span class="s0">def </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(</span>
+    <span class="s1">fn</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[</span><span class="s1">Concatenate</span><span class="s2">[</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s1">P</span><span class="s2">], </span><span class="s1">T</span><span class="s2">],</span>
+    <span class="s1">wait_fn</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[[</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">], </span><span class="s1">Awaitable</span><span class="s2">[</span><span class="s0">None</span><span class="s2">]],</span>
+    <span class="s1">maybe_avail</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Callable</span><span class="s2">[</span><span class="s1">Concatenate</span><span class="s2">[</span><span class="s1">_SocketType</span><span class="s2">, </span><span class="s1">P</span><span class="s2">], </span><span class="s1">Awaitable</span><span class="s2">[</span><span class="s1">T</span><span class="s2">]]:</span>
+    <span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">fn</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(</span><span class="s3">&quot;__name__&quot;</span><span class="s2">,), </span><span class="s1">updated</span><span class="s2">=())</span>
+    <span class="s0">async def </span><span class="s1">wrapper</span><span class="s2">(</span><span class="s1">self</span><span class="s2">: </span><span class="s1">_SocketType</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">: </span><span class="s1">P</span><span class="s2">.</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">: </span><span class="s1">P</span><span class="s2">.</span><span class="s1">kwargs</span><span class="s2">) </span><span class="s1">-&gt; T</span><span class="s2">:</span>
+        <span class="s0">return await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_nonblocking_helper</span><span class="s2">(</span><span class="s1">wait_fn</span><span class="s2">, </span><span class="s1">fn</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+
+    <span class="s1">wrapper</span><span class="s2">.</span><span class="s1">__doc__ </span><span class="s2">= </span><span class="s3">f&quot;&quot;&quot;Like :meth:`socket.socket.</span><span class="s0">{</span><span class="s1">fn</span><span class="s2">.</span><span class="s1">__name__</span><span class="s0">}</span><span class="s3">`, but async.</span>
+
+            <span class="s3">&quot;&quot;&quot;</span>
+    <span class="s0">if </span><span class="s1">maybe_avail</span><span class="s2">:</span>
+        <span class="s1">wrapper</span><span class="s2">.</span><span class="s1">__doc__ </span><span class="s2">+= (</span>
+            <span class="s3">f&quot;Only available on platforms where :meth:`socket.socket.</span><span class="s0">{</span><span class="s1">fn</span><span class="s2">.</span><span class="s1">__name__</span><span class="s0">}</span><span class="s3">` is &quot;</span>
+            <span class="s3">&quot;available.&quot;</span>
+        <span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">wrapper</span>
+
+
+<span class="s4"># Helpers to work with the (hostname, port) language that Python uses for socket</span>
+<span class="s4"># addresses everywhere. Split out into a standalone function so it can be reused by</span>
+<span class="s4"># FakeNet.</span>
+
+
+<span class="s4"># Take an address in Python's representation, and returns a new address in</span>
+<span class="s4"># the same representation, but with names resolved to numbers,</span>
+<span class="s4"># etc.</span>
+<span class="s4">#</span>
+<span class="s4"># local=True means that the address is being used with bind() or similar</span>
+<span class="s4"># local=False means that the address is being used with connect() or sendto() or</span>
+<span class="s4"># similar.</span>
+<span class="s4">#</span>
+
+
+<span class="s4"># Using a TypeVar to indicate we return the same type of address appears to give errors</span>
+<span class="s4"># when passed a union of address types.</span>
+<span class="s4"># @overload likely works, but is extremely verbose.</span>
+<span class="s4"># NOTE: this function does not always checkpoint</span>
+<span class="s0">async def </span><span class="s1">_resolve_address_nocp</span><span class="s2">(</span>
+    <span class="s1">type</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+    <span class="s1">family</span><span class="s2">: </span><span class="s1">AddressFamily</span><span class="s2">,</span>
+    <span class="s1">proto</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+    <span class="s2">*,</span>
+    <span class="s1">ipv6_v6only</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">| </span><span class="s1">int</span><span class="s2">,</span>
+    <span class="s1">address</span><span class="s2">: </span><span class="s1">AddressFormat</span><span class="s2">,</span>
+    <span class="s1">local</span><span class="s2">: </span><span class="s1">bool</span><span class="s2">,</span>
+<span class="s2">) </span><span class="s1">-&gt; Any</span><span class="s2">:</span>
+    <span class="s4"># Do some pre-checking (or exit early for non-IP sockets)</span>
+    <span class="s0">if </span><span class="s1">family </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET</span><span class="s2">:</span>
+        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">address</span><span class="s2">, </span><span class="s1">tuple</span><span class="s2">) </span><span class="s0">or not </span><span class="s1">len</span><span class="s2">(</span><span class="s1">address</span><span class="s2">) == </span><span class="s6">2</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s3">&quot;address should be a (host, port) tuple&quot;</span><span class="s2">)</span>
+    <span class="s0">elif </span><span class="s1">family </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET6</span><span class="s2">:</span>
+        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">address</span><span class="s2">, </span><span class="s1">tuple</span><span class="s2">) </span><span class="s0">or not </span><span class="s6">2 </span><span class="s2">&lt;= </span><span class="s1">len</span><span class="s2">(</span><span class="s1">address</span><span class="s2">) &lt;= </span><span class="s6">4</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+                <span class="s3">&quot;address should be a (host, port, [flowinfo, [scopeid]]) tuple&quot;</span>
+            <span class="s2">)</span>
+    <span class="s0">elif </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">, </span><span class="s3">&quot;AF_UNIX&quot;</span><span class="s2">) </span><span class="s0">and </span><span class="s1">family </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_UNIX</span><span class="s2">:</span>
+        <span class="s4"># unwrap path-likes</span>
+        <span class="s0">assert </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">address</span><span class="s2">, (</span><span class="s1">str</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">))</span>
+        <span class="s0">return </span><span class="s1">os</span><span class="s2">.</span><span class="s1">fspath</span><span class="s2">(</span><span class="s1">address</span><span class="s2">)</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">address</span>
+
+    <span class="s4"># -- From here on we know we have IPv4 or IPV6 --</span>
+    <span class="s1">host</span><span class="s2">: </span><span class="s1">str </span><span class="s2">| </span><span class="s0">None</span>
+    <span class="s1">host</span><span class="s2">, </span><span class="s1">port</span><span class="s2">, *</span><span class="s1">_ </span><span class="s2">= </span><span class="s1">address</span>
+    <span class="s4"># Fast path for the simple case: already-resolved IP address,</span>
+    <span class="s4"># already-resolved port. This is particularly important for UDP, since</span>
+    <span class="s4"># every sendto call goes through here.</span>
+    <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">port</span><span class="s2">, </span><span class="s1">int</span><span class="s2">) </span><span class="s0">and </span><span class="s1">host </span><span class="s0">is not None</span><span class="s2">:</span>
+        <span class="s0">try</span><span class="s2">:</span>
+            <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">inet_pton</span><span class="s2">(</span><span class="s1">family</span><span class="s2">, </span><span class="s1">host</span><span class="s2">)</span>
+        <span class="s0">except </span><span class="s2">(</span><span class="s1">OSError</span><span class="s2">, </span><span class="s1">TypeError</span><span class="s2">):</span>
+            <span class="s0">pass</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">address</span>
+    <span class="s4"># Special cases to match the stdlib, see gh-277</span>
+    <span class="s0">if </span><span class="s1">host </span><span class="s2">== </span><span class="s3">&quot;&quot;</span><span class="s2">:</span>
+        <span class="s1">host </span><span class="s2">= </span><span class="s0">None</span>
+    <span class="s0">if </span><span class="s1">host </span><span class="s2">== </span><span class="s3">&quot;&lt;broadcast&gt;&quot;</span><span class="s2">:</span>
+        <span class="s1">host </span><span class="s2">= </span><span class="s3">&quot;255.255.255.255&quot;</span>
+    <span class="s1">flags </span><span class="s2">= </span><span class="s6">0</span>
+    <span class="s0">if </span><span class="s1">local</span><span class="s2">:</span>
+        <span class="s1">flags </span><span class="s2">|= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AI_PASSIVE</span>
+    <span class="s4"># Since we always pass in an explicit family here, AI_ADDRCONFIG</span>
+    <span class="s4"># doesn't add any value -- if we have no ipv6 connectivity and are</span>
+    <span class="s4"># working with an ipv6 socket, then things will break soon enough! And</span>
+    <span class="s4"># if we do enable it, then it makes it impossible to even run tests</span>
+    <span class="s4"># for ipv6 address resolution on travis-ci, which as of 2017-03-07 has</span>
+    <span class="s4"># no ipv6.</span>
+    <span class="s4"># flags |= AI_ADDRCONFIG</span>
+    <span class="s0">if </span><span class="s1">family </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET6 </span><span class="s0">and not </span><span class="s1">ipv6_v6only</span><span class="s2">:</span>
+        <span class="s1">flags </span><span class="s2">|= </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AI_V4MAPPED</span>
+    <span class="s1">gai_res </span><span class="s2">= </span><span class="s0">await </span><span class="s1">getaddrinfo</span><span class="s2">(</span><span class="s1">host</span><span class="s2">, </span><span class="s1">port</span><span class="s2">, </span><span class="s1">family</span><span class="s2">, </span><span class="s1">type</span><span class="s2">, </span><span class="s1">proto</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">)</span>
+    <span class="s4"># AFAICT from the spec it's not possible for getaddrinfo to return an</span>
+    <span class="s4"># empty list.</span>
+    <span class="s0">assert </span><span class="s1">len</span><span class="s2">(</span><span class="s1">gai_res</span><span class="s2">) &gt;= </span><span class="s6">1</span>
+    <span class="s4"># Address is the last item in the first entry</span>
+    <span class="s2">(*</span><span class="s1">_</span><span class="s2">, </span><span class="s1">normed</span><span class="s2">), *</span><span class="s1">_ </span><span class="s2">= </span><span class="s1">gai_res</span>
+    <span class="s4"># The above ignored any flowid and scopeid in the passed-in address,</span>
+    <span class="s4"># so restore them if present:</span>
+    <span class="s0">if </span><span class="s1">family </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET6</span><span class="s2">:</span>
+        <span class="s1">list_normed </span><span class="s2">= </span><span class="s1">list</span><span class="s2">(</span><span class="s1">normed</span><span class="s2">)</span>
+        <span class="s0">assert </span><span class="s1">len</span><span class="s2">(</span><span class="s1">normed</span><span class="s2">) == </span><span class="s6">4</span>
+        <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">address</span><span class="s2">) &gt;= </span><span class="s6">3</span><span class="s2">:</span>
+            <span class="s1">list_normed</span><span class="s2">[</span><span class="s6">2</span><span class="s2">] = </span><span class="s1">address</span><span class="s2">[</span><span class="s6">2</span><span class="s2">]</span>
+        <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">address</span><span class="s2">) &gt;= </span><span class="s6">4</span><span class="s2">:</span>
+            <span class="s1">list_normed</span><span class="s2">[</span><span class="s6">3</span><span class="s2">] = </span><span class="s1">address</span><span class="s2">[</span><span class="s6">3</span><span class="s2">]</span>
+        <span class="s0">return </span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">list_normed</span><span class="s2">)</span>
+    <span class="s0">return </span><span class="s1">normed</span>
+
+
+<span class="s0">class </span><span class="s1">SocketType</span><span class="s2">:</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s4"># make sure this __init__ works with multiple inheritance</span>
+        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">()</span>
+        <span class="s4"># and only raises error if it's directly constructed</span>
+        <span class="s0">if </span><span class="s1">type</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) == </span><span class="s1">SocketType</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span>
+                <span class="s3">&quot;SocketType is an abstract class; use trio.socket.socket if you &quot;</span>
+                <span class="s3">&quot;want to construct a socket object&quot;</span>
+            <span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">detach</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">fileno</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">getpeername</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; AddressFormat</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">getsockname</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; AddressFormat</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">buflen</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; bytes</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s0">def </span><span class="s1">getsockopt</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">buflen</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span>
+    <span class="s2">) </span><span class="s1">-&gt; int </span><span class="s2">| </span><span class="s1">bytes</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">setsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">value</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s1">Buffer</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">setsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">value</span><span class="s2">: </span><span class="s0">None</span><span class="s2">, </span><span class="s1">optlen</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s0">def </span><span class="s1">setsockopt</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s2">/,</span>
+        <span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+        <span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+        <span class="s1">value</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s1">Buffer </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">optlen</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">listen</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">backlog</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s1">min</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SOMAXCONN</span><span class="s2">, </span><span class="s6">128</span><span class="s2">)) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">get_inheritable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">set_inheritable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">inheritable</span><span class="s2">: </span><span class="s1">bool</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">== </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;share&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+
+        <span class="s0">def </span><span class="s1">share</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">process_id</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; bytes</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">__enter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; Self</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">__exit__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">exc_type</span><span class="s2">: </span><span class="s1">type</span><span class="s2">[</span><span class="s1">BaseException</span><span class="s2">] | </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">exc_value</span><span class="s2">: </span><span class="s1">BaseException </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">traceback</span><span class="s2">: </span><span class="s1">TracebackType </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">family</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; AddressFamily</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">type</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; SocketKind</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">proto</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">did_shutdown_SHUT_WR</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">__repr__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">dup</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; SocketType</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">close</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">async def </span><span class="s1">bind</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">address</span><span class="s2">: </span><span class="s1">AddressFormat</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">shutdown</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">flag</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">is_readable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">async def </span><span class="s1">wait_writable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">async def </span><span class="s1">accept</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; tuple</span><span class="s2">[</span><span class="s1">SocketType</span><span class="s2">, </span><span class="s1">AddressFormat</span><span class="s2">]:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">async def </span><span class="s1">connect</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">address</span><span class="s2">: </span><span class="s1">AddressFormat</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s4"># argument names with __ used because of typeshed, see comment for recv in _SocketType</span>
+    <span class="s0">def </span><span class="s1">recv</span><span class="s2">(</span><span class="s1">__self</span><span class="s2">, </span><span class="s1">__buflen</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">]:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">recv_into</span><span class="s2">(</span>
+        <span class="s1">__self</span><span class="s2">, </span><span class="s1">buffer</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">nbytes</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span>
+    <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">int</span><span class="s2">]:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s4"># return type of socket.socket.recvfrom in typeshed is tuple[bytes, Any]</span>
+    <span class="s0">def </span><span class="s1">recvfrom</span><span class="s2">(</span>
+        <span class="s1">__self</span><span class="s2">, </span><span class="s1">__bufsize</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span>
+    <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">, </span><span class="s1">AddressFormat</span><span class="s2">]]:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s4"># return type of socket.socket.recvfrom_into in typeshed is tuple[bytes, Any]</span>
+    <span class="s0">def </span><span class="s1">recvfrom_into</span><span class="s2">(</span>
+        <span class="s1">__self</span><span class="s2">, </span><span class="s1">buffer</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">nbytes</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span>
+    <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">AddressFormat</span><span class="s2">]]:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;recvmsg&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+
+        <span class="s0">def </span><span class="s1">recvmsg</span><span class="s2">(</span>
+            <span class="s1">__self</span><span class="s2">,</span>
+            <span class="s1">__bufsize</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+            <span class="s1">__ancbufsize</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+            <span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+        <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">, </span><span class="s1">list</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">]], </span><span class="s1">int</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">]]:</span>
+            <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;recvmsg_into&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+
+        <span class="s0">def </span><span class="s1">recvmsg_into</span><span class="s2">(</span>
+            <span class="s1">__self</span><span class="s2">,</span>
+            <span class="s1">__buffers</span><span class="s2">: </span><span class="s1">Iterable</span><span class="s2">[</span><span class="s1">Buffer</span><span class="s2">],</span>
+            <span class="s1">__ancbufsize</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+            <span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+        <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">list</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">]], </span><span class="s1">int</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">]]:</span>
+            <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">def </span><span class="s1">send</span><span class="s2">(</span><span class="s1">__self</span><span class="s2">, </span><span class="s1">__bytes</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">int</span><span class="s2">]:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">async def </span><span class="s1">sendto</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, </span><span class="s1">__data</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">__address</span><span class="s2">: </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">object</span><span class="s2">, ...] | </span><span class="s1">str </span><span class="s2">| </span><span class="s1">Buffer</span>
+    <span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">async def </span><span class="s1">sendto</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">__data</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">,</span>
+        <span class="s1">__flags</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+        <span class="s1">__address</span><span class="s2">: </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">object</span><span class="s2">, ...] | </span><span class="s1">str </span><span class="s2">| </span><span class="s1">Buffer</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s0">async def </span><span class="s1">sendto</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">: </span><span class="s1">Any</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;sendmsg&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+
+        <span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">sendmsg</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(), </span><span class="s1">updated</span><span class="s2">=())</span>
+        <span class="s0">async def </span><span class="s1">sendmsg</span><span class="s2">(</span>
+            <span class="s1">self</span><span class="s2">,</span>
+            <span class="s1">__buffers</span><span class="s2">: </span><span class="s1">Iterable</span><span class="s2">[</span><span class="s1">Buffer</span><span class="s2">],</span>
+            <span class="s1">__ancdata</span><span class="s2">: </span><span class="s1">Iterable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">Buffer</span><span class="s2">]] = (),</span>
+            <span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+            <span class="s1">__address</span><span class="s2">: </span><span class="s1">AddressFormat </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">NotImplementedError</span>
+
+
+<span class="s0">class </span><span class="s1">_SocketType</span><span class="s2">(</span><span class="s1">SocketType</span><span class="s2">):</span>
+    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">sock</span><span class="s2">: </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">type</span><span class="s2">(</span><span class="s1">sock</span><span class="s2">) </span><span class="s0">is not </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">:</span>
+            <span class="s4"># For example, ssl.SSLSocket subclasses socket.socket, but we</span>
+            <span class="s4"># certainly don't want to blindly wrap one of those.</span>
+            <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span>
+                <span class="s3">f&quot;expected object of type 'socket.socket', not '</span><span class="s0">{</span><span class="s1">type</span><span class="s2">(</span><span class="s1">sock</span><span class="s2">).</span><span class="s1">__name__</span><span class="s0">}</span><span class="s3">'&quot;</span>
+            <span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_sock </span><span class="s2">= </span><span class="s1">sock</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">setblocking</span><span class="s2">(</span><span class="s0">False</span><span class="s2">)</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_did_shutdown_SHUT_WR </span><span class="s2">= </span><span class="s0">False</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># Simple + portable methods and attributes</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s4"># forwarded methods</span>
+    <span class="s0">def </span><span class="s1">detach</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">detach</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">fileno</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">fileno</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">getpeername</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; AddressFormat</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">getpeername</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">getsockname</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; AddressFormat</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">getsockname</span><span class="s2">()</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">buflen</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; bytes</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s0">def </span><span class="s1">getsockopt</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">buflen</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span>
+    <span class="s2">) </span><span class="s1">-&gt; int </span><span class="s2">| </span><span class="s1">bytes</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">buflen </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">level</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">level</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">, </span><span class="s1">buflen</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">setsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">value</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s1">Buffer</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">def </span><span class="s1">setsockopt</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">value</span><span class="s2">: </span><span class="s0">None</span><span class="s2">, </span><span class="s1">optlen</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s0">def </span><span class="s1">setsockopt</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s2">/,</span>
+        <span class="s1">level</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+        <span class="s1">optname</span><span class="s2">: </span><span class="s1">int</span><span class="s2">,</span>
+        <span class="s1">value</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s1">Buffer </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">optlen</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">optlen </span><span class="s0">is None</span><span class="s2">:</span>
+            <span class="s0">if </span><span class="s1">value </span><span class="s0">is None</span><span class="s2">:</span>
+                <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span>
+                    <span class="s3">&quot;invalid value for argument 'value', must not be None when specifying optlen&quot;</span>
+                <span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">setsockopt</span><span class="s2">(</span><span class="s1">level</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">, </span><span class="s1">value</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">value </span><span class="s0">is not None</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span>
+                <span class="s3">f&quot;invalid value for argument 'value': </span><span class="s0">{</span><span class="s1">value</span><span class="s0">!r}</span><span class="s3">, must be None when specifying optlen&quot;</span>
+            <span class="s2">)</span>
+
+        <span class="s4"># Note: PyPy may crash here due to setsockopt only supporting</span>
+        <span class="s4"># four parameters.</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">setsockopt</span><span class="s2">(</span><span class="s1">level</span><span class="s2">, </span><span class="s1">optname</span><span class="s2">, </span><span class="s1">value</span><span class="s2">, </span><span class="s1">optlen</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">listen</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">backlog</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s1">min</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SOMAXCONN</span><span class="s2">, </span><span class="s6">128</span><span class="s2">)) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">listen</span><span class="s2">(</span><span class="s1">backlog</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">get_inheritable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">get_inheritable</span><span class="s2">()</span>
+
+    <span class="s0">def </span><span class="s1">set_inheritable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">inheritable</span><span class="s2">: </span><span class="s1">bool</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">set_inheritable</span><span class="s2">(</span><span class="s1">inheritable</span><span class="s2">)</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">== </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;share&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+
+        <span class="s0">def </span><span class="s1">share</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, /, </span><span class="s1">process_id</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; bytes</span><span class="s2">:</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">share</span><span class="s2">(</span><span class="s1">process_id</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">__enter__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; Self</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span>
+
+    <span class="s0">def </span><span class="s1">__exit__</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">exc_type</span><span class="s2">: </span><span class="s1">type</span><span class="s2">[</span><span class="s1">BaseException</span><span class="s2">] | </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">exc_value</span><span class="s2">: </span><span class="s1">BaseException </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s1">traceback</span><span class="s2">: </span><span class="s1">TracebackType </span><span class="s2">| </span><span class="s0">None</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">__exit__</span><span class="s2">(</span><span class="s1">exc_type</span><span class="s2">, </span><span class="s1">exc_value</span><span class="s2">, </span><span class="s1">traceback</span><span class="s2">)</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">family</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; AddressFamily</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">family</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">type</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; SocketKind</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">type</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">proto</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">proto</span>
+
+    <span class="s2">@</span><span class="s1">property</span>
+    <span class="s0">def </span><span class="s1">did_shutdown_SHUT_WR</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_did_shutdown_SHUT_WR</span>
+
+    <span class="s0">def </span><span class="s1">__repr__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">repr</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">).</span><span class="s1">replace</span><span class="s2">(</span><span class="s3">&quot;socket.socket&quot;</span><span class="s2">, </span><span class="s3">&quot;trio.socket.socket&quot;</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">dup</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; SocketType</span><span class="s2">:</span>
+        <span class="s5">&quot;&quot;&quot;Same as :meth:`socket.socket.dup`.&quot;&quot;&quot;</span>
+        <span class="s0">return </span><span class="s1">_SocketType</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">dup</span><span class="s2">())</span>
+
+    <span class="s0">def </span><span class="s1">close</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">fileno</span><span class="s2">() != -</span><span class="s6">1</span><span class="s2">:</span>
+            <span class="s1">trio</span><span class="s2">.</span><span class="s1">lowlevel</span><span class="s2">.</span><span class="s1">notify_closing</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">)</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+
+    <span class="s0">async def </span><span class="s1">bind</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">address</span><span class="s2">: </span><span class="s1">AddressFormat</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s1">address </span><span class="s2">= </span><span class="s0">await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_resolve_address_nocp</span><span class="s2">(</span><span class="s1">address</span><span class="s2">, </span><span class="s1">local</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s2">(</span>
+            <span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">, </span><span class="s3">&quot;AF_UNIX&quot;</span><span class="s2">)</span>
+            <span class="s0">and </span><span class="s1">self</span><span class="s2">.</span><span class="s1">family </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_UNIX</span>
+            <span class="s0">and </span><span class="s1">address</span><span class="s2">[</span><span class="s6">0</span><span class="s2">]</span>
+        <span class="s2">):</span>
+            <span class="s4"># Use a thread for the filesystem traversal (unless it's an</span>
+            <span class="s4"># abstract domain socket)</span>
+            <span class="s0">return await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">to_thread</span><span class="s2">.</span><span class="s1">run_sync</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">bind</span><span class="s2">, </span><span class="s1">address</span><span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s4"># POSIX actually says that bind can return EWOULDBLOCK and</span>
+            <span class="s4"># complete asynchronously, like connect. But in practice AFAICT</span>
+            <span class="s4"># there aren't yet any real systems that do this, so we'll worry</span>
+            <span class="s4"># about it when it happens.</span>
+            <span class="s0">await </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">lowlevel</span><span class="s2">.</span><span class="s1">checkpoint</span><span class="s2">()</span>
+            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">bind</span><span class="s2">(</span><span class="s1">address</span><span class="s2">)</span>
+
+    <span class="s0">def </span><span class="s1">shutdown</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">flag</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s4"># no need to worry about return value b/c always returns None:</span>
+        <span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">shutdown</span><span class="s2">(</span><span class="s1">flag</span><span class="s2">)</span>
+        <span class="s4"># only do this if the call succeeded:</span>
+        <span class="s0">if </span><span class="s1">flag </span><span class="s0">in </span><span class="s2">[</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SHUT_WR</span><span class="s2">, </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SHUT_RDWR</span><span class="s2">]:</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">_did_shutdown_SHUT_WR </span><span class="s2">= </span><span class="s0">True</span>
+
+    <span class="s0">def </span><span class="s1">is_readable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">:</span>
+        <span class="s4"># use select.select on Windows, and select.poll everywhere else</span>
+        <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">== </span><span class="s3">&quot;win32&quot;</span><span class="s2">:</span>
+            <span class="s1">rready</span><span class="s2">, </span><span class="s1">_</span><span class="s2">, </span><span class="s1">_ </span><span class="s2">= </span><span class="s1">select</span><span class="s2">.</span><span class="s1">select</span><span class="s2">([</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">], [], [], </span><span class="s6">0</span><span class="s2">)</span>
+            <span class="s0">return </span><span class="s1">bool</span><span class="s2">(</span><span class="s1">rready</span><span class="s2">)</span>
+        <span class="s1">p </span><span class="s2">= </span><span class="s1">select</span><span class="s2">.</span><span class="s1">poll</span><span class="s2">()</span>
+        <span class="s1">p</span><span class="s2">.</span><span class="s1">register</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">, </span><span class="s1">select</span><span class="s2">.</span><span class="s1">POLLIN</span><span class="s2">)</span>
+        <span class="s0">return </span><span class="s1">bool</span><span class="s2">(</span><span class="s1">p</span><span class="s2">.</span><span class="s1">poll</span><span class="s2">(</span><span class="s6">0</span><span class="s2">))</span>
+
+    <span class="s0">async def </span><span class="s1">wait_writable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s0">await </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_writable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">)</span>
+
+    <span class="s0">async def </span><span class="s1">_resolve_address_nocp</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">address</span><span class="s2">: </span><span class="s1">AddressFormat</span><span class="s2">,</span>
+        <span class="s2">*,</span>
+        <span class="s1">local</span><span class="s2">: </span><span class="s1">bool</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; AddressFormat</span><span class="s2">:</span>
+        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">family </span><span class="s2">== </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">AF_INET6</span><span class="s2">:</span>
+            <span class="s1">ipv6_v6only </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">getsockopt</span><span class="s2">(</span>
+                <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">IPPROTO_IPV6</span><span class="s2">, </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">IPV6_V6ONLY</span>
+            <span class="s2">)</span>
+        <span class="s0">else</span><span class="s2">:</span>
+            <span class="s1">ipv6_v6only </span><span class="s2">= </span><span class="s0">False</span>
+        <span class="s0">return await </span><span class="s1">_resolve_address_nocp</span><span class="s2">(</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">type</span><span class="s2">,</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">family</span><span class="s2">,</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">proto</span><span class="s2">,</span>
+            <span class="s1">ipv6_v6only</span><span class="s2">=</span><span class="s1">ipv6_v6only</span><span class="s2">,</span>
+            <span class="s1">address</span><span class="s2">=</span><span class="s1">address</span><span class="s2">,</span>
+            <span class="s1">local</span><span class="s2">=</span><span class="s1">local</span><span class="s2">,</span>
+        <span class="s2">)</span>
+
+    <span class="s4"># args and kwargs must be starred, otherwise pyright complains:</span>
+    <span class="s4"># '&quot;args&quot; member of ParamSpec is valid only when used with *args parameter'</span>
+    <span class="s4"># '&quot;kwargs&quot; member of ParamSpec is valid only when used with **kwargs parameter'</span>
+    <span class="s4"># wait_fn and fn must also be first in the signature</span>
+    <span class="s4"># 'Keyword parameter cannot appear in signature after ParamSpec args parameter'</span>
+
+    <span class="s0">async def </span><span class="s1">_nonblocking_helper</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">,</span>
+        <span class="s1">wait_fn</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[[</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">], </span><span class="s1">Awaitable</span><span class="s2">[</span><span class="s0">None</span><span class="s2">]],</span>
+        <span class="s1">fn</span><span class="s2">: </span><span class="s1">Callable</span><span class="s2">[</span><span class="s1">Concatenate</span><span class="s2">[</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s1">P</span><span class="s2">], </span><span class="s1">T</span><span class="s2">],</span>
+        <span class="s2">*</span><span class="s1">args</span><span class="s2">: </span><span class="s1">P</span><span class="s2">.</span><span class="s1">args</span><span class="s2">,</span>
+        <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">: </span><span class="s1">P</span><span class="s2">.</span><span class="s1">kwargs</span><span class="s2">,</span>
+    <span class="s2">) </span><span class="s1">-&gt; T</span><span class="s2">:</span>
+        <span class="s4"># We have to reconcile two conflicting goals:</span>
+        <span class="s4"># - We want to make it look like we always blocked in doing these</span>
+        <span class="s4">#   operations. The obvious way is to always do an IO wait before</span>
+        <span class="s4">#   calling the function.</span>
+        <span class="s4"># - But, we also want to provide the correct semantics, and part</span>
+        <span class="s4">#   of that means giving correct errors. So, for example, if you</span>
+        <span class="s4">#   haven't called .listen(), then .accept() raises an error</span>
+        <span class="s4">#   immediately. But in this same circumstance, then on macOS, the</span>
+        <span class="s4">#   socket does not register as readable. So if we block waiting</span>
+        <span class="s4">#   for read *before* we call accept, then we'll be waiting</span>
+        <span class="s4">#   forever instead of properly raising an error. (On Linux,</span>
+        <span class="s4">#   interestingly, AFAICT a socket that can't possible read/write</span>
+        <span class="s4">#   *does* count as readable/writable for select() purposes. But</span>
+        <span class="s4">#   not on macOS.)</span>
+        <span class="s4">#</span>
+        <span class="s4"># So, we have to call the function once, with the appropriate</span>
+        <span class="s4"># cancellation/yielding sandwich if it succeeds, and if it gives</span>
+        <span class="s4"># BlockingIOError *then* we fall back to IO wait.</span>
+        <span class="s4">#</span>
+        <span class="s4"># XX think if this can be combined with the similar logic for IOCP</span>
+        <span class="s4"># submission...</span>
+        <span class="s0">async with </span><span class="s1">_try_sync</span><span class="s2">():</span>
+            <span class="s0">return </span><span class="s1">fn</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+        <span class="s4"># First attempt raised BlockingIOError:</span>
+        <span class="s0">while True</span><span class="s2">:</span>
+            <span class="s0">await </span><span class="s1">wait_fn</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">)</span>
+            <span class="s0">try</span><span class="s2">:</span>
+                <span class="s0">return </span><span class="s1">fn</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+            <span class="s0">except </span><span class="s1">BlockingIOError</span><span class="s2">:</span>
+                <span class="s0">pass</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># accept</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s1">_accept </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(</span>
+        <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">accept</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_readable</span>
+    <span class="s2">)</span>
+
+    <span class="s0">async def </span><span class="s1">accept</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; tuple</span><span class="s2">[</span><span class="s1">SocketType</span><span class="s2">, </span><span class="s1">AddressFormat</span><span class="s2">]:</span>
+        <span class="s5">&quot;&quot;&quot;Like :meth:`socket.socket.accept`, but async.&quot;&quot;&quot;</span>
+        <span class="s1">sock</span><span class="s2">, </span><span class="s1">addr </span><span class="s2">= </span><span class="s0">await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_accept</span><span class="s2">()</span>
+        <span class="s0">return </span><span class="s1">from_stdlib_socket</span><span class="s2">(</span><span class="s1">sock</span><span class="s2">), </span><span class="s1">addr</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># connect</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">async def </span><span class="s1">connect</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">address</span><span class="s2">: </span><span class="s1">AddressFormat</span><span class="s2">) </span><span class="s1">-&gt; </span><span class="s0">None</span><span class="s2">:</span>
+        <span class="s4"># nonblocking connect is weird -- you call it to start things</span>
+        <span class="s4"># off, then the socket becomes writable as a completion</span>
+        <span class="s4"># notification. This means it isn't really cancellable... we close the</span>
+        <span class="s4"># socket if cancelled, to avoid confusion.</span>
+        <span class="s0">try</span><span class="s2">:</span>
+            <span class="s1">address </span><span class="s2">= </span><span class="s0">await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_resolve_address_nocp</span><span class="s2">(</span><span class="s1">address</span><span class="s2">, </span><span class="s1">local</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+            <span class="s0">async with </span><span class="s1">_try_sync</span><span class="s2">():</span>
+                <span class="s4"># An interesting puzzle: can a non-blocking connect() return EINTR</span>
+                <span class="s4"># (= raise InterruptedError)? PEP 475 specifically left this as</span>
+                <span class="s4"># the one place where it lets an InterruptedError escape instead</span>
+                <span class="s4"># of automatically retrying. This is based on the idea that EINTR</span>
+                <span class="s4"># from connect means that the connection was already started, and</span>
+                <span class="s4"># will continue in the background. For a blocking connect, this</span>
+                <span class="s4"># sort of makes sense: if it returns EINTR then the connection</span>
+                <span class="s4"># attempt is continuing in the background, and on many system you</span>
+                <span class="s4"># can't then call connect() again because there is already a</span>
+                <span class="s4"># connect happening. See:</span>
+                <span class="s4">#</span>
+                <span class="s4">#   http://www.madore.org/~david/computers/connect-intr.html</span>
+                <span class="s4">#</span>
+                <span class="s4"># For a non-blocking connect, it doesn't make as much sense --</span>
+                <span class="s4"># surely the interrupt didn't happen after we successfully</span>
+                <span class="s4"># initiated the connect and are just waiting for it to complete,</span>
+                <span class="s4"># because a non-blocking connect does not wait! And the spec</span>
+                <span class="s4"># describes the interaction between EINTR/blocking connect, but</span>
+                <span class="s4"># doesn't have anything useful to say about non-blocking connect:</span>
+                <span class="s4">#</span>
+                <span class="s4">#   http://pubs.opengroup.org/onlinepubs/007904975/functions/connect.html</span>
+                <span class="s4">#</span>
+                <span class="s4"># So we have a conundrum: if EINTR means that the connect() hasn't</span>
+                <span class="s4"># happened (like it does for essentially every other syscall),</span>
+                <span class="s4"># then InterruptedError should be caught and retried. If EINTR</span>
+                <span class="s4"># means that the connect() has successfully started, then</span>
+                <span class="s4"># InterruptedError should be caught and ignored. Which should we</span>
+                <span class="s4"># do?</span>
+                <span class="s4">#</span>
+                <span class="s4"># In practice, the resolution is probably that non-blocking</span>
+                <span class="s4"># connect simply never returns EINTR, so the question of how to</span>
+                <span class="s4"># handle it is moot.  Someone spelunked macOS/FreeBSD and</span>
+                <span class="s4"># confirmed this is true there:</span>
+                <span class="s4">#</span>
+                <span class="s4">#   https://stackoverflow.com/questions/14134440/eintr-and-non-blocking-calls</span>
+                <span class="s4">#</span>
+                <span class="s4"># and exarkun seems to think it's true in general of non-blocking</span>
+                <span class="s4"># calls:</span>
+                <span class="s4">#</span>
+                <span class="s4">#   https://twistedmatrix.com/pipermail/twisted-python/2010-September/022864.html</span>
+                <span class="s4"># (and indeed, AFAICT twisted doesn't try to handle</span>
+                <span class="s4"># InterruptedError).</span>
+                <span class="s4">#</span>
+                <span class="s4"># So we don't try to catch InterruptedError. This way if it</span>
+                <span class="s4"># happens, someone will hopefully tell us, and then hopefully we</span>
+                <span class="s4"># can investigate their system to figure out what its semantics</span>
+                <span class="s4"># are.</span>
+                <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">connect</span><span class="s2">(</span><span class="s1">address</span><span class="s2">)</span>
+            <span class="s4"># It raised BlockingIOError, meaning that it's started the</span>
+            <span class="s4"># connection attempt. We wait for it to complete:</span>
+            <span class="s0">await </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_writable</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">)</span>
+        <span class="s0">except </span><span class="s1">trio</span><span class="s2">.</span><span class="s1">Cancelled</span><span class="s2">:</span>
+            <span class="s4"># We can't really cancel a connect, and the socket is in an</span>
+            <span class="s4"># indeterminate state. Better to close it so we don't get</span>
+            <span class="s4"># confused.</span>
+            <span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">close</span><span class="s2">()</span>
+            <span class="s0">raise</span>
+        <span class="s4"># Okay, the connect finished, but it might have failed:</span>
+        <span class="s1">err </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_sock</span><span class="s2">.</span><span class="s1">getsockopt</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SOL_SOCKET</span><span class="s2">, </span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">SO_ERROR</span><span class="s2">)</span>
+        <span class="s0">if </span><span class="s1">err </span><span class="s2">!= </span><span class="s6">0</span><span class="s2">:</span>
+            <span class="s0">raise </span><span class="s1">OSError</span><span class="s2">(</span><span class="s1">err</span><span class="s2">, </span><span class="s3">f&quot;Error connecting to </span><span class="s0">{</span><span class="s1">address</span><span class="s0">!r}</span><span class="s3">: </span><span class="s0">{</span><span class="s1">os</span><span class="s2">.</span><span class="s1">strerror</span><span class="s2">(</span><span class="s1">err</span><span class="s2">)</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># recv</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s4"># Not possible to typecheck with a Callable (due to DefaultArg), nor with a</span>
+    <span class="s4"># callback Protocol (https://github.com/python/typing/discussions/1040)</span>
+    <span class="s4"># but this seems to work. If not explicitly defined then pyright --verifytypes will</span>
+    <span class="s4"># complain about AmbiguousType</span>
+    <span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+
+        <span class="s0">def </span><span class="s1">recv</span><span class="s2">(</span><span class="s1">__self</span><span class="s2">, </span><span class="s1">__buflen</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">]:</span>
+            <span class="s2">...</span>
+
+    <span class="s4"># _make_simple_sock_method_wrapper is typed, so this checks that the above is correct</span>
+    <span class="s4"># this requires that we refrain from using `/` to specify pos-only</span>
+    <span class="s4"># args, or mypy thinks the signature differs from typeshed.</span>
+    <span class="s1">recv </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(  </span><span class="s4"># noqa: F811</span>
+        <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">recv</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_readable</span>
+    <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># recv_into</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+
+        <span class="s0">def </span><span class="s1">recv_into</span><span class="s2">(</span>
+            <span class="s1">__self</span><span class="s2">, </span><span class="s1">buffer</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">nbytes</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span>
+        <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">int</span><span class="s2">]:</span>
+            <span class="s2">...</span>
+
+    <span class="s1">recv_into </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(  </span><span class="s4"># noqa: F811</span>
+        <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">recv_into</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_readable</span>
+    <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># recvfrom</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+        <span class="s4"># return type of socket.socket.recvfrom in typeshed is tuple[bytes, Any]</span>
+        <span class="s0">def </span><span class="s1">recvfrom</span><span class="s2">(</span>
+            <span class="s1">__self</span><span class="s2">, </span><span class="s1">__bufsize</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span>
+        <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">, </span><span class="s1">AddressFormat</span><span class="s2">]]:</span>
+            <span class="s2">...</span>
+
+    <span class="s1">recvfrom </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(  </span><span class="s4"># noqa: F811</span>
+        <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">recvfrom</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_readable</span>
+    <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># recvfrom_into</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+        <span class="s4"># return type of socket.socket.recvfrom_into in typeshed is tuple[bytes, Any]</span>
+        <span class="s0">def </span><span class="s1">recvfrom_into</span><span class="s2">(</span>
+            <span class="s1">__self</span><span class="s2">, </span><span class="s1">buffer</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">nbytes</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">, </span><span class="s1">flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span>
+        <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">AddressFormat</span><span class="s2">]]:</span>
+            <span class="s2">...</span>
+
+    <span class="s1">recvfrom_into </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(  </span><span class="s4"># noqa: F811</span>
+        <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">recvfrom_into</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_readable</span>
+    <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># recvmsg</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;recvmsg&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+
+            <span class="s0">def </span><span class="s1">recvmsg</span><span class="s2">(</span>
+                <span class="s1">__self</span><span class="s2">, </span><span class="s1">__bufsize</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">__ancbufsize</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span>
+            <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">, </span><span class="s1">list</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">]], </span><span class="s1">int</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">]]:</span>
+                <span class="s2">...</span>
+
+        <span class="s1">recvmsg </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(</span>
+            <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">recvmsg</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_readable</span><span class="s2">, </span><span class="s1">maybe_avail</span><span class="s2">=</span><span class="s0">True</span>
+        <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># recvmsg_into</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;recvmsg_into&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+        <span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+
+            <span class="s0">def </span><span class="s1">recvmsg_into</span><span class="s2">(</span>
+                <span class="s1">__self</span><span class="s2">,</span>
+                <span class="s1">__buffers</span><span class="s2">: </span><span class="s1">Iterable</span><span class="s2">[</span><span class="s1">Buffer</span><span class="s2">],</span>
+                <span class="s1">__ancbufsize</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+                <span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+            <span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">list</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">]], </span><span class="s1">int</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">]]:</span>
+                <span class="s2">...</span>
+
+        <span class="s1">recvmsg_into </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(</span>
+            <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">recvmsg_into</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_readable</span><span class="s2">, </span><span class="s1">maybe_avail</span><span class="s2">=</span><span class="s0">True</span>
+        <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># send</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+
+        <span class="s0">def </span><span class="s1">send</span><span class="s2">(</span><span class="s1">__self</span><span class="s2">, </span><span class="s1">__bytes</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">) </span><span class="s1">-&gt; Awaitable</span><span class="s2">[</span><span class="s1">int</span><span class="s2">]:</span>
+            <span class="s2">...</span>
+
+    <span class="s1">send </span><span class="s2">= </span><span class="s1">_make_simple_sock_method_wrapper</span><span class="s2">(  </span><span class="s4"># noqa: F811</span>
+        <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">send</span><span class="s2">, </span><span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_writable</span>
+    <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># sendto</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">async def </span><span class="s1">sendto</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, </span><span class="s1">__data</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">__address</span><span class="s2">: </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">object</span><span class="s2">, ...] | </span><span class="s1">str </span><span class="s2">| </span><span class="s1">Buffer</span>
+    <span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s2">@</span><span class="s1">overload</span>
+    <span class="s0">async def </span><span class="s1">sendto</span><span class="s2">(</span>
+        <span class="s1">self</span><span class="s2">, </span><span class="s1">__data</span><span class="s2">: </span><span class="s1">Buffer</span><span class="s2">, </span><span class="s1">__flags</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">__address</span><span class="s2">: </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">object</span><span class="s2">, ...] | </span><span class="s1">str </span><span class="s2">| </span><span class="s1">Buffer</span>
+    <span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s2">...</span>
+
+    <span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">sendto</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(), </span><span class="s1">updated</span><span class="s2">=())  </span><span class="s4"># type: ignore[misc]</span>
+    <span class="s0">async def </span><span class="s1">sendto</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">: </span><span class="s1">Any</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+        <span class="s5">&quot;&quot;&quot;Similar to :meth:`socket.socket.sendto`, but async.&quot;&quot;&quot;</span>
+        <span class="s4"># args is: data[, flags], address</span>
+        <span class="s4"># and kwargs are not accepted</span>
+        <span class="s1">args_list </span><span class="s2">= </span><span class="s1">list</span><span class="s2">(</span><span class="s1">args</span><span class="s2">)</span>
+        <span class="s1">args_list</span><span class="s2">[-</span><span class="s6">1</span><span class="s2">] = </span><span class="s0">await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_resolve_address_nocp</span><span class="s2">(</span><span class="s1">args</span><span class="s2">[-</span><span class="s6">1</span><span class="s2">], </span><span class="s1">local</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+        <span class="s4"># args_list is Any, which isn't the signature of sendto().</span>
+        <span class="s4"># We don't care about invalid types, sendto() will do the checking.</span>
+        <span class="s0">return await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_nonblocking_helper</span><span class="s2">(</span>
+            <span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_writable</span><span class="s2">,</span>
+            <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">sendto</span><span class="s2">,  </span><span class="s4"># type: ignore[arg-type]</span>
+            <span class="s2">*</span><span class="s1">args_list</span><span class="s2">,</span>
+        <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># sendmsg</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">platform </span><span class="s2">!= </span><span class="s3">&quot;win32&quot; </span><span class="s0">or </span><span class="s2">(</span>
+        <span class="s0">not </span><span class="s1">TYPE_CHECKING </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">, </span><span class="s3">&quot;sendmsg&quot;</span><span class="s2">)</span>
+    <span class="s2">):</span>
+
+        <span class="s2">@</span><span class="s1">_wraps</span><span class="s2">(</span><span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">sendmsg</span><span class="s2">, </span><span class="s1">assigned</span><span class="s2">=(), </span><span class="s1">updated</span><span class="s2">=())</span>
+        <span class="s0">async def </span><span class="s1">sendmsg</span><span class="s2">(</span>
+            <span class="s1">self</span><span class="s2">,</span>
+            <span class="s1">__buffers</span><span class="s2">: </span><span class="s1">Iterable</span><span class="s2">[</span><span class="s1">Buffer</span><span class="s2">],</span>
+            <span class="s1">__ancdata</span><span class="s2">: </span><span class="s1">Iterable</span><span class="s2">[</span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, </span><span class="s1">int</span><span class="s2">, </span><span class="s1">Buffer</span><span class="s2">]] = (),</span>
+            <span class="s1">__flags</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s6">0</span><span class="s2">,</span>
+            <span class="s1">__address</span><span class="s2">: </span><span class="s1">AddressFormat </span><span class="s2">| </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">,</span>
+        <span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">:</span>
+            <span class="s5">&quot;&quot;&quot;Similar to :meth:`socket.socket.sendmsg`, but async. 
+ 
+            Only available on platforms where :meth:`socket.socket.sendmsg` is 
+            available. 
+ 
+            &quot;&quot;&quot;</span>
+            <span class="s0">if </span><span class="s1">__address </span><span class="s0">is not None</span><span class="s2">:</span>
+                <span class="s1">__address </span><span class="s2">= </span><span class="s0">await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_resolve_address_nocp</span><span class="s2">(</span><span class="s1">__address</span><span class="s2">, </span><span class="s1">local</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+            <span class="s0">return await </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_nonblocking_helper</span><span class="s2">(</span>
+                <span class="s1">_core</span><span class="s2">.</span><span class="s1">wait_writable</span><span class="s2">,</span>
+                <span class="s1">_stdlib_socket</span><span class="s2">.</span><span class="s1">socket</span><span class="s2">.</span><span class="s1">sendmsg</span><span class="s2">,</span>
+                <span class="s1">__buffers</span><span class="s2">,</span>
+                <span class="s1">__ancdata</span><span class="s2">,</span>
+                <span class="s1">__flags</span><span class="s2">,</span>
+                <span class="s1">__address</span><span class="s2">,</span>
+            <span class="s2">)</span>
+
+    <span class="s4">################################################################</span>
+    <span class="s4"># sendfile</span>
+    <span class="s4">################################################################</span>
+
+    <span class="s4"># Not implemented yet:</span>
+    <span class="s4"># async def sendfile(self, file, offset=0, count=None):</span>
+    <span class="s4">#     XX</span>
+
+    <span class="s4"># Intentionally omitted:</span>
+    <span class="s4">#   sendall</span>
+    <span class="s4">#   makefile</span>
+    <span class="s4">#   setblocking/getblocking</span>
+    <span class="s4">#   settimeout/gettimeout</span>
+    <span class="s4">#   timeout</span>
+</pre>
+</body>
+</html>

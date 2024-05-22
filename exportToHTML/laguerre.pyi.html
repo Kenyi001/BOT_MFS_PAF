@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>laguerre.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+laguerre.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+
+<span class="s0">from </span><span class="s1">numpy </span><span class="s0">import </span><span class="s1">ndarray</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">, </span><span class="s1">int_</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">_polybase </span><span class="s0">import </span><span class="s1">ABCPolyBase</span>
+<span class="s0">from </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">polynomial</span><span class="s2">.</span><span class="s1">polyutils </span><span class="s0">import </span><span class="s1">trimcoef</span>
+
+<span class="s1">__all__</span><span class="s2">: </span><span class="s1">list</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]</span>
+
+<span class="s1">lagtrim </span><span class="s2">= </span><span class="s1">trimcoef</span>
+
+<span class="s0">def </span><span class="s1">poly2lag</span><span class="s2">(</span><span class="s1">pol</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lag2poly</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+
+<span class="s1">lagdomain</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">lagzero</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">lagone</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+<span class="s1">lagx</span><span class="s2">: </span><span class="s1">ndarray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">[</span><span class="s1">int_</span><span class="s2">]]</span>
+
+<span class="s0">def </span><span class="s1">lagline</span><span class="s2">(</span><span class="s1">off</span><span class="s2">, </span><span class="s1">scl</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagfromroots</span><span class="s2">(</span><span class="s1">roots</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagadd</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagsub</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagmulx</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagmul</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagdiv</span><span class="s2">(</span><span class="s1">c1</span><span class="s2">, </span><span class="s1">c2</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagpow</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">pow</span><span class="s2">, </span><span class="s1">maxpower</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">lagder</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">lagint</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">m</span><span class="s2">=..., </span><span class="s1">k </span><span class="s2">= ..., </span><span class="s1">lbnd</span><span class="s2">=..., </span><span class="s1">scl</span><span class="s2">=..., </span><span class="s1">axis</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">lagval</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">c</span><span class="s2">, </span><span class="s1">tensor</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">lagval2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">laggrid2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagval3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">laggrid3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagvander</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagvander2d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagvander3d</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">z</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagfit</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">, </span><span class="s1">deg</span><span class="s2">, </span><span class="s1">rcond</span><span class="s2">=..., </span><span class="s1">full</span><span class="s2">=..., </span><span class="s1">w</span><span class="s2">=...): ...</span>
+<span class="s0">def </span><span class="s1">lagcompanion</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagroots</span><span class="s2">(</span><span class="s1">c</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">laggauss</span><span class="s2">(</span><span class="s1">deg</span><span class="s2">): ...</span>
+<span class="s0">def </span><span class="s1">lagweight</span><span class="s2">(</span><span class="s1">x</span><span class="s2">): ...</span>
+
+<span class="s0">class </span><span class="s1">Laguerre</span><span class="s2">(</span><span class="s1">ABCPolyBase</span><span class="s2">):</span>
+    <span class="s1">domain</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">window</span><span class="s2">: </span><span class="s1">Any</span>
+    <span class="s1">basis_name</span><span class="s2">: </span><span class="s1">Any</span>
+</pre>
+</body>
+</html>

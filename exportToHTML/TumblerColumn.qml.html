@@ -1,0 +1,194 @@
+<html>
+<head>
+<title>TumblerColumn.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #7a7e85;}
+.s6 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+TumblerColumn.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2016 The Qt Company Ltd.</span>
+<span class="s0">** Contact: https://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Extras module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see https://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at https://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPL3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or (at your option) the GNU General</span>
+<span class="s0">** Public license version 3 or any later version approved by the KDE Free</span>
+<span class="s0">** Qt Foundation. The licenses are as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3</span>
+<span class="s0">** included in the packaging of this file. Please review the following</span>
+<span class="s0">** information to ensure the GNU General Public License requirements will</span>
+<span class="s0">** be met: https://www.gnu.org/licenses/gpl-2.0.html and</span>
+<span class="s0">** https://www.gnu.org/licenses/gpl-3.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.2</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls </span><span class="s3">1.4</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Private </span><span class="s3">1.0</span>
+
+<span class="s5">/*! 
+    \qmltype TumblerColumn 
+    \inqmlmodule QtQuick.Extras 
+    \since 5.5 
+    \ingroup extras 
+    \brief A column within a tumbler. 
+ 
+    TumblerColumn represents a column within a tumbler, providing the interface 
+    to define the items and width of each column. 
+ 
+    \code 
+    Tumbler { 
+        TumblerColumn { 
+            model: [1, 2, 3] 
+        } 
+ 
+        TumblerColumn { 
+            model: [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;] 
+            visible: false 
+        } 
+    } 
+    \endcode 
+ 
+    You can create a custom appearance for a Tumbler by assigning a 
+    \l {TumblerStyle}. 
+*/</span>
+
+<span class="s1">QtObject </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">tumblerColumn</span>
+
+    <span class="s5">/*! \internal */</span>
+    <span class="s1">property Item __tumbler</span><span class="s4">: </span><span class="s2">null</span>
+
+    <span class="s5">/*! 
+        \internal 
+ 
+        The index of this column within the tumbler. 
+    */</span>
+    <span class="s1">property int __index</span><span class="s4">: -</span><span class="s3">1</span>
+
+    <span class="s5">/*! 
+        \internal 
+ 
+        The index of the current item, if the PathView has items instantiated, 
+        or the last current index if it doesn't. 
+    */</span>
+    <span class="s1">property int __currentIndex</span><span class="s4">: -</span><span class="s3">1</span>
+
+    <span class="s1">property int accessibleRole</span><span class="s4">: </span><span class="s1">Accessible</span><span class="s4">.</span><span class="s1">ColumnHeader</span>
+
+    <span class="s5">/*! 
+        \qmlproperty int TumblerColumn::currentIndex 
+ 
+        This read-only property holds the index of the current item for this 
+        column. If the model count is reduced, the current index will be 
+        reduced to the new count minus one. 
+ 
+        \sa {Tumbler::currentIndexAt}, {Tumbler::setCurrentIndexAt} 
+    */</span>
+    <span class="s1">readonly property alias currentIndex</span><span class="s4">: </span><span class="s1">tumblerColumn</span><span class="s4">.</span><span class="s1">__currentIndex</span>
+
+    <span class="s5">/*! 
+        This property holds the model that provides data for this column. 
+    */</span>
+    <span class="s1">property </span><span class="s2">var </span><span class="s1">model</span><span class="s4">: </span><span class="s2">null</span>
+
+    <span class="s5">/*! 
+        This property holds the model role of this column. 
+    */</span>
+    <span class="s1">property string role</span><span class="s4">: </span><span class="s6">&quot;&quot;</span>
+
+    <span class="s5">/*! 
+        The item delegate for this column. 
+ 
+        If set, this delegate will be used to display items in this column, 
+        instead of the 
+        \l {TumblerStyle::}{delegate} 
+        property in \l {TumblerStyle}. 
+ 
+        The \l {Item::implicitHeight}{implicitHeight} property must be set, 
+        and it must be the same for each delegate. 
+    */</span>
+    <span class="s1">property Component delegate</span>
+
+    <span class="s5">/*! 
+        The highlight delegate for this column. 
+ 
+        If set, this highlight will be used to display the highlight in this 
+        column, instead of the 
+        \l {TumblerStyle::}{highlight} 
+        property in \l {TumblerStyle}. 
+    */</span>
+    <span class="s1">property Component highlight</span>
+
+    <span class="s5">/*! 
+        The foreground of this column. 
+ 
+        If set, this component will be used to display the foreground in this 
+        column, instead of the 
+        \l {TumblerStyle::}{columnForeground} 
+        property in \l {TumblerStyle}. 
+    */</span>
+    <span class="s1">property Component columnForeground</span>
+
+    <span class="s5">/*! 
+        This property holds the visibility of this column. 
+    */</span>
+    <span class="s1">property bool visible</span><span class="s4">: </span><span class="s2">true</span>
+
+    <span class="s5">/*! 
+        This read-only property indicates whether the item has active focus. 
+ 
+        See Item's \l {Item::activeFocus}{activeFocus} property for more 
+        information. 
+    */</span>
+    <span class="s1">readonly property bool activeFocus</span><span class="s4">: {</span>
+        <span class="s2">if </span><span class="s4">(</span><span class="s1">__tumbler </span><span class="s4">=== </span><span class="s2">null</span><span class="s4">)</span>
+            <span class="s2">return null</span><span class="s4">;</span>
+
+        <span class="s2">var </span><span class="s1">view </span><span class="s4">= </span><span class="s1">__tumbler</span><span class="s4">.</span><span class="s1">__viewAt</span><span class="s4">(</span><span class="s1">__index</span><span class="s4">);</span>
+        <span class="s2">return </span><span class="s1">view </span><span class="s4">&amp;&amp; </span><span class="s1">view</span><span class="s4">.</span><span class="s1">activeFocus </span><span class="s4">? </span><span class="s2">true </span><span class="s4">: </span><span class="s2">false</span><span class="s4">;</span>
+    <span class="s4">}</span>
+
+    <span class="s5">/*! 
+        This property holds the width of this column. 
+    */</span>
+    <span class="s1">property real width</span><span class="s4">: </span><span class="s1">TextSingleton</span><span class="s4">.</span><span class="s1">implicitHeight </span><span class="s4">* </span><span class="s3">4</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

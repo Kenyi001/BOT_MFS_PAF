@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>npymath.ini</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+npymath.ini</font>
+</center></td></tr></table>
+<pre><span class="s0">[meta]</span>
+<span class="s2">Name=</span><span class="s3">npymath</span>
+<span class="s2">Description=</span><span class="s3">Portable, core math library implementing C99 standard</span>
+<span class="s2">Version=</span><span class="s3">0.1</span>
+
+<span class="s0">[variables]</span>
+<span class="s2">pkgname=</span><span class="s3">numpy.core</span>
+<span class="s2">prefix=</span><span class="s3">${pkgdir}</span>
+<span class="s2">libdir=</span><span class="s3">${prefix}\lib</span>
+<span class="s2">includedir=</span><span class="s3">${prefix}\include</span>
+
+<span class="s0">[default]</span>
+<span class="s2">Libs=</span><span class="s3">-L${libdir} -lnpymath</span>
+<span class="s2">Cflags=</span><span class="s3">-I${includedir}</span>
+<span class="s2">Requires=</span><span class="s3">mlib</span>
+
+<span class="s0">[msvc]</span>
+<span class="s2">Libs=</span><span class="s3">/LIBPATH:${libdir} npymath.lib</span>
+<span class="s2">Cflags=</span><span class="s3">/INCLUDE:${includedir}</span>
+<span class="s2">Requires=</span><span class="s3">mlib</span>
+</pre>
+</body>
+</html>

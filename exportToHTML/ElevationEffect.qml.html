@@ -1,0 +1,301 @@
+<html>
+<head>
+<title>ElevationEffect.qml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #2aacb8;}
+.s4 { color: #bcbec4;}
+.s5 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ElevationEffect.qml</font>
+</center></td></tr></table>
+<pre><span class="s0">/****************************************************************************</span>
+<span class="s0">**</span>
+<span class="s0">** Copyright (C) 2017 The Qt Company Ltd.</span>
+<span class="s0">** Contact: http://www.qt.io/licensing/</span>
+<span class="s0">**</span>
+<span class="s0">** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_BEGIN_LICENSE:LGPL3$</span>
+<span class="s0">** Commercial License Usage</span>
+<span class="s0">** Licensees holding valid commercial Qt licenses may use this file in</span>
+<span class="s0">** accordance with the commercial license agreement provided with the</span>
+<span class="s0">** Software or, alternatively, in accordance with the terms contained in</span>
+<span class="s0">** a written agreement between you and The Qt Company. For licensing terms</span>
+<span class="s0">** and conditions see http://www.qt.io/terms-conditions. For further</span>
+<span class="s0">** information use the contact form at http://www.qt.io/contact-us.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU Lesser General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU Lesser</span>
+<span class="s0">** General Public License version 3 as published by the Free Software</span>
+<span class="s0">** Foundation and appearing in the file LICENSE.LGPLv3 included in the</span>
+<span class="s0">** packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU Lesser General Public License version 3 requirements</span>
+<span class="s0">** will be met: https://www.gnu.org/licenses/lgpl.html.</span>
+<span class="s0">**</span>
+<span class="s0">** GNU General Public License Usage</span>
+<span class="s0">** Alternatively, this file may be used under the terms of the GNU</span>
+<span class="s0">** General Public License version 2.0 or later as published by the Free</span>
+<span class="s0">** Software Foundation and appearing in the file LICENSE.GPL included in</span>
+<span class="s0">** the packaging of this file. Please review the following information to</span>
+<span class="s0">** ensure the GNU General Public License version 2.0 requirements will be</span>
+<span class="s0">** met: http://www.gnu.org/licenses/gpl-2.0.html.</span>
+<span class="s0">**</span>
+<span class="s0">** $QT_END_LICENSE$</span>
+<span class="s0">**</span>
+<span class="s0">****************************************************************************/</span>
+
+<span class="s2">import </span><span class="s1">QtQuick </span><span class="s3">2.12</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Material </span><span class="s3">2.12</span>
+<span class="s2">import </span><span class="s1">QtQuick</span><span class="s4">.</span><span class="s1">Controls</span><span class="s4">.</span><span class="s1">Material</span><span class="s4">.</span><span class="s1">impl </span><span class="s3">2.12</span>
+
+<span class="s5">/* 
+   An effect for standard Material Design elevation shadows. Useful for using as \c layer.effect. 
+ */</span>
+<span class="s1">Item </span><span class="s4">{</span>
+    <span class="s1">id</span><span class="s4">: </span><span class="s1">effect</span>
+
+    <span class="s5">/* 
+       The source the effect is applied to. 
+     */</span>
+    <span class="s1">property </span><span class="s2">var </span><span class="s1">source</span>
+
+    <span class="s5">/* 
+       The elevation of the \l source Item. 
+     */</span>
+    <span class="s1">property int elevation</span><span class="s4">: </span><span class="s3">0</span>
+
+    <span class="s5">/* 
+       Set to \c true if the \l source Item is the same width as its parent and the shadow 
+       should be full width instead of rounding around the corner of the Item. 
+ 
+       \sa fullHeight 
+     */</span>
+    <span class="s1">property bool fullWidth</span><span class="s4">: </span><span class="s2">false</span>
+
+    <span class="s5">/* 
+       Set to \c true if the \l source Item is the same height as its parent and the shadow 
+       should be full height instead of rounding around the corner of the Item. 
+ 
+       \sa fullWidth 
+     */</span>
+    <span class="s1">property bool fullHeight</span><span class="s4">: </span><span class="s2">false</span>
+
+    <span class="s5">/* 
+       \internal 
+ 
+       The actual source Item the effect is applied to. 
+     */</span>
+    <span class="s1">readonly property Item sourceItem</span><span class="s4">: </span><span class="s1">source</span><span class="s4">.</span><span class="s1">sourceItem</span>
+
+    <span class="s5">/* 
+     * The following shadow values are taken from Angular Material 
+     * 
+     * The MIT License (MIT) 
+     * 
+     * Copyright (c) 2014-2016 Google, Inc. http://angularjs.org 
+     * 
+     * Permission is hereby granted, free of charge, to any person obtaining a copy 
+     * of this software and associated documentation files (the &quot;Software&quot;), to deal 
+     * in the Software without restriction, including without limitation the rights 
+     * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+     * copies of the Software, and to permit persons to whom the Software is 
+     * furnished to do so, subject to the following conditions: 
+     * 
+     * The above copyright notice and this permission notice shall be included in all 
+     * copies or substantial portions of the Software. 
+     * 
+     * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+     * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+     * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+     * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+     * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+     * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+     * SOFTWARE. 
+     */</span>
+    <span class="s5">/* 
+       \internal 
+ 
+       The shadows to use for each possible elevation. There are three shadows that when combined 
+       make up the elevation. 
+     */</span>
+    <span class="s1">readonly property </span><span class="s2">var </span><span class="s1">_shadows</span><span class="s4">: [</span>
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">0</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">0</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">0</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">0</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">0</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">0</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">2</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">1</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">2</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">2</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">2</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">4</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">2</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">2</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">4</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">4</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">14</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">1</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">18</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">0</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">4</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">7</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">2</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">16</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">1</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">14</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">9</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">12</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">3</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">16</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">14</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">4</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">18</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">3</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">7</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">4</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">11</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">15</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">1</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">4</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">20</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">3</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">7</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">4</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">12</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">17</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">22</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">4</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">7</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">4</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">13</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">19</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">24</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">4</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">7</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">9</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">4</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">14</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">21</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">5</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">26</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">4</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">9</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">5</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">15</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">22</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">28</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">5</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">5</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">16</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">24</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">30</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">5</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">11</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">5</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">17</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">26</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">6</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">32</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">5</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">9</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">11</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">5</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">18</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">28</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">7</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">34</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">6</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">9</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">12</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">6</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">19</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">29</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">2</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">7</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">36</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">6</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">13</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">6</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">20</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">31</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">38</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">7</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">13</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">6</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">21</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">33</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">40</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">7</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">10</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">14</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">6</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">22</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">35</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">8</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">42</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">7</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">11</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">14</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">7</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">23</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">36</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">9</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">44</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">8</span><span class="s4">}],</span>
+
+        <span class="s4">[{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">11</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">15</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: -</span><span class="s3">7</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">24</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">38</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">3</span><span class="s4">},</span>
+         <span class="s4">{</span><span class="s1">offset</span><span class="s4">: </span><span class="s3">9</span><span class="s4">, </span><span class="s1">blur</span><span class="s4">: </span><span class="s3">46</span><span class="s4">, </span><span class="s1">spread</span><span class="s4">: </span><span class="s3">8</span><span class="s4">}]</span>
+    <span class="s4">]</span>
+
+    <span class="s5">/* 
+       \internal 
+ 
+       The current shadow based on the elevation. 
+     */</span>
+    <span class="s1">readonly property </span><span class="s2">var </span><span class="s1">_shadow</span><span class="s4">: </span><span class="s1">_shadows</span><span class="s4">[</span><span class="s1">Math</span><span class="s4">.</span><span class="s1">max</span><span class="s4">(</span><span class="s3">0</span><span class="s4">, </span><span class="s1">Math</span><span class="s4">.</span><span class="s1">min</span><span class="s4">(</span><span class="s1">elevation</span><span class="s4">, </span><span class="s1">_shadows</span><span class="s4">.</span><span class="s1">length </span><span class="s4">- </span><span class="s3">1</span><span class="s4">))]</span>
+
+    <span class="s5">// Nest the shadows and source view in two items rendered as a layer</span>
+    <span class="s5">// so the shadow is not clipped by the bounds of the source view</span>
+    <span class="s1">Item </span><span class="s4">{</span>
+        <span class="s1">property int margin</span><span class="s4">: -</span><span class="s3">100</span>
+
+        <span class="s1">x</span><span class="s4">: </span><span class="s1">margin</span>
+        <span class="s1">y</span><span class="s4">: </span><span class="s1">margin</span>
+        <span class="s1">width</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width </span><span class="s4">- </span><span class="s3">2 </span><span class="s4">* </span><span class="s1">margin</span>
+        <span class="s1">height</span><span class="s4">: </span><span class="s1">parent</span><span class="s4">.</span><span class="s1">height </span><span class="s4">- </span><span class="s3">2 </span><span class="s4">* </span><span class="s1">margin</span>
+
+        <span class="s5">// By rendering as a layer, the shadow will never show through the source item,</span>
+        <span class="s5">// even when the source item's opacity is less than 1</span>
+        <span class="s1">layer</span><span class="s4">.</span><span class="s1">enabled</span><span class="s4">: </span><span class="s2">true</span>
+
+        <span class="s5">// The box shadows automatically pick up the size of the source Item and not</span>
+        <span class="s5">// the size of the parent, so we don't need to worry about the extra padding</span>
+        <span class="s5">// in the parent Item</span>
+        <span class="s1">BoxShadow </span><span class="s4">{</span>
+            <span class="s1">offsetY</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">0</span><span class="s4">].</span><span class="s1">offset</span>
+            <span class="s1">blurRadius</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">0</span><span class="s4">].</span><span class="s1">blur</span>
+            <span class="s1">spreadRadius</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">0</span><span class="s4">].</span><span class="s1">spread</span>
+            <span class="s1">color</span><span class="s4">: </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rgba</span><span class="s4">(</span><span class="s3">0</span><span class="s4">,</span><span class="s3">0</span><span class="s4">,</span><span class="s3">0</span><span class="s4">, </span><span class="s3">0.2</span><span class="s4">)</span>
+
+            <span class="s1">fullWidth</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">fullWidth</span>
+            <span class="s1">fullHeight</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">fullHeight</span>
+            <span class="s1">source</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">sourceItem</span>
+        <span class="s4">}</span>
+
+        <span class="s1">BoxShadow </span><span class="s4">{</span>
+            <span class="s1">offsetY</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">1</span><span class="s4">].</span><span class="s1">offset</span>
+            <span class="s1">blurRadius</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">1</span><span class="s4">].</span><span class="s1">blur</span>
+            <span class="s1">spreadRadius</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">1</span><span class="s4">].</span><span class="s1">spread</span>
+            <span class="s1">color</span><span class="s4">: </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rgba</span><span class="s4">(</span><span class="s3">0</span><span class="s4">,</span><span class="s3">0</span><span class="s4">,</span><span class="s3">0</span><span class="s4">, </span><span class="s3">0.14</span><span class="s4">)</span>
+
+            <span class="s1">fullWidth</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">fullWidth</span>
+            <span class="s1">fullHeight</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">fullHeight</span>
+            <span class="s1">source</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">sourceItem</span>
+        <span class="s4">}</span>
+
+        <span class="s1">BoxShadow </span><span class="s4">{</span>
+            <span class="s1">offsetY</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">2</span><span class="s4">].</span><span class="s1">offset</span>
+            <span class="s1">blurRadius</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">2</span><span class="s4">].</span><span class="s1">blur</span>
+            <span class="s1">spreadRadius</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">_shadow</span><span class="s4">[</span><span class="s3">2</span><span class="s4">].</span><span class="s1">spread</span>
+            <span class="s1">color</span><span class="s4">: </span><span class="s1">Qt</span><span class="s4">.</span><span class="s1">rgba</span><span class="s4">(</span><span class="s3">0</span><span class="s4">,</span><span class="s3">0</span><span class="s4">,</span><span class="s3">0</span><span class="s4">, </span><span class="s3">0.12</span><span class="s4">)</span>
+
+            <span class="s1">fullWidth</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">fullWidth</span>
+            <span class="s1">fullHeight</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">fullHeight</span>
+            <span class="s1">source</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">sourceItem</span>
+        <span class="s4">}</span>
+
+        <span class="s1">ShaderEffect </span><span class="s4">{</span>
+            <span class="s1">property alias source</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">source</span>
+
+            <span class="s1">x</span><span class="s4">: (</span><span class="s1">parent</span><span class="s4">.</span><span class="s1">width </span><span class="s4">- </span><span class="s1">width</span><span class="s4">)/</span><span class="s3">2</span>
+            <span class="s1">y</span><span class="s4">: (</span><span class="s1">parent</span><span class="s4">.</span><span class="s1">height </span><span class="s4">- </span><span class="s1">height</span><span class="s4">)/</span><span class="s3">2</span>
+            <span class="s1">width</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">sourceItem</span><span class="s4">.</span><span class="s1">width</span>
+            <span class="s1">height</span><span class="s4">: </span><span class="s1">effect</span><span class="s4">.</span><span class="s1">sourceItem</span><span class="s4">.</span><span class="s1">height</span>
+        <span class="s4">}</span>
+    <span class="s4">}</span>
+<span class="s4">}</span>
+</pre>
+</body>
+</html>

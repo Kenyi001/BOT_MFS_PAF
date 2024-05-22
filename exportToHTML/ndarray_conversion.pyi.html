@@ -1,0 +1,81 @@
+<html>
+<head>
+<title>ndarray_conversion.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #7a7e85;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ndarray_conversion.pyi</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">sys</span>
+<span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">typing </span><span class="s0">as </span><span class="s1">npt</span>
+
+<span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&gt;= (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">11</span><span class="s2">):</span>
+    <span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">assert_type</span>
+<span class="s0">else</span><span class="s2">:</span>
+    <span class="s0">from </span><span class="s1">typing_extensions </span><span class="s0">import </span><span class="s1">assert_type</span>
+
+<span class="s1">nd</span><span class="s2">: </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int_</span><span class="s2">]</span>
+
+<span class="s4"># item</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">item</span><span class="s2">(), </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">item</span><span class="s2">(</span><span class="s3">1</span><span class="s2">), </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">item</span><span class="s2">(</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">), </span><span class="s1">int</span><span class="s2">)</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">item</span><span class="s2">((</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">)), </span><span class="s1">int</span><span class="s2">)</span>
+
+<span class="s4"># tolist</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">tolist</span><span class="s2">(), </span><span class="s1">Any</span><span class="s2">)</span>
+
+<span class="s4"># itemset does not return a value</span>
+<span class="s4"># tostring is pretty simple</span>
+<span class="s4"># tobytes is pretty simple</span>
+<span class="s4"># tofile does not return a value</span>
+<span class="s4"># dump does not return a value</span>
+<span class="s4"># dumps is pretty simple</span>
+
+<span class="s4"># astype</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s5">&quot;float&quot;</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">float</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s5">&quot;K&quot;</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s5">&quot;K&quot;</span><span class="s2">, </span><span class="s5">&quot;unsafe&quot;</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s5">&quot;K&quot;</span><span class="s2">, </span><span class="s5">&quot;unsafe&quot;</span><span class="s2">, </span><span class="s0">True</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s5">&quot;K&quot;</span><span class="s2">, </span><span class="s5">&quot;unsafe&quot;</span><span class="s2">, </span><span class="s0">True</span><span class="s2">, </span><span class="s0">True</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+
+<span class="s4"># byteswap</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">byteswap</span><span class="s2">(), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int_</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">byteswap</span><span class="s2">(</span><span class="s0">True</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int_</span><span class="s2">])</span>
+
+<span class="s4"># copy</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">(), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int_</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">(</span><span class="s5">&quot;C&quot;</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int_</span><span class="s2">])</span>
+
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">view</span><span class="s2">(), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int_</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">view</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">view</span><span class="s2">(</span><span class="s1">float</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">view</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">matrix</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">matrix</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">, </span><span class="s1">Any</span><span class="s2">])</span>
+
+<span class="s4"># getfield</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">getfield</span><span class="s2">(</span><span class="s5">&quot;float&quot;</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">getfield</span><span class="s2">(</span><span class="s1">float</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">getfield</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+<span class="s1">assert_type</span><span class="s2">(</span><span class="s1">nd</span><span class="s2">.</span><span class="s1">getfield</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">, </span><span class="s3">8</span><span class="s2">), </span><span class="s1">npt</span><span class="s2">.</span><span class="s1">NDArray</span><span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">])</span>
+
+<span class="s4"># setflags does not return a value</span>
+<span class="s4"># fill does not return a value</span>
+</pre>
+</body>
+</html>
