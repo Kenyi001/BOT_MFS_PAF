@@ -9,24 +9,40 @@ from PyQt5.QtWidgets import (
     QDialog, QLabel, QTextEdit, QProgressDialog
 )
 from openpyxl.reader.excel import load_workbook
+import threading
+
+from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH, URL_INICIO_SESION
+from selenium_scripts.extraccion_datos_web import extraer_datos_web, cancel_event
 
 from gui import ConfigurationDialog
 from selenium_scripts.new_PAF_PTM import ejecutar_automatizacion_new
-from selenium_scripts.extraccion_datos_web import extraer_datos_web
-from config import URL_INICIO_SESION
 
 class Worker(QThread):
-    finished = pyqtSignal()
+    finished = pyqtSignal(bool)  # Signal indicates if the task was canceled or not
     progress = pyqtSignal(int)
+    canceled = pyqtSignal()
 
     def __init__(self, func: Callable, *args) -> None:
         super().__init__()
         self.func = func
         self.args = args
+        self._is_canceled = False
 
     def run(self) -> None:
-        self.func(*self.args)
-        self.finished.emit()
+        try:
+            if not self._is_canceled:
+                self.func(*self.args)
+                self.finished.emit(False)
+            else:
+                self.finished.emit(True)
+        except Exception as e:
+            print(f"Error en el worker: {str(e)}")
+            self.finished.emit(True)
+
+    def cancel(self) -> None:
+        self._is_canceled = True
+        cancel_event.set()
+        self.canceled.emit()
 
 class SelectableInfoDialog(QDialog):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
@@ -83,7 +99,7 @@ class App(QWidget):
         # Crear un layout horizontal para el logo y el botón de información
         logo_info_layout = QHBoxLayout()
         logo = QLabel(self)
-        logo.setPixmap(QPixmap('D:\Comercial_-_Daniel\BOT_MFS_PAF\Static\logo_home.png'))
+        logo.setPixmap(QPixmap(os.path.join('resources', 'logo_home.png')))
         logo_info_layout.addWidget(logo)
 
         self.btn_info = QPushButton('!', self)
@@ -148,9 +164,6 @@ class App(QWidget):
             "<h2>Ejecución de la Aplicación</h2>"
             "<p>La aplicación se ejecuta localmente en la PC del usuario, proporcionando una herramienta "
             "robusta y eficiente para gestionar las tareas de automatización de PTM y extracción de datos.</p>"
-            "<br>"
-            "<h2>Repositorio por: https://github.com/Kenyi001/BOT_MFS_PAF/tree/Desktop-App</h2>"
-            
         )
         dialog.exec_()
 
@@ -234,7 +247,6 @@ class App(QWidget):
                         URL_INICIO_SESION, file_path, sheet_name, username, password,
                         label="Ejecutando 'New PAF/PTM'..."
                     )
-                    self.show_confirmation_message("La automatización 'New PAF/PTM' se completó con éxito.")
 
     def open_file_dialog_web_data_extraction(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(self, 'Seleccionar archivo', '', 'Excel Files (*.xlsx *.xls)')
@@ -246,18 +258,39 @@ class App(QWidget):
                     URL_INICIO_SESION, file_path, username, password,
                     label="Ejecutando extracción de datos web..."
                 )
-                self.show_confirmation_message("La extracción de datos web se completó con éxito.")
 
     def run_task_with_progress(self, func: Callable, *args, label: str) -> None:
-        progress = QProgressDialog(label, "Cancelar", 0, 0, self)
+        progress = QProgressDialog(label, "Cancelar", 0, 100, self)
         progress.setWindowModality(Qt.WindowModal)
+        progress.setAutoClose(True)
+        progress.setAutoReset(True)
 
-        worker = Worker(func, *args)
-        worker.finished.connect(progress.close)
-        worker.finished.connect(worker.deleteLater)
+        def update_progress(value):
+            progress.setValue(value)
+
+        worker = Worker(func, update_progress, *args)
+        worker.finished.connect(lambda canceled: self.on_task_finished(progress, canceled))
+        worker.canceled.connect(lambda: self.on_task_canceled(progress))
         worker.start()
 
+        progress.canceled.connect(worker.cancel)
         progress.exec_()
+
+    def on_task_finished(self, progress: QProgressDialog, canceled: bool) -> None:
+        progress.close()
+        if not canceled:
+            self.show_confirmation_message("La tarea se completó con éxito.")
+        else:
+            self.show_confirmation_message("La tarea fue cancelada por el usuario.")
+        self.reset_worker_state()
+
+    def on_task_canceled(self, progress: QProgressDialog) -> None:
+        progress.close()
+        self.show_confirmation_message("La tarea fue cancelada por el usuario.")
+        self.reset_worker_state()
+
+    def reset_worker_state(self):
+        cancel_event.clear()
 
     def show_confirmation_message(self, message: str) -> None:
         msg_box = QMessageBox()
@@ -270,9 +303,8 @@ class App(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    exe_path = sys.executable
-    dir_path = os.path.dirname(exe_path)
-    icon_path = os.path.join(dir_path, 'Tigo_Money_BOT_icon.ico')
+    # Ruta del ícono de la aplicación
+    icon_path = os.path.join('resources', 'Tigo_Money_BOT_icon.ico')
 
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
@@ -304,10 +336,15 @@ if __name__ == '__main__':
             padding: 5px 10px;
         }
     """)
+
+    # Verificar que las rutas del WebDriver sean cadenas válidas
+    assert isinstance(WEBDRIVER_PATH, str) and WEBDRIVER_PATH, "WEBDRIVER_PATH debe ser una cadena no vacía."
+    assert isinstance(EDGE_BINARY_PATH, str) and EDGE_BINARY_PATH, "EDGE_BINARY_PATH debe ser una cadena no vacía."
+    assert isinstance(USER_PROFILE_PATH, str) and USER_PROFILE_PATH, "USER_PROFILE_PATH debe ser una cadena no vacía."
+
     window = App()
     window.show()
     sys.exit(app.exec_())
 
 # ejecutar comando en terminal para el .exe:
-# pyinstaller --onefile --windowed --icon=D:\Comercial_-_Daniel\BOT_MFS_PAF\Static\Tigo_Money_BOT_ico.ico --name=Bot_PTM_Asfi main2.py
-
+# pyinstaller --onefile --windowed --icon=D:\Comercial_-_Daniel\BOT_MFS_PAF\Static\Tigo_Money_BOT_icon.ico --name=Bot_PTM_Asfi main2.py

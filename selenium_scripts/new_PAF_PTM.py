@@ -12,27 +12,9 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 
-import json
+# Importar las configuraciones de config.py
+from config import WEBDRIVER_PATH, EDGE_BINARY_PATH, USER_PROFILE_PATH, URL_REGISTRO_PAF
 
-def load_config():
-    # Valores predeterminados para la configuración
-    default_config = {"WEBDRIVER_PATH": "", "EDGE_BINARY_PATH": "", "USER_PROFILE_PATH": ""}
-
-    # Si el archivo config.json no existe, lo creamos con los valores predeterminados
-    if not os.path.exists('config.json'):
-        with open('config.json', 'w') as config_file:
-            json.dump(default_config, config_file)
-
-    # Leemos el archivo config.json (que ahora sabemos que existe)
-    with open('config.json', 'r') as config_file:
-        config = json.load(config_file)
-
-    return config
-
-config = load_config()
-WEBDRIVER_PATH = config.get('WEBDRIVER_PATH', '')
-EDGE_BINARY_PATH = config.get('EDGE_BINARY_PATH', '')
-USER_PROFILE_PATH = config.get('USER_PROFILE_PATH', '')
 ruta_actual = os.getcwd()
 
 
@@ -241,7 +223,7 @@ def ejecutar_automatizacion_new(url_inicio_sesion, ruta_archivo_excel, nombre_ho
             departamento_verificado = row["departamento"]
             mensaje_deseado = "Se guardo correctamente el punto de atención"
 
-            driver.get("https://appweb.asfi.gob.bo/RMI/RegistroParticipante/puntoAtencion.aspx")
+            driver.get(URL_REGISTRO_PAF)
             driver.find_element(By.ID, "MainContent_DefaultContent_btnAdicionar").click()
             driver.find_element(By.ID, "MainContent_DefaultContent_txtNumero").send_keys(numero_MEF)
             select = Select(driver.find_element(By.ID, 'MainContent_DefaultContent_ddlTipoSucursal'))

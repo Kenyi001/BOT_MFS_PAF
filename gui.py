@@ -56,6 +56,7 @@ class ConfigurationDialog(QDialog):
         """Agrega una sección de ruta de archivo al layout."""
         path_layout = QHBoxLayout()
         path_input = QLineEdit(self.config.get(config_key, ''))
+        path_input.setObjectName(config_key)
         path_button = QPushButton('Buscar')
         path_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         path_button.clicked.connect(lambda: self.open_file_dialog(path_input) if 'Path' in config_key else self.open_directory_dialog(path_input))
@@ -71,30 +72,38 @@ class ConfigurationDialog(QDialog):
         layout.addLayout(path_layout)
 
     def load_configuration(self):
-        if os.path.exists('config.json'):
-            with open('config.json', 'r') as config_file:
+        """Carga la configuración desde un archivo JSON."""
+        if os.path.exists('resources/config.json'):
+            with open('resources/config.json', 'r') as config_file:
                 return json.load(config_file)
         return {}
 
     def open_file_dialog(self, line_edit):
+        """Abre un diálogo para seleccionar un archivo."""
         path, _ = QFileDialog.getOpenFileName(self, 'Seleccionar Archivo', '', 'All Files (*)')
         if path:
             line_edit.setText(path)
 
     def open_directory_dialog(self, line_edit):
+        """Abre un diálogo para seleccionar un directorio."""
         path = QFileDialog.getExistingDirectory(self, 'Seleccionar Directorio')
         if path:
             line_edit.setText(path)
 
     def save_configuration(self):
+        """Guarda la configuración actual en un archivo JSON."""
         config = {
-            'WEBDRIVER_PATH': self.findChild(QLineEdit, 'WebDriver Path:').text(),
-            'EDGE_BINARY_PATH': self.findChild(QLineEdit, 'Edge Binary Path:').text(),
-            'USER_PROFILE_PATH': self.findChild(QLineEdit, 'User Profile Path:').text()
+            'WEBDRIVER_PATH': self.findChild(QLineEdit, 'WEBDRIVER_PATH').text(),
+            'EDGE_BINARY_PATH': self.findChild(QLineEdit, 'EDGE_BINARY_PATH').text(),
+            'USER_PROFILE_PATH': self.findChild(QLineEdit, 'USER_PROFILE_PATH').text()
         }
-        with open('config.json', 'w') as config_file:
-            json.dump(config, config_file)
-        self.accept()
+        try:
+            with open('resources/config.json', 'w') as config_file:
+                json.dump(config, config_file, indent=4)
+            QMessageBox.information(self, 'Éxito', 'Configuración guardada con éxito.')
+            self.accept()
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', f'Error al guardar la configuración: {e}')
 
     def show_info_wp(self):
         self.show_info_dialog(
@@ -148,7 +157,6 @@ class InfoDialog(QDialog):
         # Agregar el layout de los botones al layout principal
         layout.addLayout(button_layout)
 
-# Uso de las funciones de información en el contexto de una ventana principal
 if __name__ == "__main__":
     app = QApplication([])
     window = ConfigurationDialog()
